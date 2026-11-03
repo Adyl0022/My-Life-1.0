@@ -1,0 +1,73 @@
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle, Path, G, Text as SText } from 'react-native-svg';
+import { Glass } from '../components/Glass';
+import { IslamicBg, Header } from '../components/IslamicUi';
+import { Sheet, SBtn, W } from '../components/Ui';
+import { usePrayer, ZONES, qiblaBearing } from '../lib/prayer';
+import { useStored } from '../lib/store';
+
+const COL: any = { fajr: 'rgba(124,156,255,.35)', syuruk: 'rgba(255,196,107,.35)', dhuhr: 'rgba(255,196,107,.35)', asr: 'rgba(255,143,171,.35)', maghrib: 'rgba(183,148,255,.35)', isha: 'rgba(94,231,223,.3)' };
+
+export default function Prayer() {
+  const pr = usePrayer();
+  const [alarms, setAlarms] = useStored<Record<string, boolean>>('ml_prayer_alerts', { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true });
+  const [pick, setPick] = useState(false);
+  const pl = pr.place;
+  const zn = pl ? (ZONES.find((x) => x.code === pl.zone)?.name.split(' (')[0] || 'Zone ' + pl.zone) : 'Choose location';
+  const label = pr.mode.auto ? 'Auto · ' + zn : zn;
+  const q = pl ? qiblaBearing(pl.lat, pl.lon) : 292;
+  const n = pr.next;
+  return (
+    <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
+      <IslamicBg a="rgba(124,156,255,.4)" b="rgba(94,231,223,.3)" />
+      <SafeAreaView style={{ flex: 1 }}>
+        <Header title="Prayer Times" />
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 50, gap: 12 }}>
+          <Glass radius={26} style={{ padding: 18 }}>
+            <LinearGradient colors={['rgba(52,211,153,.3)', 'rgba(94,231,223,.15)']} pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: -1 }} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>NEXT PRAYER</Text>
+              <Pressable onPress={() => setPick(true)}><Text style={{ color: W, fontSize: 12, fontWeight: '700' }}>{label} ▾</Text></Pressable></View>
+            {n ? (<>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 12, marginTop: 6 }}><Text style={{ color: W, fontSize: 32, fontWeight: '800' }}>{n.name}</Text><Text style={{ color: W, fontSize: 24, fontWeight: '700' }}>{n.time12}</Text></View>
+              <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 13, marginTop: 6 }}>In {Math.floor(n.diff / 60)} h {n.diff % 60} min{n.tomorrow ? ' (tomorrow)' : ''}</Text>
+            </>) : (
+              <View style={{ marginTop: 8 }}>
+                <Text style={{ color: W, fontSize: 15, fontWeight: '700' }}>{pr.status === 'loading' ? 'Finding your location…' : pr.status === 'denied' ? 'Location is off' : 'Could not load prayer times'}</Text>
+                {(pr.status === 'error' || pr.status === 'denied') && <><Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12.5, marginTop: 4, lineHeight: 18 }}>{pr.status === 'denied' ? 'Allow location so My Life can find your JAKIM zone, or choose your zone yourself.' : 'Check your internet connection. Times are saved for the month after the first successful load.'}</Text><View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}><SBtn t="Try again" kind="primary" onPress={pr.retry} /><SBtn t="Choose zone" onPress={() => setPick(true)} /></View></>}
+              </View>
+            )}
+          </Glass>
+          {pr.times.length > 0 && (
+            <Glass radius={24} style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
+              {pr.times.map((p, i) => (
+                <View key={p.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, borderBottomWidth: i === pr.times.length - 1 ? 0 : 1, borderBottomColor: 'rgba(255,255,255,.1)' }}>
+                  <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: COL[p.key], alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} /></View>
+                  <Text style={{ flex: 1, color: n && n.idx === i ? '#7df0c6' : W, fontSize: 15, fontWeight: n && n.idx === i ? '800' : '600' }}>{p.name}</Text>
+                  <Text style={{ color: n && n.idx === i ? '#7df0c6' : W, fontSize: 15, fontWeight: '700' }}>{p.time12}</Text>
+                  {p.key !== 'syuruk' ? <Pressable accessibilityLabel="Toggle alert" onPress={() => setAlarms({ ...alarms, [p.key]: !alarms[p.key] })} style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: alarms[p.key] ? 'rgba(52,211,153,.45)' : 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 14 }}>🔔</Text></Pressable> : <View style={{ width: 34 }} />}
+                </View>
+              ))}
+            </Glass>
+          )}
+          <Glass radius={24} style={{ padding: 16, alignItems: 'center' }}>
+            <View style={{ alignSelf: 'stretch' }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Qibla</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>About {q}° from North ({zn})</Text></View>
+            <Svg width={210} height={210} viewBox="0 0 210 210" style={{ marginTop: 6 }}>
+              <Circle cx={105} cy={105} r={92} stroke="rgba(255,255,255,.25)" strokeWidth={2} fill="rgba(255,255,255,.05)" />
+              <G fill="rgba(255,255,255,.75)" fontSize={13} fontWeight="700"><SText x={99} y={22} fill="#ff8fab">N</SText><SText x={99} y={196}>S</SText><SText x={193} y={109}>E</SText><SText x={13} y={109}>W</SText></G>
+              <G rotation={q} origin="105, 105">
+                <Path d="M105 30l12 62h-24z" fill="#34d399" /><Path d="M105 180l10-52h-20z" fill="rgba(255,255,255,.3)" />
+              </G>
+              <Circle cx={105} cy={105} r={8} fill="#fff" />
+            </Svg>
+            <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, textAlign: 'center' }}>The green arrow points to the Kaaba, measured from North. Live compass will come with the phone build.</Text>
+          </Glass>
+          <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, lineHeight: 18, marginHorizontal: 4 }}>Prayer times follow JAKIM Malaysia zones. In Auto mode your location finds the zone; only the coordinates are sent, and they are not saved to your account. Data comes through the public Waktu Solat API, which republishes e-solat JAKIM and is not affiliated with JAKIM. Alerts are saved here; phone notifications arrive with the phone build.</Text>
+        </ScrollView>
+        {pick && <Sheet onClose={() => setPick(false)}><Glass radius={24} style={{ padding: 14, maxHeight: '75%' }}><Text style={{ color: W, fontSize: 16, fontWeight: '800', marginBottom: 6 }}>Location</Text><ScrollView><Pressable onPress={() => { pr.setMode({ ...pr.mode, auto: true }); setPick(false); }} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,.1)' }}><Text style={{ color: pr.mode.auto ? '#7df0c6' : W, fontSize: 14, fontWeight: '800' }}>Automatic (use my location)</Text></Pressable>{ZONES.map((x) => <Pressable key={x.code} onPress={() => { pr.setMode({ auto: false, zone: x.code }); setPick(false); }} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,.1)' }}><Text style={{ color: !pr.mode.auto && x.code === pr.mode.zone ? '#7df0c6' : W, fontSize: 14, fontWeight: !pr.mode.auto && x.code === pr.mode.zone ? '800' : '600' }}>{x.name}</Text></Pressable>)}</ScrollView></Glass></Sheet>}
+      </SafeAreaView>
+    </View>
+  );
+}

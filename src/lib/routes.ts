@@ -1,0 +1,21 @@
+// Maps design file names to app routes. Screens not built yet are left out.
+export const ROUTES: Record<string, string> = {
+  'Dashboard.dc.html': '/',
+  'Stats.dc.html': '/stats',
+  'Insights.dc.html': '/insights',
+  'Settings.dc.html': '/settings',
+  'Search.dc.html': '/search',
+  'Export.dc.html': '/export',
+  'Planner.dc.html': '/planner',
+  'Notes.dc.html': '/notes',
+  'Islamic.dc.html': '/islamic',
+  'Mathurat.dc.html': '/mathurat',
+  'Tahlil.dc.html': '/tahlil',
+  'Tasbih.dc.html': '/tasbih',
+  'Prayer.dc.html': '/prayer',
+  'Fatihah.dc.html': '/surah/fatihah',
+  'Mulk.dc.html': '/surah/mulk',
+  'Kahfi.dc.html': '/surah/kahfi',
+  'Yasin.dc.html': '/surah/yasin',
+  'Assistant.dc.html': '/assistant',
+};

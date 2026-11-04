@@ -4,6 +4,7 @@ import { Text } from '../../components/Txt';
 import { Tabs, useRouter } from 'expo-router';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
+import { THEMES, periodOf } from '../../lib/theme';
 import { Glass } from '../../components/Glass';
 
 const ITEMS: { name: string; label: string }[] = [
@@ -22,11 +23,14 @@ function Icon({ name, color }: { name: string; color: string }) {
 }
 function Bar({ state }: any) {
   const router = useRouter();
+  const home = state.index === 0;
+  const th = THEMES[periodOf(new Date())];
+  const tint = (a: number) => { const h = th.colors[th.colors.length - 1]; return 'rgba(' + parseInt(h.slice(1, 3), 16) + ',' + parseInt(h.slice(3, 5), 16) + ',' + parseInt(h.slice(5, 7), 16) + ',' + a + ')'; };
   return (
     <>
-    <LinearGradient pointerEvents="none" colors={['rgba(10,15,44,0)', 'rgba(10,15,44,.92)', 'rgba(10,15,44,.98)']} locations={[0, 0.55, 1]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 104 }} />
+    <LinearGradient pointerEvents="none" colors={home ? ['rgba(10,15,44,0)', tint(.35), tint(.6)] : ['rgba(10,15,44,0)', 'rgba(10,15,44,.92)', 'rgba(10,15,44,.98)']} locations={[0, 0.55, 1]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 104 }} />
     <View style={{ position: 'absolute', left: 20, right: 20, bottom: 18 }}>
-      <Glass radius={28} style={{ flexDirection: 'row', padding: 6, backgroundColor: 'rgba(24,28,72,.78)' }}>
+      <Glass radius={28} style={{ flexDirection: 'row', padding: 6, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
         {state.routes.map((r: any, i: number) => {
           const item = ITEMS.find((x) => x.name === r.name); if (!item) return null;
           const on = state.index === i;

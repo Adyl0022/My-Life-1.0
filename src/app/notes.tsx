@@ -57,7 +57,8 @@ export default function Notes() {
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
       <LinearGradient colors={['#0b1030', '#231452', '#0b2c46']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
-      <Blob size={320} color="rgba(255,196,107,.2)" style={{ right: -110, top: -50 }} />
+      <Blob size={300} color="rgba(255,196,107,.14)" style={{ right: -120, top: -70 }} />
+      <Blob size={300} color="rgba(124,156,255,.12)" style={{ left: -130, top: 380 }} />
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: 0.72 }}><NotesArt /></View>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 16 + TOP, flexDirection: 'row', alignItems: 'center', gap: 12 }}>

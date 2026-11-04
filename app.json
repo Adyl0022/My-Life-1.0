@@ -72,7 +72,7 @@
           "motionPermission": "My Life counts your steps to fill in your daily habit goal."
         }
       ],
-      "expo-health-connect",
+      "react-native-health-connect",
       [
         "expo-build-properties",
         {

@@ -47,7 +47,7 @@ function Bar({ state }: any) {
   const sx = useRef(new Animated.Value(1)).current;
   const sheen = useRef(new Animated.Value(0)).current;
   const [BS, setBS] = useState({ w: 0, h: 0 });
-  const PER = 2 * (BS.w - 3 - 53) + 2 * (BS.h - 3 - 53) + 2 * Math.PI * 26.5;
+  const PER = 2 * (BS.w - 5 - 51) + 2 * (BS.h - 5 - 51) + 2 * Math.PI * 25.5;
   const orb = useRef(new Animated.Value(0)).current;
   const vis = useRef(new Animated.Value(1)).current;
   const LEN = PER * 0.12, WH = PER * 0.04;
@@ -113,15 +113,15 @@ function Bar({ state }: any) {
       <Glass radius={28} style={{ padding: 8, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
         {BS.w > 0 && (
           <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: vis }}>
-            <Svg width={BS.w} height={BS.h}>
+            <Svg width={BS.w - 2} height={BS.h - 2}>
               {[0, 1].map((k) => {
                 const o = k === 0 ? offA : offB;
                 const ow = k === 0 ? offAW : offB;
                 return (
                   <React.Fragment key={k}>
-                    <ARect x={1.5} y={1.5} width={BS.w - 3} height={BS.h - 3} rx={26.5} fill="none" stroke={DOT[idx]} strokeOpacity={0.35} strokeWidth={4} strokeLinecap="round" strokeDasharray={[LEN, PER - LEN]} strokeDashoffset={o} />
-                    <ARect x={1.5} y={1.5} width={BS.w - 3} height={BS.h - 3} rx={26.5} fill="none" stroke={DOT[idx]} strokeWidth={1.8} strokeLinecap="round" strokeDasharray={[LEN, PER - LEN]} strokeDashoffset={o} />
-                    <ARect x={1.5} y={1.5} width={BS.w - 3} height={BS.h - 3} rx={26.5} fill="none" stroke="#fff" strokeOpacity={0.9} strokeWidth={1.2} strokeLinecap="round" strokeDasharray={[WH, PER - WH]} strokeDashoffset={ow} />
+                    <ARect x={1.5} y={1.5} width={BS.w - 5} height={BS.h - 5} rx={25.5} fill="none" stroke={DOT[idx]} strokeOpacity={0.3} strokeWidth={2.4} strokeLinecap="round" strokeDasharray={[LEN, PER - LEN]} strokeDashoffset={o} />
+                    <ARect x={1.5} y={1.5} width={BS.w - 5} height={BS.h - 5} rx={25.5} fill="none" stroke={DOT[idx]} strokeWidth={1.2} strokeLinecap="round" strokeDasharray={[LEN, PER - LEN]} strokeDashoffset={o} />
+                    <ARect x={1.5} y={1.5} width={BS.w - 5} height={BS.h - 5} rx={25.5} fill="none" stroke="#fff" strokeOpacity={0.9} strokeWidth={1} strokeLinecap="round" strokeDasharray={[WH, PER - WH]} strokeDashoffset={ow} />
                   </React.Fragment>
                 );
               })}

@@ -57,10 +57,10 @@ export default function Notes() {
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
       <LinearGradient colors={['#0b1030', '#231452', '#0b2c46']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
-      <Blob size={320} color="rgba(255,196,107,.38)" style={{ right: -110, top: -50 }} />
-      <Blob size={340} color="rgba(94,231,223,.28)" style={{ left: -120, bottom: 40 }} />
-      <Blob size={240} color="rgba(183,148,255,.22)" style={{ left: 30, top: 330 }} />
-      <NotesArt />
+      <Blob size={320} color="rgba(255,196,107,.27)" style={{ right: -110, top: -50 }} />
+      <Blob size={340} color="rgba(94,231,223,.2)" style={{ left: -120, bottom: 40 }} />
+      <Blob size={240} color="rgba(183,148,255,.16)" style={{ left: 30, top: 330 }} />
+      <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: 0.72 }}><NotesArt /></View>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 16 + TOP, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Pressable onPress={() => router.back()} accessibilityLabel="Back"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 24, marginTop: -3 }}>‹</Text></Glass></Pressable>

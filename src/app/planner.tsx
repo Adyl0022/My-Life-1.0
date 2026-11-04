@@ -132,9 +132,9 @@ export default function Planner() {
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
       <LinearGradient colors={['#0a0f2c', '#1a1048', '#0c2b4d']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
-      <Blob size={300} color="rgba(124,156,255,.5)" style={{ right: -100, top: -40 }} />
-      <Blob size={320} color="rgba(94,231,223,.3)" style={{ left: -110, bottom: 60 }} />
-      <PlannerArt />
+      <Blob size={300} color="rgba(124,156,255,.38)" style={{ right: -100, top: -40 }} />
+      <Blob size={320} color="rgba(94,231,223,.22)" style={{ left: -110, bottom: 60 }} />
+      <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: 0.78 }}><PlannerArt /></View>
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 60 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>

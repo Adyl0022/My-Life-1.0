@@ -28,27 +28,6 @@ function Drift({ dur, delay = 0, children }: { dur: number; delay?: number; chil
   return <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, transform: [{ translateX: v.interpolate({ inputRange: [0, 1], outputRange: [0, 16] }) }, { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -22] }) }, { rotate: v.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '24deg'] }) }] }}>{children}</Animated.View>;
 }
 
-let bannerShown = false;
-function Banner() {
-  const insets = useSafeAreaInsets();
-  const v = React.useRef(new Animated.Value(0)).current;
-  const [show] = React.useState(() => { const r = !bannerShown; bannerShown = true; return r; });
-  React.useEffect(() => {
-    if (!show) return;
-    Animated.sequence([Animated.delay(900), Animated.timing(v, { toValue: 1, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }), Animated.delay(4600), Animated.timing(v, { toValue: 0, duration: 500, useNativeDriver: true })]).start();
-  }, [v, show]);
-  if (!show) return null;
-  return (
-    <Animated.View pointerEvents="none" style={{ position: 'absolute', top: Math.max(insets.top - 14, 6), left: 0, right: 0, alignItems: 'center', zIndex: 8, opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-90, 0] }) }] }}>
-      <LinearGradient colors={['rgba(124,156,255,.34)', 'rgba(10,16,40,.74)', 'rgba(94,231,223,.24)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: 'row', alignItems: 'center', gap: 9, paddingVertical: 6, paddingLeft: 8, paddingRight: 14, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(143,233,226,.65)' }}>
-        <OrbSvg size={26} uid="bn" />
-        <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800', letterSpacing: 0.3 }}>My Life Assistant</Text>
-        <Text style={{ color: '#d9fff9', fontSize: 11.5, fontWeight: '500' }}>Ask about your data</Text>
-      </LinearGradient>
-    </Animated.View>
-  );
-}
-
 export default function Home() {
   const router = useRouter();
   const name = useName();
@@ -145,7 +124,6 @@ export default function Home() {
           </Glass>
         </View>
       </SafeAreaView>
-      <Banner />
     </Bg>
   );
 }

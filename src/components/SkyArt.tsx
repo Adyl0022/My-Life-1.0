@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, Easing } from 'react-native';
-import Svg, { Defs, RadialGradient, Stop, Circle, Path, Rect, LinearGradient as SvgLG } from 'react-native-svg';
+import Svg, { Defs, RadialGradient, Stop, Circle, Path, Rect, Polygon, LinearGradient as SvgLG } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Period } from '../lib/theme';
 
 function loop(v: Animated.Value, duration: number, from = 0, to = 1, easing = Easing.linear, yoyo = false) {
@@ -62,7 +63,7 @@ function Cloud({ top, w, h, opacity, dur, delay, color = '#fff' }: { top: number
 }
 
 function Disc({ size, right, top, colors, glow }: { size: number; right: number; top: number; colors: [string, string, string]; glow: string }) {
-  const id = 'd' + size + right;
+  const id = 'd' + size;
   return (
     <>
       <Glow size={size * 2.4} style={{ right: right - size * 0.7, top: top - size * 0.7 }} stops={[[0, glow], [1, 'rgba(0,0,0,0)']]} />
@@ -74,6 +75,28 @@ function Disc({ size, right, top, colors, glow }: { size: number; right: number;
       </View>
     </>
   );
+}
+
+// Slowly turning sun rays (same wedges as the design)
+function Rays({ right, top, n, half, color, opacity }: { right: number; top: number; n: number; half: number; color: string; opacity: number }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => { const a = Animated.loop(Animated.timing(v, { toValue: 1, duration: 80000, easing: Easing.linear, useNativeDriver: true })); a.start(); return () => a.stop(); }, [v]);
+  const polys = Array.from({ length: n }, (_, i) => {
+    const c = (i * 2 * Math.PI) / n, h = (half * Math.PI) / 180;
+    const pt = (t: number) => `${(150 * Math.cos(t)).toFixed(1)},${(150 * Math.sin(t)).toFixed(1)}`;
+    return `0,0 ${pt(c - h)} ${pt(c + h)}`;
+  });
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', right, top, width: 300, height: 300, transform: [{ rotate: v.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }}>
+      <Svg width={300} height={300} viewBox="-150 -150 300 300">{polys.map((pts, i) => <Polygon key={i} points={pts} fill={color} opacity={opacity} />)}</Svg>
+    </Animated.View>
+  );
+}
+
+function Flare({ right, top, size, delay }: { right: number; top: number; size: number; delay: number }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => { v.setValue(0); const a = Animated.sequence([Animated.delay(delay), Animated.loop(loop(v, 4000, 0, 1, Easing.inOut(Easing.ease), true))]); a.start(); return () => a.stop(); }, [v, delay]);
+  return <Animated.View pointerEvents="none" style={{ position: 'absolute', right, top, width: size, height: size, borderRadius: size / 2, backgroundColor: 'rgba(255,236,170,.5)', opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.7] }), transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.15] }) }] }} />;
 }
 
 function Stars() {
@@ -91,7 +114,7 @@ function Moon() {
   const v = useRef(new Animated.Value(0)).current;
   useEffect(() => { const a = loop(v, 4000, 0, 1, Easing.inOut(Easing.ease), true); a.start(); return () => a.stop(); }, [v]);
   return (
-    <Animated.View pointerEvents="none" style={{ position: 'absolute', right: 34, top: 32, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -6] }) }] }}>
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', right: 52, top: 92, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -6] }) }] }}>
       <Svg width={76} height={76} viewBox="0 0 76 76"><Path d="M44 10a28 28 0 1 0 26 38 22 22 0 1 1-26-38z" fill="#fff7dc" opacity={0.97} /></Svg>
     </Animated.View>
   );
@@ -107,26 +130,33 @@ function Shoot() {
   );
 }
 
-export function SkyArt({ period }: { period: Period }) {
+export function SkyArt({ period, offset = 0 }: { period: Period; offset?: number }) {
   return (
-    <View style={{ position: 'absolute', left: 0, top: 0, right: 0, height: 340, overflow: 'hidden' }} pointerEvents="none">
+    <View style={{ position: 'absolute', left: 0, top: offset, right: 0, height: 340, overflow: 'hidden' }} pointerEvents="none">
       {period === 'Morning' && (<>
         <Pulse style={{ right: -75, top: 21 }}><Glow size={330} stops={[[0, 'rgba(255,238,185,.95)'], [0.38, 'rgba(255,190,120,.45)'], [0.7, 'rgba(0,0,0,0)']]} style={{ position: 'relative' }} /></Pulse>
-        <Disc size={72} right={28} top={34} colors={['#fffbe6', '#ffd98a', '#ffb35c']} glow="rgba(255,210,130,.7)" />
+        <Rays right={-60} top={36} n={16} half={5.6} color="#fff3c9" opacity={0.3} />
+        <Disc size={72} right={54} top={150} colors={['#fffbe6', '#ffd98a', '#ffb35c']} glow="rgba(255,210,130,.7)" />
         <Cloud top={98} w={80} h={26} opacity={0.6} dur={42000} delay={0.14} />
         <Cloud top={150} w={64} h={20} opacity={0.5} dur={55000} delay={0.44} />
         <Cloud top={60} w={48} h={15} opacity={0.4} dur={48000} delay={0.62} />
       </>)}
       {period === 'Afternoon' && (<>
         <Pulse style={{ right: -38, top: -32 }}><Glow size={320} stops={[[0, 'rgba(255,252,220,.95)'], [0.38, 'rgba(255,225,140,.45)'], [0.7, 'rgba(0,0,0,0)']]} style={{ position: 'relative' }} /></Pulse>
-        <Disc size={60} right={68} top={34} colors={['#ffffff', '#fff0a8', '#ffd04d']} glow="rgba(255,236,150,.75)" />
+        <Rays right={-28} top={-22} n={18} half={5} color="#fffbe0" opacity={0.28} />
+        <Disc size={60} right={92} top={98} colors={['#ffffff', '#fff0a8', '#ffd04d']} glow="rgba(255,236,150,.75)" />
         <Cloud top={88} w={88} h={28} opacity={0.6} dur={36000} delay={0.1} />
         <Cloud top={160} w={72} h={23} opacity={0.55} dur={52000} delay={0.38} />
         <Cloud top={44} w={56} h={18} opacity={0.4} dur={60000} delay={0.55} />
+        <Flare right={162} top={166} size={18} delay={0} />
+        <Flare right={190} top={196} size={30} delay={700} />
+        <Flare right={256} top={224} size={14} delay={1400} />
+        <Flare right={298} top={248} size={22} delay={2100} />
       </>)}
       {period === 'Evening' && (<>
         <Pulse style={{ right: -90, top: 0 }}><Glow size={360} stops={[[0, 'rgba(255,170,110,.9)'], [0.38, 'rgba(255,90,120,.4)'], [0.7, 'rgba(0,0,0,0)']]} style={{ position: 'relative' }} /></Pulse>
-        <Disc size={72} right={28} top={34} colors={['#fff0c8', '#ffb06b', '#ff6a5a']} glow="rgba(255,120,90,.65)" />
+        <Disc size={72} right={54} top={146} colors={['#fff0c8', '#ffb06b', '#ff6a5a']} glow="rgba(255,120,90,.65)" />
+        <LinearGradient colors={['rgba(255,130,100,0)', 'rgba(255,110,100,.45)']} style={{ position: 'absolute', left: 0, right: 0, top: 176, height: 90 }} />
         <Cloud top={92} w={88} h={28} opacity={0.6} dur={44000} delay={0.18} color="#ffc2d1" />
         <Cloud top={146} w={68} h={22} opacity={0.5} dur={58000} delay={0.45} color="#ffd2bd" />
         <Cloud top={52} w={56} h={18} opacity={0.4} dur={66000} delay={0.52} color="#ffb3c8" />

@@ -242,7 +242,7 @@ export default function Settings() {
           {tab === 2 && (
             <View style={{ gap: 12, marginTop: 14 }}>
               <View style={{ alignItems: 'center', paddingVertical: 8 }}>
-                <Float><LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 72, height: 72, borderRadius: 24, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 28, fontWeight: '800' }}>M</Text></LinearGradient></Float>
+                <Float><LinearGradient colors={['#7c9cff', '#b794ff', '#5ee7df']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0.2 }} end={{ x: 1, y: 0.8 }} style={{ width: 72, height: 72, borderRadius: 23, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)', boxShadow: '0 14px 36px rgba(124,156,255,.5)' } as any}><Svg width={36} height={36} viewBox="0 0 30 30"><Path d="M5 24V6l10 12L25 6v18" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" /></Svg></LinearGradient></Float>
                 <Text style={{ color: W, fontSize: 20, fontWeight: '800', marginTop: 10 }}>My Life 1.0</Text>
                 <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4, marginTop: 3 }}>YOUR LIFE, ALL IN ONE PLACE</Text>
                 <Pressable onPress={() => setChecked(!checked)} style={{ marginTop: 12, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, backgroundColor: checked ? 'rgba(94,231,181,.25)' : 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{checked ? "You're up to date" : 'Check for updates'}</Text></Pressable>

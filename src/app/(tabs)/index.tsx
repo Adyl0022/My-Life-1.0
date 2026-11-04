@@ -39,7 +39,7 @@ function Banner() {
   }, [v, show]);
   if (!show) return null;
   return (
-    <Animated.View pointerEvents="none" style={{ position: 'absolute', top: insets.top + TOP + 6, left: 0, right: 0, alignItems: 'center', zIndex: 8, opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-90, 0] }) }] }}>
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', top: Math.max(insets.top - 14, 6), left: 0, right: 0, alignItems: 'center', zIndex: 8, opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-90, 0] }) }] }}>
       <LinearGradient colors={['rgba(124,156,255,.34)', 'rgba(10,16,40,.74)', 'rgba(94,231,223,.24)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: 'row', alignItems: 'center', gap: 9, paddingVertical: 6, paddingLeft: 8, paddingRight: 14, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(143,233,226,.65)' }}>
         <OrbSvg size={26} uid="bn" />
         <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800', letterSpacing: 0.3 }}>My Life Assistant</Text>
@@ -57,22 +57,26 @@ export default function Home() {
   const mins = Math.floor(usage.today.sec / 60);
   const maxM = Math.max(...usage.series, 1);
   const now = new Date();
-  const period = periodOf(now);
+  const [force, setForce] = React.useState(-1);
+  const insets = useSafeAreaInsets();
+  const HEAD = insets.top > 0 ? insets.top + 30 : 56;
+  const NAMES = ['Morning', 'Afternoon', 'Evening', 'Night'] as const;
+  const period = force >= 0 ? NAMES[force] : periodOf(now);
   const t = THEMES[period];
   return (
     <Bg period={period}>
       <Blob size={320} color={t.a} style={{ left: -90, top: -60 }} />
       <Blob size={340} color={t.b} style={{ right: -110, top: 420 }} />
       <Blob size={260} color={t.c} style={{ left: -40, top: 520 }} />
-      <SkyArt period={period} />
+      <SkyArt period={period} offset={HEAD - 56} />
       <Drift dur={11000}><View style={{ position: 'absolute', left: 18, top: 214, width: 74, height: 74, borderRadius: 37, borderWidth: 2, borderColor: 'rgba(255,255,255,.32)' }} /></Drift>
       <Drift dur={13000} delay={1500}><LinearGradient colors={['rgba(255,255,255,.35)', 'rgba(255,255,255,.04)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', left: 316, top: 262, width: 58, height: 58, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,.3)' }} /></Drift>
       <Drift dur={15000} delay={3000}><LinearGradient colors={['rgba(255,255,255,.28)', 'rgba(255,255,255,.03)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', left: 150, top: 300, width: 88, height: 28, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,.25)' }} /></Drift>
-      <SafeAreaView style={{ flex: 1 }}>
-        <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 58 + TOP, paddingBottom: 104 }}>
+      <SafeAreaView edges={['left', 'right']} style={{ flex: 1 }}>
+        <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: HEAD, paddingBottom: 104 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,.88)' }}>Good {period} · {DAYS[now.getDay()]}, {now.getDate()} {MON[now.getMonth()]}</Text>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,.88)' }}>Good {period} · {DAYS[now.getDay()]}, {now.getDate()} {MON[now.getMonth()]} {now.getFullYear()}</Text>
               <Text style={{ marginTop: 5, fontSize: 21, fontWeight: '800', color: '#fff', letterSpacing: -0.3 }}>Hi {name},</Text>
               <Text style={{ marginTop: 2, fontSize: 13, color: 'rgba(255,255,255,.88)' }}>{LINES[(now.getDate() - 1) % 31]}</Text>
             </View>
@@ -85,7 +89,13 @@ export default function Home() {
               </Pressable>
             </View>
           </View>
-          <Text style={{ marginTop: 10, fontSize: 11.5, fontWeight: '700', letterSpacing: 1.6, color: '#d9fff9' }}>YOUR LIFE, ALL IN ONE PLACE</Text>
+          <View style={{ marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text style={{ fontSize: 11.5, fontWeight: '700', letterSpacing: 1.6, color: '#d9fff9' }}>YOUR LIFE, ALL IN ONE PLACE</Text>
+            <LinearGradient colors={['rgba(143,233,226,.6)', 'rgba(143,233,226,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1, height: 1 }} />
+            <Pressable onPress={() => setForce(force === 3 ? -1 : force < 0 ? 0 : force + 1)} accessibilityLabel="Preview time of day" style={{ borderWidth: 1, borderColor: 'rgba(255,255,255,.35)', backgroundColor: 'rgba(255,255,255,.16)', paddingVertical: 4, paddingHorizontal: 9, borderRadius: 999 }}>
+              <Text style={{ color: '#fff', fontSize: 10.5, fontWeight: '700', letterSpacing: 0.3 }}>{period}{force >= 0 ? '' : ' · auto'} ▸</Text>
+            </Pressable>
+          </View>
           <View style={{ flex: 1, gap: 10, marginTop: 10 }}>
             {(() => { const L = CARDS.filter((c) => c.k !== 'Habit'); return [L.slice(0, 2), L.slice(2)]; })().map((row, ri) => (
               <View key={ri} style={{ flex: 1, flexDirection: 'row', gap: 10, minHeight: 100 }}>

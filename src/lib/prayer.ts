@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStored } from './store';
 import { syncPrayerAlerts, clearPrayerAlerts, Alert } from './adhan';
-import { Platform } from 'react-native';
+import { Platform, AppState } from 'react-native';
 
 export const ZONES: { code: string; name: string; lat: number; lon: number }[] = [
   { code: 'WLY01', name: 'Kuala Lumpur & Putrajaya', lat: 3.139, lon: 101.687 },
@@ -55,8 +55,8 @@ async function monthByZoneWs(zone: string, y: number, mo: number): Promise<Month
   }
   throw err || new Error('zone failed');
 }
-async function monthJakim(zone: string): Promise<Month> {
-  const j = await getJson('https://www.e-solat.gov.my/index.php?r=esolatApi/TakwimSolat&period=month&zone=' + zone);
+async function monthJakim(zone: string, y?: number, mo?: number): Promise<Month> {
+  const j = await getJson('https://www.e-solat.gov.my/index.php?r=esolatApi/TakwimSolat&period=month&zone=' + zone + (y && mo ? '&year=' + y + '&month=' + mo : ''));
   if (!j || !Array.isArray(j.prayerTime) || !j.prayerTime.length) throw new Error('empty');
   return { zone, prayers: j.prayerTime, src: 'jakim' };
 }
@@ -76,10 +76,10 @@ async function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
   try { await AsyncStorage.setItem(key, JSON.stringify(v)); } catch (e) {}
   return v;
 }
-async function whereAmI(): Promise<{ lat: number; lon: number }> {
+async function whereAmI(fresh = false): Promise<{ lat: number; lon: number }> {
   const perm = await Location.requestForegroundPermissionsAsync();
   if (perm.status !== 'granted') throw new Error('denied');
-  const last = await Location.getLastKnownPositionAsync().catch(() => null);
+  const last = fresh ? null : await Location.getLastKnownPositionAsync({ maxAge: 10 * 60 * 1000 }).catch(() => null);
   const pos = last || (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
   return { lat: pos.coords.latitude, lon: pos.coords.longitude };
 }
@@ -93,8 +93,13 @@ export function usePrayer() {
   const [place, setPlace] = useState<Place | null>(null);
   const [tick, setTick] = useState(0);
   const [month, setMonth] = useState<Month | null>(null);
+  const [month2, setMonth2] = useState<Month | null>(null);
+  const [locName, setLocName] = useState('');
+  const freshRef = useRef(false);
   const [alarms] = useStored<Record<string, boolean>>('ml_prayer_alerts', { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true });
   const [clock, setClock] = useState(0);
+  const dayId = myNow().toISOString().slice(0, 10);
+  useEffect(() => { if (Platform.OS === 'web') return; const sub = AppState.addEventListener('change', (st) => { if (st === 'active') setTick((x) => x + 1); }); return () => sub.remove(); }, []);
   useEffect(() => { const t = setInterval(() => setClock((c) => c + 1), 30000); return () => clearInterval(t); }, []);
 
   useEffect(() => {
@@ -104,48 +109,58 @@ export function usePrayer() {
       const nd = myNow(); const y = nd.getUTCFullYear(), mo = nd.getUTCMonth() + 1;
       try {
         let m: Month; let lat: number, lon: number; let auto = mode.auto;
+        let get: (yy: number, mm: number) => Promise<Month>;
         if (mode.auto) {
           let c: { lat: number; lon: number };
-          try { c = await whereAmI(); } catch (e: any) {
+          const fr = freshRef.current; freshRef.current = false;
+          try { c = await whereAmI(fr); } catch (e: any) {
             if (lastPlace) c = { lat: lastPlace.lat, lon: lastPlace.lon };
             else { if (alive) setStatus(e && e.message === 'denied' ? 'denied' : 'error'); return; }
           }
           lat = c.lat; lon = c.lon;
-          m = await cached(`ml_pt_gps_${lat.toFixed(2)}_${lon.toFixed(2)}_${y}-${mo}`, async () => {
-            try { return await monthByGps(lat, lon, y, mo); } catch (e) {
+          get = (yy, mm) => cached(`ml_pt_gps_${lat.toFixed(2)}_${lon.toFixed(2)}_${yy}-${mm}`, async () => {
+            try { return await monthByGps(lat, lon, yy, mm); } catch (e) {
               const z = [...ZONES].sort((a, b) => Math.hypot(a.lat - lat, a.lon - lon) - Math.hypot(b.lat - lat, b.lon - lon))[0];
-              try { return await monthByZoneWs(z.code, y, mo); } catch (e2) { return monthJakim(z.code); }
+              try { return await monthByZoneWs(z.code, yy, mm); } catch (e2) { return monthJakim(z.code, yy, mm); }
             }
           });
+          m = await get(y, mo);
           if (alive) setLastPlace({ lat, lon, zone: m.zone });
+          if (Platform.OS !== 'web') Location.reverseGeocodeAsync({ latitude: lat, longitude: lon }).then((r) => { const a: any = r && r[0]; if (a && alive) setLocName([a.district || a.subregion || a.city, a.region].filter(Boolean).join(', ')); }).catch(() => {});
         } else {
           const z = ZONES.find((x) => x.code === mode.zone) || ZONES[0]; lat = z.lat; lon = z.lon; auto = false;
-          m = await cached(`ml_pt_${z.code}_${y}-${mo}`, async () => { try { return await monthByZoneWs(z.code, y, mo); } catch (e) { return monthJakim(z.code); } });
+          get = (yy, mm) => cached(`ml_pt_${z.code}_${yy}-${mm}`, async () => { try { return await monthByZoneWs(z.code, yy, mm); } catch (e) { return monthJakim(z.code, yy, mm); } });
+          m = await get(y, mo);
+          if (alive) setLocName('');
         }
         const t = dayFrom(m, nd); if (!t) throw new Error('nodate');
         if (alive) { setMonth(m); setTimes(t); setPlace({ zone: m.zone, lat, lon, auto }); setStatus('ready'); }
+        // Next month too, when the alert window (12 days) crosses the month end.
+        const dim = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+        if (nd.getUTCDate() + 12 > dim) { try { const m2 = await get(mo === 12 ? y + 1 : y, mo === 12 ? 1 : mo + 1); if (alive) setMonth2(m2); } catch (e) { if (alive) setMonth2(null); } } else if (alive) setMonth2(null);
       } catch (e) { if (alive) setStatus('error'); }
     })();
     return () => { alive = false; };
-  }, [mode.auto, mode.zone, tick]);
+  }, [mode.auto, mode.zone, tick, dayId]);
 
   useEffect(() => {
     if (Platform.OS === 'web' || !month || !place) return;
     const list: Alert[] = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 12; i++) {
       const d = new Date(Date.now() + 8 * 3600 * 1000 + i * 86400000);
-      if (d.getUTCMonth() !== myNow().getUTCMonth()) break;
-      const day = dayFrom(month, d); if (!day) continue;
+      const src = d.getUTCMonth() === myNow().getUTCMonth() ? month : month2;
+      if (!src) break;
+      const day = dayFrom(src, d); if (!day) continue;
       day.filter((p) => p.key !== 'syuruk' && alarms[p.key]).forEach((p) => list.push({ key: p.key, name: p.name, at: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), p.h - 8, p.m)) }));
     }
     const zn = ZONES.find((x) => x.code === place.zone)?.name.split(' (')[0] || place.zone;
     if (list.length) syncPrayerAlerts(list, zn); else clearPrayerAlerts();
-  }, [month, place, JSON.stringify(alarms)]);
+  }, [month, month2, place, JSON.stringify(alarms)]);
 
   const nd = myNow(); const mins = nd.getUTCHours() * 60 + nd.getUTCMinutes();
   const pick = (list: PT[]) => { let i = list.findIndex((p) => p.h * 60 + p.m > mins); const tomorrow = i < 0 && list.length > 0; if (tomorrow) i = 0; return list.length ? { ...list[i], tomorrow, idx: i, diff: list[i].h * 60 + list[i].m - mins + (tomorrow ? 1440 : 0) } : null; };
   const next = pick(times);
   const solat = times.filter((t) => t.key !== 'syuruk');
   const nextSolat = pick(solat);
-  return { times, next, nextSolat, status, place, mode, setMode, retry: () => setTick((x) => x + 1), clock };
+  return { times, next, nextSolat, status, place, mode, setMode, retry: () => setTick((x) => x + 1), refreshLoc: () => { freshRef.current = true; setTick((x) => x + 1); }, locName, clock };
 }

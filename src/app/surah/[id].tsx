@@ -6,7 +6,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Glass } from '../../components/Glass';
 import { IslamicBg, Header, ToolBar, VerseBlock, Credit } from '../../components/IslamicUi';
 import { W } from '../../components/Ui';
-import { SURAH, BISMILLAH, useIslamic, useLang, useSize, AR_SIZE } from '../../lib/islamic';
+import { SURAH, BISMILLAH, partVerses, useIslamic, useLang, useSize, AR_SIZE } from '../../lib/islamic';
 
 export default function SurahScreen() {
   const { id, v: jump } = useLocalSearchParams<{ id: string; v?: string }>();
@@ -46,7 +46,12 @@ export default function SurahScreen() {
             ))}
           </Glass>
           </View>
-          {key === 'yasin' && <Glass radius={22} style={{ marginTop: 12, padding: 14 }}><Text style={{ color: '#ffd593', fontSize: 13, fontWeight: '800' }}>Doa after Yasin</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 12.5, lineHeight: 18, marginTop: 4 }}>The doa text will be added only from a verified source, checked by someone knowledgeable.</Text></Glass>}
+          {key === 'yasin' && (
+            <Glass radius={22} style={{ marginTop: 12, padding: 14 }}>
+              <Text style={{ color: '#ffd593', fontSize: 14, fontWeight: '800', marginBottom: 4 }}>Doa after Yasin</Text>
+              {(partVerses({ name: 'Doa after Yasin', kind: 'Doa' }) || []).map((v, i, a) => <VerseBlock key={i} v={v} size={size} lang={lang} showNum={a.length > 1} last={i === a.length - 1} />)}
+            </Glass>
+          )}
           <Text style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, marginHorizontal: 4, marginTop: 10 }}>Tap a verse to mark where you stopped. Long-press a verse to bookmark it (★).</Text>
           <Credit lang={lang} />
         </ScrollView>

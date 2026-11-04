@@ -51,6 +51,15 @@ export default function Prayer() {
               </View>
             )}
           </Glass>
+          <Glass radius={22} style={{ padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: 'rgba(52,211,153,.25)', alignItems: 'center', justifyContent: 'center' }}><Ic n="compass" color="#7df0c6" size={18} /></View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 10.5, fontWeight: '700', letterSpacing: 1.2 }}>{pr.mode.auto ? 'YOUR LOCATION' : 'SELECTED ZONE'}</Text>
+              <Text style={{ color: W, fontSize: 14, fontWeight: '800', marginTop: 1 }} numberOfLines={2}>{pr.mode.auto && pr.locName ? pr.locName : zn}</Text>
+              <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginTop: 1 }}>{pl ? 'Zone ' + pl.zone + (pr.mode.auto ? ' · ' + pl.lat.toFixed(3) + ', ' + pl.lon.toFixed(3) : '') : '—'}</Text>
+            </View>
+            {pr.mode.auto ? <Pressable onPress={pr.refreshLoc} accessibilityLabel="Refresh location" style={{ paddingVertical: 9, paddingHorizontal: 12, borderRadius: 999, backgroundColor: 'rgba(52,211,153,.3)', borderWidth: 1, borderColor: 'rgba(52,211,153,.6)' }}><Text style={{ color: W, fontSize: 12, fontWeight: '800' }}>{pr.status === 'loading' ? 'Finding…' : '⟳ Refresh'}</Text></Pressable> : null}
+          </Glass>
           {pr.times.length > 0 && (
             <Glass radius={24} style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
               {pr.times.map((p, i) => (

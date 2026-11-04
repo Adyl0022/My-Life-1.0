@@ -8,6 +8,8 @@ export const ROUTES: Record<string, string> = {
   'Export.dc.html': '/export',
   'Planner.dc.html': '/planner',
   'Notes.dc.html': '/notes',
+  'Finance.dc.html': '/finance',
+  'Record.dc.html': '/record',
   'Islamic.dc.html': '/islamic',
   'Mathurat.dc.html': '/mathurat',
   'Tahlil.dc.html': '/tahlil',

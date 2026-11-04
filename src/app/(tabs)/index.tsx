@@ -31,7 +31,7 @@ function Drift({ dur, delay = 0, children }: { dur: number; delay?: number; chil
 export default function Home() {
   const router = useRouter();
   const name = useName();
-  const go = (k: string) => { const r = ({ Planner: '/planner', Islamic: '/islamic' } as Record<string, string>)[k]; if (r) router.push(r as any); };
+  const go = (k: string) => { const r = ({ Planner: '/planner', Islamic: '/islamic', Finance: '/finance', Record: '/record' } as Record<string, string>)[k]; if (r) router.push(r as any); };
   const usage = useUsage(16);
   const mins = Math.floor(usage.today.sec / 60);
   const maxM = Math.max(...usage.series, 1);

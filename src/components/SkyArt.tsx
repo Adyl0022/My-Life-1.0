@@ -10,12 +10,28 @@ function loop(v: Animated.Value, duration: number, from = 0, to = 1, easing = Ea
   return Animated.loop(seq);
 }
 
+
+// Native SVG blends toward "transparent black" and leaves a dark ring, so keep one hue and fade only the opacity.
+function fixStops(stops: [number, string][]): [number, string, number][] {
+  const parsed = stops.map(([o, c]) => {
+    const m = c.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)/);
+    return m ? { o, rgb: `rgb(${m[1]},${m[2]},${m[3]})`, a: m[4] === undefined ? 1 : parseFloat(m[4]) } : { o, rgb: c, a: 1 };
+  });
+  return parsed.map((p, i) => {
+    if (p.a === 0) {
+      let j = i - 1; while (j >= 0 && parsed[j].a === 0) j--;
+      return [p.o, j >= 0 ? parsed[j].rgb : p.rgb, 0] as [number, string, number];
+    }
+    return [p.o, p.rgb, p.a] as [number, string, number];
+  });
+}
+
 export function Glow({ size, stops, style }: { size: number; stops: [number, string][]; style?: any }) {
   const id = 'g' + Math.abs(Math.round(size * 7 + stops.length * 13 + (style?.left ?? 0)));
   return (
     <View style={[{ position: 'absolute', width: size, height: size }, style]} pointerEvents="none">
       <Svg width={size} height={size}>
-        <Defs><RadialGradient id={id} cx="50%" cy="50%" r="50%">{stops.map(([o, c], i) => <Stop key={i} offset={o} stopColor={c} />)}</RadialGradient></Defs>
+        <Defs><RadialGradient id={id} cx="50%" cy="50%" r="50%">{fixStops(stops).map(([o, c, a], i) => <Stop key={i} offset={o} stopColor={c} stopOpacity={a} />)}</RadialGradient></Defs>
         <Circle cx={size / 2} cy={size / 2} r={size / 2} fill={`url(#${id})`} />
       </Svg>
     </View>

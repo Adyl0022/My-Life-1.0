@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.adyl0022.mylife"
+      "package": "com.adyl0022.mylife",
+      "backgroundColor": "#0a0f2c"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -42,6 +43,7 @@
           "locationWhenInUsePermission": "My Life uses your location to find your JAKIM prayer zone and the Qibla direction."
         }
       ]
-    ]
+    ],
+    "backgroundColor": "#0a0f2c"
   }
 }

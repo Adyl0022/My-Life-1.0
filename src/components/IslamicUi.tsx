@@ -35,17 +35,17 @@ export function ToolBar({ saved, onSave, size, onSize, lang, onLang }: { saved: 
     </Glass>
   );
 }
-export function VerseBlock({ v, size, lang, showNum = true, active, onPress, last }: { v: Verse; size: number; lang: string; showNum?: boolean; active?: boolean; onPress?: () => void; last?: boolean }) {
+export function VerseBlock({ v, size, lang, showNum = true, active, onPress, onLong, marked, last }: { v: Verse; size: number; lang: string; showNum?: boolean; active?: boolean; onPress?: () => void; onLong?: () => void; marked?: boolean; last?: boolean }) {
   return (
-    <Pressable onPress={onPress} style={{ paddingVertical: 14, paddingHorizontal: 4, borderBottomWidth: last ? 0 : 1, borderBottomColor: 'rgba(255,255,255,.1)', backgroundColor: active ? 'rgba(125,240,198,.12)' : 'transparent', borderRadius: active ? 14 : 0 }}>
-      <Text style={{ color: W, fontSize: AR_SIZE[size] + 3, lineHeight: (AR_SIZE[size] + 3) * 1.9, textAlign: 'right', writingDirection: 'rtl' }}>{v.ar}{showNum ? <Text style={{ color: '#7df0c6', fontSize: 15 }}>{'  ﴿' + v.n + '﴾'}</Text> : null}</Text>
+    <Pressable onPress={onPress} onLongPress={onLong} delayLongPress={380} style={{ paddingVertical: 14, paddingHorizontal: 4, borderBottomWidth: last ? 0 : 1, borderBottomColor: 'rgba(255,255,255,.1)', backgroundColor: active ? 'rgba(125,240,198,.12)' : 'transparent', borderRadius: active ? 14 : 0 }}>
+      <Text style={{ color: W, fontSize: AR_SIZE[size] + 3, lineHeight: (AR_SIZE[size] + 3) * 1.9, textAlign: 'right', writingDirection: 'rtl' }}>{v.ar}{showNum ? <Text style={{ color: '#7df0c6', fontSize: 15 }}>{'  ﴿' + v.n + '﴾'}</Text> : null}{marked ? <Text style={{ color: '#ffd593', fontSize: 15 }}>{'  ★'}</Text> : null}</Text>
       <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: M_SIZE[size] + 1, lineHeight: (M_SIZE[size] + 1) * 1.5, marginTop: 6 }}>{lang === 'en' ? v.en : v.ms}</Text>
     </Pressable>
   );
 }
 export const Credit = ({ lang }: { lang: string }) => (
   <Text style={{ color: 'rgba(255,255,255,.5)', fontSize: 10.5, lineHeight: 15, marginTop: 14, marginHorizontal: 4 }}>
-    Arabic: Tanzil Uthmani text (tanzil.net, CC BY 3.0). {lang === 'en' ? 'English: Marmaduke Pickthall (public domain).' : 'Malay: Abdullah Basumayyah (Basmeih), via QuranEnc.com, v1.0.0.'} Text has not yet been reviewed by a qualified reader.
+    Arabic: Quran Uthmani (Hafs), King Fahd Quran Complex text. {lang === 'en' ? 'English: Marmaduke Pickthall (public domain).' : 'Malay: Abdullah Muhammad Basmeih (Tanzil edition).'} Dataset: github.com/fawazahmed0/quran-api. Text has not yet been reviewed by a qualified reader.
   </Text>
 );
 export const Pending = ({ kind }: { kind: string }) => (

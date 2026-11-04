@@ -1,18 +1,28 @@
 import { useStored } from './store';
 import data from '../data/quranData.json';
+import full from '../data/quranFull.json';
 
 export type Verse = { n: number; ar: string; ms: string; en: string };
-export const SURAH: Record<string, { title: string; ar: string; sub: string; verses: Verse[]; bismillah: boolean }> = {
-  fatihah: { title: 'Surah Al-Fatihah', ar: 'ٱلْفَاتِحَة', sub: '7 verses', verses: (data as any).surah.fatihah, bismillah: false },
-  mulk: { title: 'Surah Al-Mulk', ar: 'ٱلْمُلْك', sub: '30 verses', verses: (data as any).surah.mulk, bismillah: true },
-  kahfi: { title: 'Surah Al-Kahfi', ar: 'ٱلْكَهْف', sub: 'First 10 & last 10 verses', verses: (data as any).surah.kahfi, bismillah: true },
-  yasin: { title: 'Surah Yasin', ar: 'يسٓ', sub: 'With doa after recitation', verses: (data as any).surah.yasin, bismillah: true },
-};
+const FULL: any[] = (full as any).default || (full as any);
+const LEGACY: Record<number, [string, string, string, string]> = { 1: ['fatihah', 'Surah Al-Fatihah', 'ٱلْفَاتِحَة', '7 verses'], 18: ['kahfi', 'Surah Al-Kahfi', 'ٱلْكَهْف', '110 verses'], 36: ['yasin', 'Surah Yasin', 'يسٓ', 'With doa after recitation'], 67: ['mulk', 'Surah Al-Mulk', 'ٱلْمُلْك', '30 verses'] };
+export type SurahInfo = { title: string; ar: string; sub: string; verses: Verse[]; bismillah: boolean; num: number };
+export const SURAH: Record<string, SurahInfo> = {};
+export const SURAH_LIST: { key: string; num: number; title: string; ar: string; sub: string; place: string }[] = [];
+FULL.forEach((f: any) => {
+  const L = LEGACY[f.n];
+  const key = L ? L[0] : String(f.n);
+  const title = L ? L[1] : 'Surah ' + f.t;
+  const sub = L ? L[3] : f.tr + ' · ' + f.v.length + ' verses';
+  const info: any = { title, ar: L ? L[2] : f.a, sub, bismillah: f.n !== 1 && f.n !== 9, num: f.n };
+  Object.defineProperty(info, 'verses', { enumerable: true, get: () => f.v.map((x: string[], i: number) => ({ n: i + 1, ar: x[0], ms: x[1], en: x[2] })) });
+  SURAH[key] = info;
+  SURAH_LIST.push({ key, num: f.n, title, ar: info.ar, sub: f.tr + ' · ' + f.v.length + ' verses', place: f.ty === 'meccan' ? 'Makkiyyah' : 'Madaniyyah' });
+});
 export const REFS: Record<string, Verse[]> = (data as any).refs;
 export const BISMILLAH = (data as any).surah.fatihah[0] as Verse;
 
-export type Islamic = { bm: Record<string, boolean>; last: Record<string, number>; lastKey: string; read: Record<string, Record<string, boolean>> };
-export const EMPTY_ISL: Islamic = { bm: {}, last: {}, lastKey: '', read: {} };
+export type Islamic = { bm: Record<string, boolean>; vb?: Record<string, number[]>; last: Record<string, number>; lastKey: string; read: Record<string, Record<string, boolean>> };
+export const EMPTY_ISL: Islamic = { bm: {}, vb: {}, last: {}, lastKey: '', read: {} };
 export const useIslamic = () => useStored<Islamic>('ml_islamic', EMPTY_ISL);
 export const useLang = () => useStored<'ms' | 'en'>('ml_mean', 'ms');
 export const useSize = () => useStored<number>('ml_size', 1);

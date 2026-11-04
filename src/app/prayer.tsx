@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, ScrollView, Pressable } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, Pressable, Platform } from 'react-native';
+import * as Location from 'expo-location';
 import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,6 +21,15 @@ export default function Prayer() {
   const zn = pl ? (ZONES.find((x) => x.code === pl.zone)?.name.split(' (')[0] || 'Zone ' + pl.zone) : 'Choose location';
   const label = pr.mode.auto ? 'Auto · ' + zn : zn;
   const q = pl ? qiblaBearing(pl.lat, pl.lon) : 292;
+  const [heading, setHeading] = useState<number | null>(null);
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    let sub: any; let dead = false;
+    (async () => { try { const p = await Location.getForegroundPermissionsAsync(); if (p.status !== 'granted') return; sub = await Location.watchHeadingAsync((h) => { if (!dead) setHeading(h.trueHeading >= 0 ? h.trueHeading : h.magHeading); }); } catch (e) {} })();
+    return () => { dead = true; sub && sub.remove(); };
+  }, [pr.status]);
+  const off = heading === null ? 0 : ((q - heading + 540) % 360) - 180;
+  const aligned = heading !== null && Math.abs(off) < 6;
   const n = pr.next;
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
@@ -54,16 +64,19 @@ export default function Prayer() {
             </Glass>
           )}
           <Glass radius={24} style={{ padding: 16, alignItems: 'center' }}>
-            <View style={{ alignSelf: 'stretch' }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Qibla</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>About {q}° from North ({zn})</Text></View>
+            <View style={{ alignSelf: 'stretch' }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Qibla</Text><Text style={{ color: aligned ? '#7df0c6' : 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2, fontWeight: aligned ? '800' : '400' }}>{aligned ? 'You are facing the Qibla' : 'Qibla ' + q + '° from North (' + zn + ')'}{heading !== null ? '  ·  Facing ' + Math.round(heading) + '°' : ''}</Text></View>
             <Svg width={210} height={210} viewBox="0 0 210 210" style={{ marginTop: 6 }}>
               <Circle cx={105} cy={105} r={92} stroke="rgba(255,255,255,.25)" strokeWidth={2} fill="rgba(255,255,255,.05)" />
-              <G fill="rgba(255,255,255,.75)" fontSize={13} fontWeight="700"><SText x={99} y={22} fill="#ff8fab">N</SText><SText x={99} y={196}>S</SText><SText x={193} y={109}>E</SText><SText x={13} y={109}>W</SText></G>
-              <G rotation={q} origin="105, 105">
-                <Path d="M105 30l12 62h-24z" fill="#34d399" /><Path d="M105 180l10-52h-20z" fill="rgba(255,255,255,.3)" />
+              <G rotation={heading === null ? 0 : -heading} origin="105, 105">
+                <G fill="rgba(255,255,255,.75)" fontSize={13} fontWeight="700"><SText x={99} y={22} fill="#ff8fab">N</SText><SText x={99} y={196}>S</SText><SText x={193} y={109}>E</SText><SText x={13} y={109}>W</SText></G>
+                <G rotation={q} origin="105, 105">
+                  <Path d="M105 30l12 62h-24z" fill={aligned ? '#7df0c6' : '#34d399'} /><Path d="M105 180l10-52h-20z" fill="rgba(255,255,255,.3)" />
+                </G>
               </G>
+              <Path d="M105 6l5 9h-10z" fill="#fff" />
               <Circle cx={105} cy={105} r={8} fill="#fff" />
             </Svg>
-            <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, textAlign: 'center' }}>The green arrow points to the Kaaba, measured from North. Live compass will come with the phone build.</Text>
+            <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, textAlign: 'center' }}>The green arrow points to the Kaaba. On your phone the dial turns as you turn; hold the phone flat and away from metal. On the web it shows the fixed bearing.</Text>
           </Glass>
           <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, lineHeight: 18, marginHorizontal: 4 }}>Prayer times follow JAKIM Malaysia zones. In Auto mode your location finds the zone; only the coordinates are sent, and they are not saved to your account. Data comes through the public Waktu Solat API, which republishes e-solat JAKIM and is not affiliated with JAKIM. Alerts are saved here; phone notifications arrive with the phone build.</Text>
         </ScrollView>

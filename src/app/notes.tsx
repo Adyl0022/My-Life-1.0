@@ -14,8 +14,7 @@ import { TOP } from '../lib/layout';
 type Note = { id: number; t: string; s: string; c: number; pin: boolean; u: number; r: string };
 type Data = { notes: Note[]; seq: number };
 const COL = ['#7c9cff', '#5ee7df', '#ffc46b', '#ff8fb1', '#a78bfa', '#9be37a'];
-const REM = ['', 'Tomorrow 9:00', 'Next week'];
-const FILTERS = ['All', 'Pinned', 'Checklist', 'Reminder', 'Recent'];
+const FILTERS = ['All', 'Pinned', 'Checklist', 'Recent'];
 const SORTS = ['Newest', 'Oldest', 'A–Z'];
 const days = (u: number) => Math.floor((Date.now() - u) / 86400000);
 const when = (u: number) => { const d = days(u); return d <= 0 ? 'Today' : d === 1 ? 'Yesterday' : d + ' days ago'; };
@@ -33,7 +32,7 @@ export default function Notes() {
   const notes = data.notes;
 
   const qq = q.trim().toLowerCase();
-  const FIL = [() => true, (n: Note) => n.pin, isChk, (n: Note) => !!n.r, (n: Note) => days(n.u) <= 2];
+  const FIL = [() => true, (n: Note) => n.pin, isChk, (n: Note) => days(n.u) <= 2];
   const list = notes.filter((n) => FIL[filter](n) && (!qq || (n.t + ' ' + n.s).toLowerCase().includes(qq)));
   const key = (a: Note, b: Note) => (sort === 1 ? a.u - b.u : sort === 2 ? (a.t || '').localeCompare(b.t || '') : b.u - a.u);
   const sorted = [...list.filter((n) => n.pin).sort(key), ...list.filter((n) => !n.pin).sort(key)];
@@ -52,6 +51,8 @@ export default function Notes() {
   };
   const del = (id: number) => { setData({ ...data, notes: notes.filter((x) => x.id !== id) }); };
   const addLine = (pre: string) => draft && upd({ s: (draft.s && !/\n$/.test(draft.s) ? draft.s + '\n' : draft.s) + pre });
+  const numLine = () => { if (!draft) return; const m = draft.s.split('\n').map((l) => l.match(/^(\d+)\.\s/)).filter(Boolean) as RegExpMatchArray[]; addLine((m.length ? +m[m.length - 1][1] + 1 : 1) + '. '); };
+  const stamp = () => { if (!draft) return; const d = new Date(); const t = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); addLine(t + '\n'); };
   const words = draft ? (draft.t + ' ' + draft.s).trim().split(/\s+/).filter(Boolean).length : 0;
 
   return (
@@ -93,7 +94,6 @@ export default function Notes() {
                     <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                       <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 10.5 }}>{when(n.u)}</Text>
                       {tot ? <Text style={{ color: '#8fe9e2', fontSize: 10.5 }}>✓ {dn}/{tot}</Text> : null}
-                      {n.r ? <Text style={{ color: '#ffd593', fontSize: 10.5 }}>● {n.r}</Text> : null}
                     </View>
                   </Glass>
                 </Pressable>
@@ -130,17 +130,15 @@ export default function Notes() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COL[draft.c] }} />
                   <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12 }}>{words} {words === 1 ? 'word' : 'words'}</Text>
-                  {draft.r ? <Text style={{ color: '#ffd593', fontSize: 12 }}>● Reminder: {draft.r}</Text> : null}
                 </View>
                 <TextInput multiline value={draft.s} onChangeText={(v) => upd({ s: v })} placeholder="Start writing..." placeholderTextColor="rgba(255,255,255,.4)" style={{ color: W, fontSize: 16, lineHeight: 24, marginTop: 14, minHeight: 280, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
               </ScrollView>
               <Glass radius={22} style={{ marginHorizontal: 16, marginBottom: 12, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {[['☐', 'Add checklist item', () => addLine('☐ ')], ['•', 'Add bullet', () => addLine('• ')]].map(([t, l, f]: any) => (
-                  <Pressable key={l} accessibilityLabel={l} onPress={f} style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 18 }}>{t}</Text></Pressable>
+                {[['☐', 'Add checklist item', () => addLine('☐ ')], ['•', 'Add bullet', () => addLine('• ')], ['1.', 'Add numbered item', numLine], ['Date', 'Insert date and time', stamp]].map(([t, l, f]: any) => (
+                  <Pressable key={l} accessibilityLabel={l} onPress={f} style={{ minWidth: 36, height: 36, paddingHorizontal: t === 'Date' ? 8 : 0, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: t.length > 1 ? 12.5 : 18, fontWeight: t.length > 1 ? '700' : '400' }}>{t}</Text></Pressable>
                 ))}
-                <Pressable accessibilityLabel="Reminder" onPress={() => { const r = REM[(REM.indexOf(draft.r) + 1) % REM.length]; upd({ r }); say(r ? 'Reminder: ' + r : 'Reminder off'); }} style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: draft.r ? 'rgba(255,213,147,.28)' : 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 16 }}>⏰</Text></Pressable>
-                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
-                  {COL.map((c, i) => <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: c, borderWidth: draft.c === i ? 2 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.25)' }} />)}
+                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 5 }}>
+                  {COL.map((c, i) => <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: c, borderWidth: draft.c === i ? 2 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.25)' }} />)}
                 </View>
               </Glass>
               {confirmDel && (

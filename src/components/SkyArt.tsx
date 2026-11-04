@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, Easing } from 'react-native';
-import Svg, { Defs, RadialGradient, Stop, Circle, Path, Rect, Polygon, LinearGradient as SvgLG } from 'react-native-svg';
+import Svg, { Defs, RadialGradient, Stop, Circle, Path, Rect, Polygon, ClipPath, LinearGradient as SvgLG } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Period } from '../lib/theme';
 
@@ -112,20 +112,75 @@ function Stars() {
 
 function Moon() {
   const v = useRef(new Animated.Value(0)).current;
-  useEffect(() => { const a = loop(v, 4000, 0, 1, Easing.inOut(Easing.ease), true); a.start(); return () => a.stop(); }, [v]);
+  useEffect(() => { const a = loop(v, 10000, 0, 1, Easing.inOut(Easing.ease), true); a.start(); return () => a.stop(); }, [v]);
   return (
-    <Animated.View pointerEvents="none" style={{ position: 'absolute', right: 48, top: 99, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -3] }) }] }}>
-      <Svg width={36} height={36} viewBox="0 0 76 76"><Path d="M44 10a28 28 0 1 0 26 38 22 22 0 1 1-26-38z" fill="#fff7dc" opacity={0.97} /></Svg>
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', right: -44, top: -52, width: 190, height: 190, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -4] }) }] }}>
+      <Glow size={330} stops={[[0, 'rgba(255,238,200,.38)'], [0.42, 'rgba(190,200,255,.14)'], [0.7, 'rgba(0,0,0,0)']]} style={{ left: -70, top: -70 }} />
+      <Svg width={190} height={190} viewBox="0 0 100 100">
+        <Defs>
+          <RadialGradient id="mdisc" cx="0.38" cy="0.34" r="0.78"><Stop offset="0" stopColor="#fffdf3" /><Stop offset="0.55" stopColor="#f6e9c8" /><Stop offset="1" stopColor="#d9c697" /></RadialGradient>
+          <SvgLG id="mshade" x1="0" y1="0.3" x2="1" y2="0.7"><Stop offset="0" stopColor="#0b1040" stopOpacity="0.72" /><Stop offset="0.45" stopColor="#0b1040" stopOpacity="0.3" /><Stop offset="0.8" stopColor="#0b1040" stopOpacity="0" /></SvgLG>
+          <ClipPath id="mclip"><Circle cx="50" cy="50" r="42" /></ClipPath>
+        </Defs>
+        <Circle cx="50" cy="50" r="42" fill="url(#mdisc)" />
+        <Circle cx="34" cy="40" r="6" fill="#cdb67c" fillOpacity="0.28" /><Circle cx="52" cy="62" r="8.500" fill="#cdb67c" fillOpacity="0.22" /><Circle cx="66" cy="38" r="4" fill="#cdb67c" fillOpacity="0.26" /><Circle cx="40" cy="70" r="3.200" fill="#cdb67c" fillOpacity="0.24" /><Circle cx="72" cy="58" r="2.600" fill="#cdb67c" fillOpacity="0.24" />
+        <Rect x="8" y="8" width="84" height="84" fill="url(#mshade)" clipPath="url(#mclip)" />
+        <Circle cx="50" cy="50" r="42" fill="none" stroke="#ffffff" strokeOpacity="0.45" strokeWidth="0.8" />
+      </Svg>
     </Animated.View>
   );
 }
 
-function Shoot() {
+function Aurora() {
   const v = useRef(new Animated.Value(0)).current;
-  useEffect(() => { const a = loop(v, 9000, 0, 1, Easing.in(Easing.ease)); a.start(); return () => a.stop(); }, [v]);
+  useEffect(() => { const a = loop(v, 12000, 0, 1, Easing.inOut(Easing.ease), true); a.start(); return () => a.stop(); }, [v]);
   return (
-    <Animated.View pointerEvents="none" style={{ position: 'absolute', right: 20, top: 40, width: 70, height: 2, opacity: v.interpolate({ inputRange: [0, 0.04, 0.16, 1], outputRange: [0, 1, 0, 0] }), transform: [{ rotate: '28deg' }, { translateX: v.interpolate({ inputRange: [0, 0.16, 1], outputRange: [0, -170, -170] }) }, { translateY: v.interpolate({ inputRange: [0, 0.16, 1], outputRange: [0, 95, 95] }) }] }}>
-      <Svg width={70} height={2}><Defs><SvgLG id="sh" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#fff" stopOpacity="0" /><Stop offset="1" stopColor="#fff" stopOpacity="1" /></SvgLG></Defs><Rect width={70} height={2} rx={1} fill="url(#sh)" /></Svg>
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: -40, right: -40, top: 20, height: 170, opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] }), transform: [{ rotate: '-7deg' }] }}>
+      <LinearGradient colors={['rgba(94,231,223,0)', 'rgba(94,231,223,.2)', 'rgba(150,110,255,.2)', 'rgba(150,110,255,0)']} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ flex: 1 }} />
+    </Animated.View>
+  );
+}
+
+function Sparkle({ x, y, size, delay, dur }: { x: number; y: number; size: number; delay: number; dur: number }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => { v.setValue(0); const a = Animated.sequence([Animated.delay(delay), Animated.loop(loop(v, dur, 0, 1, Easing.inOut(Easing.ease), true))]); a.start(); return () => a.stop(); }, [v, delay, dur]);
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: x, top: y, width: size, height: size, opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.25, 1] }), transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.15] }) }] }}>
+      <Svg width={size} height={size} viewBox="0 0 24 24"><Path d="M12 0c.9 6.200 3.600 10.100 12 12-8.400 1.900-11.100 5.800-12 12-.9-6.200-3.600-10.100-12-12 8.400-1.900 11.100-5.800 12-12z" fill="#fff" /></Svg>
+    </Animated.View>
+  );
+}
+
+function Constellation() {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => { const a = loop(v, 5200, 0, 1, Easing.inOut(Easing.ease), true); a.start(); return () => a.stop(); }, [v]);
+  const P = [[8, 30], [34, 12], [62, 26], [88, 8], [112, 30]];
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 120, top: 6, opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0.95] }) }}>
+      <Svg width={124} height={44}>
+        <Path d={'M' + P.map((p) => p.join(' ')).join('L')} stroke="#cfe0ff" strokeOpacity="0.35" strokeWidth="0.8" fill="none" strokeDasharray="2 3" />
+        {P.map((p, i) => <Circle key={i} cx={p[0]} cy={p[1]} r={i === 2 ? 2.2 : 1.5} fill="#fff" />)}
+      </Svg>
+    </Animated.View>
+  );
+}
+
+function Firefly({ x, y, dx, dy, delay, dur, color }: { x: number; y: number; dx: number; dy: number; delay: number; dur: number; color: string }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => { v.setValue(0); const a = Animated.sequence([Animated.delay(delay), Animated.loop(loop(v, dur, 0, 1, Easing.inOut(Easing.sin), true))]); a.start(); return () => a.stop(); }, [v, delay, dur]);
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: x, top: y, width: 14, height: 14, opacity: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.15, 1, 0.2] }), transform: [{ translateX: v.interpolate({ inputRange: [0, 1], outputRange: [0, dx] }) }, { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, dy] }) }] }}>
+      <Svg width={14} height={14}><Defs><RadialGradient id={'ff' + color.slice(1)} cx="50%" cy="50%" r="50%"><Stop offset="0" stopColor={color} stopOpacity="1" /><Stop offset="0.35" stopColor={color} stopOpacity="0.55" /><Stop offset="1" stopColor={color} stopOpacity="0" /></RadialGradient></Defs><Circle cx={7} cy={7} r={7} fill={'url(#ff' + color.slice(1) + ')'} /></Svg>
+    </Animated.View>
+  );
+}
+
+function Shoot({ right = 20, top = 40, dur = 6500, delay = 0, w = 110 }: { right?: number; top?: number; dur?: number; delay?: number; w?: number }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => { v.setValue(0); const a = Animated.sequence([Animated.delay(delay), loop(v, dur, 0, 1, Easing.in(Easing.ease))]); a.start(); return () => a.stop(); }, [v, dur, delay]);
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', right, top, width: w, height: 2.5, opacity: v.interpolate({ inputRange: [0, 0.04, 0.16, 1], outputRange: [0, 1, 0, 0] }), transform: [{ rotate: '28deg' }, { translateX: v.interpolate({ inputRange: [0, 0.16, 1], outputRange: [0, -170, -170] }) }, { translateY: v.interpolate({ inputRange: [0, 0.16, 1], outputRange: [0, 95, 95] }) }] }}>
+      <Svg width={w} height={2.5}><Defs><SvgLG id="sh" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#fff" stopOpacity="0" /><Stop offset="1" stopColor="#fff" stopOpacity="1" /></SvgLG></Defs><Rect width={w} height={2.5} rx={1.2} fill="url(#sh)" /></Svg>
     </Animated.View>
   );
 }
@@ -162,10 +217,14 @@ export function SkyArt({ period, offset = 0 }: { period: Period; offset?: number
         <Cloud top={52} w={56} h={18} opacity={0.4} dur={66000} delay={0.52} color="#ffb3c8" />
       </>)}
       {period === 'Night' && (<>
+        <Aurora />
         <Stars />
-        <Pulse style={{ right: -60, top: -22 }}><Glow size={300} stops={[[0, 'rgba(190,210,255,.5)'], [0.38, 'rgba(124,156,255,.22)'], [0.7, 'rgba(0,0,0,0)']]} style={{ position: 'relative' }} /></Pulse>
         <Moon />
-        <Shoot />
+        <Sparkle x={26} y={62} size={13} delay={0} dur={2600} />
+        <Sparkle x={150} y={26} size={10} delay={600} dur={3200} />
+        <Sparkle x={74} y={152} size={9} delay={1800} dur={3400} />
+        <Sparkle x={236} y={150} size={11} delay={1100} dur={3000} />
+        <Shoot right={40} top={150} dur={7500} delay={1200} w={100} />
       </>)}
     </View>
   );

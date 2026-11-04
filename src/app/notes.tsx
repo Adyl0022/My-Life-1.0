@@ -106,11 +106,11 @@ export default function Notes() {
 
         {menuNote && (
           <Sheet onClose={() => setMenuId(0)}>
-            <Glass radius={24} style={{ padding: 16, gap: 8 }}>
+            <View style={{ padding: 16, gap: 8, borderRadius: 24, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
               <Text style={{ color: W, fontSize: 15, fontWeight: '800', marginBottom: 4 }} numberOfLines={1}>{menuNote.t || 'Untitled'}</Text>
               <SBtn t={menuNote.pin ? 'Unpin' : 'Pin to top'} onPress={() => { setData({ ...data, notes: notes.map((x) => (x.id === menuNote.id ? { ...x, pin: !x.pin } : x)) }); setMenuId(0); say(menuNote.pin ? 'Unpinned' : 'Pinned to top'); }} />
               <SBtn t="Delete" kind="danger" onPress={() => { del(menuNote.id); setMenuId(0); say('Note deleted'); }} />
-            </Glass>
+            </View>
           </Sheet>
         )}
 
@@ -145,11 +145,11 @@ export default function Notes() {
               </Glass>
               {confirmDel && (
                 <Sheet onClose={() => setConfirmDel(false)}>
-                  <Glass radius={26} style={{ padding: 20 }}>
+                  <View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
                     <Text style={{ color: W, fontSize: 17, fontWeight: '800' }}>Delete this note?</Text>
                     <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 13, marginTop: 4 }}>This can't be undone.</Text>
                     <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}><SBtn t="Cancel" onPress={() => setConfirmDel(false)} /><SBtn t="Delete" kind="danger" onPress={() => { del(draft.id); closeEd(); say('Note deleted'); }} /></View>
-                  </Glass>
+                  </View>
                 </Sheet>
               )}
               <Toast t={toast} />

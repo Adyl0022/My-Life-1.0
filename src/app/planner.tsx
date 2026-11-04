@@ -83,14 +83,14 @@ export default function Planner() {
     const p = x.date.split('-'); const okd = p.length === 3;
     return (
       <Pressable onPress={() => setD({ ...d, events: d.events.map((y) => (y.id === x.id ? { ...y, done: !y.done } : y)) })}>
-        <Glass radius={20} style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: x.done ? 0.6 : 1 }}>
+        <View style={{ borderRadius: 20, backgroundColor: '#262d6b', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: x.done ? 0.6 : 1 }}>
           <LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 48, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 10, fontWeight: '700' }}>{okd ? MON[+p[1] - 1] : 'NEW'}</Text><Text style={{ color: W, fontSize: 18, fontWeight: '800' }}>{okd ? p[2] : '--'}</Text>
           </LinearGradient>
           <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 14, fontWeight: '700', textDecorationLine: x.done ? 'line-through' : 'none' }}>{x.name}</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>{x.remind === 'None' ? 'No reminder' : 'Reminder: ' + x.remind}</Text></View>
           <Ic t="✎" label="Edit" onPress={() => setEdit({ id: x.id, kind: 'event', name: x.name, note: '', prio: 'Medium', date: x.date, remind: x.remind })} />
           <Ic t="✕" label="Delete" onPress={() => { setD({ ...d, events: d.events.filter((y) => y.id !== x.id) }); setEdit(null); }} />
-        </Glass>
+        </View>
       </Pressable>
     );
   };
@@ -101,7 +101,7 @@ export default function Planner() {
     if (!parts.length) parts.push(x.status === 'doing' ? 'In progress' : done ? 'Completed' : 'No due date');
     return (
       <Pressable onPress={() => setStatus(x.id, x.status === 'todo' ? 'doing' : 'todo')}>
-        <Glass radius={20} style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: done ? 0.6 : 1 }}>
+        <View style={{ borderRadius: 20, backgroundColor: '#262d6b', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: done ? 0.6 : 1 }}>
           <Pressable accessibilityLabel="Mark done" onPress={() => setStatus(x.id, done ? 'todo' : 'done')} hitSlop={8}>
             <LinearGradient colors={done ? ['#34d399', '#5ee7df'] : x.status === 'doing' ? ['rgba(94,231,181,.22)', 'rgba(94,231,181,.22)'] : ['transparent', 'transparent']} style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: done ? 'transparent' : x.status === 'doing' ? '#5ee7b5' : 'rgba(255,255,255,.5)', alignItems: 'center', justifyContent: 'center' }}>
               {done ? <Text style={{ color: '#06241d', fontSize: 13, fontWeight: '800' }}>✓</Text> : null}
@@ -110,7 +110,7 @@ export default function Planner() {
           <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 14, fontWeight: '700', textDecorationLine: done ? 'line-through' : 'none' }}>{x.name}</Text><Text style={{ color: overdue ? '#ffb3c0' : 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>{parts.join(' · ')}</Text></View>
           <View style={{ paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999, backgroundColor: PB[x.prio] }}><Text style={{ color: PC[x.prio], fontSize: 11, fontWeight: '700' }}>{x.prio}</Text></View>
           <Ic t="✎" label="Edit" onPress={() => setEdit({ id: x.id, kind: 'task', name: x.name, note: x.note, prio: x.prio, date: x.due, remind: 'None' })} />
-        </Glass>
+        </View>
       </Pressable>
     );
   };

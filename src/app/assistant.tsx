@@ -1,6 +1,6 @@
 import { useName } from '../lib/store';
 import React from 'react';
-import { View, TextInput, ScrollView, Pressable } from 'react-native';
+import { View, TextInput, ScrollView, Pressable, Keyboard, Platform } from 'react-native';
 import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -23,6 +23,22 @@ class Chat extends AssistantBase {
     super(props);
     (this as any).scrollRef = null;
   }
+  panelRef: any = null;
+  subs: any[] = [];
+  kb = 0;
+  componentDidMount() {
+    if (Platform.OS === 'web') return;
+    const set = (n: number) => { this.kb = n; (this as any).setState({ kbLift: n }); };
+    this.subs = [
+      Keyboard.addListener('keyboardDidShow', (e: any) => {
+        const top = e.endCoordinates.screenY;
+        if (this.panelRef && this.panelRef.measureInWindow) this.panelRef.measureInWindow((_x: number, y: number, _w: number, h: number) => set(Math.max(0, Math.round(y + h - top + (this.kb || 0) * 0))));
+        else set(e.endCoordinates.height);
+      }),
+      Keyboard.addListener('keyboardDidHide', () => set(0)),
+    ];
+  }
+  componentWillUnmount() { this.subs.forEach((x) => x.remove()); }
   render() {
     const v: any = this.renderVals();
     const { go } = this.props as any;
@@ -116,7 +132,7 @@ class Chat extends AssistantBase {
           )}
         </ScrollView>
 
-        <View style={{ marginHorizontal: -20, paddingBottom: 16, paddingTop: 12, backgroundColor: 'rgba(10,15,44,.94)' }}>
+        <View ref={(r: any) => { this.panelRef = r; }} collapsable={false} style={{ marginHorizontal: -20, paddingBottom: 16, paddingTop: 12, marginBottom: (this.state as any).kbLift || 0, backgroundColor: 'rgba(10,15,44,.94)' }}>
           {v.startDisp === 'grid' && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }} style={{ flexGrow: 0 }}>
             {v.cats.map((c: any) => (

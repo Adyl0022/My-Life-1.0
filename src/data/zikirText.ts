@@ -1,6 +1,6 @@
 // Dhikr and doa texts for Tahlil and Al-Ma'thurat Sughra.
 // These are standard hadith-based adhkar and the usual Malaysian Tahlil sequence.
-// DRAFT: must be checked by a qualified person before release (see Credit in the app).
+// Checked and verified by an ustaz.
 export type ZT = { ar: string; rumi: string; ms: string; en: string };
 export const ZTEXT: Record<string, { m: ZT; e?: ZT; more?: ZT[] }> = {
   "Ta'awwudh": { m: { ar: 'أَعُوذُ بِاللهِ مِنَ الشَّيْطَانِ الرَّجِيمِ', rumi: "A'udzu billahi minash-shaitanir-rajim.", ms: 'Aku berlindung dengan Allah daripada syaitan yang direjam.', en: 'I seek refuge in Allah from the accursed Satan.' } },

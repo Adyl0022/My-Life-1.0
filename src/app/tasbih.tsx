@@ -77,7 +77,6 @@ export default function Tasbih() {
             <Glass radius={20} style={{ flex: 1, padding: 14 }}><Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11.5 }}>Total today</Text><Text style={{ color: W, fontSize: 22, fontWeight: '800', marginTop: 2 }}>{today.total}</Text></Glass>
           </View>
           <Pressable onPress={() => { setCount(0); setDone(false); setSt({ day: dayKey(), total: 0, rounds: 0 }); }} style={{ marginTop: 12, height: 46, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,.25)', backgroundColor: 'rgba(255,255,255,.08)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Reset counter</Text></Pressable>
-          <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, lineHeight: 18, marginTop: 12, marginHorizontal: 4 }}>Arabic text will be reviewed by someone knowledgeable before release.</Text>
         </ScrollView>
       </SafeAreaView>
     </View>

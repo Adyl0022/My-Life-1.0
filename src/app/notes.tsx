@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, ScrollView, Pressable, TextInput } from 'react-native';
 import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -50,7 +50,28 @@ export default function Notes() {
     closeEd(); say('Note saved');
   };
   const del = (id: number) => { setData({ ...data, notes: notes.filter((x) => x.id !== id) }); };
-  const addLine = (pre: string) => draft && upd({ s: (draft.s && !/\n$/.test(draft.s) ? draft.s + '\n' : draft.s) + pre });
+  const addLine = (pre: string) => { if (!draft) return; const ns = (draft.s && !/\n$/.test(draft.s) ? draft.s + '\n' : draft.s) + pre; upd({ s: ns }); setFo(ns.split('\n').length - 1); };
+  const refs = useRef<any[]>([]);
+  const [fo, setFo] = useState(-1);
+  useEffect(() => { if (fo >= 0) { const i = fo; setTimeout(() => refs.current[i]?.focus?.(), 40); setFo(-1); } }, [fo]);
+  const setLines = (L: string[]) => upd({ s: L.join('\n') });
+  const lineChange = (i: number, pre: string, v: string) => {
+    const L = (draft?.s ?? '').split('\n');
+    if (!v.includes('\n')) { L[i] = pre + v; return setLines(L); }
+    const parts = v.split('\n'); const first = parts[0]; const rest = parts.slice(1);
+    const emptyMarker = !first.trim() && pre;
+    const cont = pre === '☐ ' || pre === '☑ ' ? '☐ ' : /^•\s/.test(pre + first) && !emptyMarker ? '• ' : '';
+    if (emptyMarker || (!first.trim() && /^(•|\d+\.)\s*$/.test(pre + first))) { L[i] = ''; return setLines(L), setFo(i); }
+    const nm = /^(\d+)\.\s/.exec(pre + first); const num = nm ? (+nm[1] + 1) + '. ' : '';
+    L[i] = pre + first; const ins = rest.map((r, k) => (k === 0 ? (cont || num) + r : r));
+    L.splice(i + 1, 0, ...ins); setLines(L); setFo(i + rest.length);
+  };
+  const lineKey = (i: number, pre: string, rest: string, e: any) => {
+    if (e?.nativeEvent?.key !== 'Backspace' || rest !== '') return;
+    const L = (draft?.s ?? '').split('\n');
+    if (pre) { L[i] = ''; setLines(L); setFo(i); } else if (i > 0) { L.splice(i, 1); setLines(L); setFo(i - 1); }
+  };
+  const toggleLine = (i: number) => { const L = (draft?.s ?? '').split('\n'); L[i] = (L[i].startsWith('☑') ? '☐' : '☑') + L[i].slice(1); setLines(L); };
   const numLine = () => { if (!draft) return; const m = draft.s.split('\n').map((l) => l.match(/^(\d+)\.\s/)).filter(Boolean) as RegExpMatchArray[]; addLine((m.length ? +m[m.length - 1][1] + 1 : 1) + '. '); };
   const stamp = () => { if (!draft) return; const d = new Date(); const t = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); addLine(t + '\n'); };
   const words = draft ? (draft.t + ' ' + draft.s).trim().split(/\s+/).filter(Boolean).length : 0;
@@ -142,7 +163,18 @@ export default function Notes() {
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COL[draft.c] }} />
                   <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12 }}>{words} {words === 1 ? 'word' : 'words'}</Text>
                 </View>
-                <TextInput multiline value={draft.s} onChangeText={(v) => upd({ s: v })} placeholder="Start writing..." placeholderTextColor="rgba(255,255,255,.4)" style={{ color: W, fontSize: 16, lineHeight: 24, marginTop: 14, minHeight: 280, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
+                <View style={{ marginTop: 14, minHeight: 280 }}>
+                  {(draft.s ? draft.s.split('\n') : ['']).map((ln, i, all) => {
+                    const ck = /^[☐☑] /.test(ln); const on = ln.startsWith('☑'); const pre = ck ? ln.slice(0, 2) : ''; const rest = ck ? ln.slice(2) : ln;
+                    return (
+                      <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                        {ck ? <Pressable onPress={() => toggleLine(i)} hitSlop={8} accessibilityLabel="Toggle item" style={{ width: 30, height: 24, justifyContent: 'center' }}><Text style={{ color: on ? '#ffc46b' : W, fontSize: 20, lineHeight: 24 }}>{on ? '☑' : '☐'}</Text></Pressable> : null}
+                        <TextInput ref={(r) => { refs.current[i] = r; }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.4)" style={{ flex: 1, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
+                      </View>
+                    );
+                  })}
+                  <Pressable onPress={() => { const n = (draft.s || '').split('\n').length - 1; setFo(n); }} style={{ minHeight: 160 }} />
+                </View>
               </ScrollView>
               <Glass radius={22} style={{ marginHorizontal: 16, marginBottom: 12, padding: 10, gap: 10 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

@@ -72,7 +72,7 @@ export function VerseBlock({ v, size, lang, showNum = true, active, onPress, onL
 }
 export const Credit = ({ lang }: { lang: string }) => (
   <Text style={{ color: 'rgba(255,255,255,.5)', fontSize: 10.5, lineHeight: 15, marginTop: 14, marginHorizontal: 4 }}>
-    Arabic: Quran Uthmani (Hafs), King Fahd Quran Complex text. {lang === 'en' ? 'English: Marmaduke Pickthall (public domain).' : 'Malay: Abdullah Muhammad Basmeih (Tanzil edition).'} Dataset: github.com/fawazahmed0/quran-api. Text has not yet been reviewed by a qualified reader.
+    Arabic: Quran Uthmani (Hafs), King Fahd Quran Complex text. {lang === 'en' ? 'English: Marmaduke Pickthall (public domain).' : 'Malay: Abdullah Muhammad Basmeih (Tanzil edition).'} Dataset: github.com/fawazahmed0/quran-api. Texts checked by an ustaz.
   </Text>
 );
 export const Pending = ({ kind }: { kind: string }) => (

@@ -15,7 +15,7 @@ import { HData, HEMPTY, MOODS, WD, MON, GLASS, dateOf, getDay, keyOfDate, goalPc
 
 const T = '#5ee7df';
 const Lbl = ({ t }: { t: string }) => <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12, fontWeight: '600' }}>{t}</Text>;
-const Ttl = ({ t, k }: { t: string; k?: string }) => <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: k ? 9 : 0 }}>{k ? <HeadIcon k={k} /> : null}<Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>{t}</Text></View>;
+const Ttl = ({ t, k, nm }: { t: string; k?: string; nm?: boolean }) => <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: k && !nm ? 9 : 0 }}>{k ? <HeadIcon k={k} /> : null}<Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>{t}</Text></View>;
 const Step = ({ t, onPress, label }: { t: string; onPress: () => void; label: string }) => (
   <Pressable accessibilityLabel={label} onPress={onPress} style={{ width: 38, height: 38, borderRadius: 13, backgroundColor: 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 20, fontWeight: '700', marginTop: -2 }}>{t}</Text></Pressable>
 );
@@ -63,7 +63,7 @@ export default function Habit() {
   let streak = 0; { const startOff = gp >= 70 ? 0 : -1; for (let o = startOff; o > -400; o--) { if (goalPctOf(getDay(h, o), goal, cg) >= 70) streak++; else break; } }
   const tip = t.sleep <= 0 ? ['Log your sleep', 'Use + and − to record last night.', 'rgba(255,255,255,.1)'] : t.sleep < 6 ? ['Short night', 'Try to rest earlier tonight.', 'rgba(255,143,171,.25)'] : t.sleep < 7 ? ['Almost there', 'A little more sleep helps.', 'rgba(255,196,107,.25)'] : t.sleep <= 9 ? ['Well rested', 'Great sleep, keep it up.', 'rgba(125,240,198,.25)'] : ['Long sleep', 'A bit much, try to keep it steady.', 'rgba(124,156,255,.25)'];
   // Steps: Health Connect first (all-day count), then the phone's step sensor while the app is open
-  const [hcOn, setHcOn] = useState(false); const [stepIn, setStepIn] = useState('');
+  const [hcOn, setHcOn] = useState(false); const [retry, setRetry] = useState(0); const [stepIn, setStepIn] = useState('');
   const setSteps = (n: number) => { const x = getDay(hRef.current, 0); put({ steps: n, ...(x.hc != null ? { adj: n - x.hc } : {}) }); };
   useEffect(() => {
     if (!h.auto || Platform.OS === 'web') { setHcOn(false); setAutoMsg(''); return; }
@@ -102,7 +102,7 @@ export default function Habit() {
       } catch (e) { await startSensor('Health Connect is not available, so steps count while this app is open.'); }
     })();
     return () => { alive = false; sub && sub.remove(); timer && clearInterval(timer); };
-  }, [h.auto]);
+  }, [h.auto, retry]);
   const dow = dateOf(0).getDay(); const sunnahDay = dow === 1 || dow === 4;
   type Sg = { t: string; b: string; tag: string; to?: string };
   const sg: Sg[] = [];
@@ -192,12 +192,22 @@ export default function Habit() {
                 <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>Count steps automatically</Text><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5 }}>All-day count from Health Connect when it has data.</Text></View>
               </Pressable>
             )}
-            {!!autoMsg && <Text style={{ color: '#ffc46b', fontSize: 11.5, marginTop: 6 }}>{autoMsg}</Text>}
+            {!!autoMsg && <Text style={{ color: '#ffc46b', fontSize: 11.5, marginTop: 6, lineHeight: 16 }}>{autoMsg}</Text>}
+            {!!autoMsg && !hcOn && Platform.OS !== 'web' && (
+              <View style={{ marginTop: 8, padding: 10, borderRadius: 14, backgroundColor: 'rgba(0,0,0,.22)' }}>
+                <Text style={{ color: W, fontSize: 12, fontWeight: '800' }}>Connect your health app</Text>
+                <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, lineHeight: 16, marginTop: 3 }}>1. Open Samsung Health, then Settings and Health Connect, and allow it to share Steps.{'\n'}2. Come back here and tap Check again.{'\n'}Honor Health may not support Health Connect. Samsung Health is the best choice.</Text>
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                  <Pressable onPress={() => { try { require('react-native-health-connect').openHealthConnectSettings(); } catch (e) {} }} style={{ flex: 1, paddingVertical: 9, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.14)', alignItems: 'center' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '800' }}>Open Health Connect</Text></Pressable>
+                  <Pressable onPress={() => setRetry(retry + 1)} style={{ flex: 1, paddingVertical: 9, borderRadius: 12, backgroundColor: T, alignItems: 'center' }}><Text style={{ color: '#0d1030', fontSize: 12.5, fontWeight: '800' }}>Check again</Text></Pressable>
+                </View>
+              </View>
+            )}
             <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, marginTop: 10, lineHeight: 16 }}>{Platform.OS === 'web' ? 'Add steps by hand here. On the phone app you can turn on automatic counting.' : !h.auto ? 'Turn this on to count steps. You can always add or correct steps by hand.' : hcOn ? 'Counting all day through Health Connect. Open My Life to refresh the total.' : 'You can always add or correct steps by hand.'}</Text>
           </Glass>
 
           <Glass radius={24} style={{ marginTop: 12, paddingVertical: 16, paddingHorizontal: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}><Ttl k="mood" t="Mood" /><Text style={{ color: t.mood >= 0 ? MOODS[t.mood][1] : 'rgba(255,255,255,.6)', fontSize: 13, fontWeight: '800' }}>{t.mood >= 0 ? MOODS[t.mood][0] : 'How do you feel?'}</Text></View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Ttl nm k="mood" t="Mood" /><Text style={{ color: t.mood >= 0 ? MOODS[t.mood][1] : 'rgba(255,255,255,.6)', fontSize: 13, fontWeight: '800' }}>{t.mood >= 0 ? MOODS[t.mood][0] : 'How do you feel?'}</Text></View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
               {MOODS.map((m, i) => { const on = t.mood === i; return (
                 <Pressable key={m[0]} accessibilityLabel={m[0]} onPress={() => put({ mood: on ? -1 : i })} style={{ alignItems: 'center', width: 58, gap: 7 }}>
@@ -208,7 +218,7 @@ export default function Habit() {
           </Glass>
 
           <Glass radius={24} style={{ marginTop: 12, paddingVertical: 16, paddingHorizontal: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}><Ttl k="water" t="Drink Water" /><Text style={{ color: t.cups >= cg ? '#7df0c6' : 'rgba(255,255,255,.7)', fontSize: 13, fontWeight: '800' }}>{t.cups} of {cg} glasses</Text></View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Ttl nm k="water" t="Drink Water" /><Text style={{ color: t.cups >= cg ? '#7df0c6' : 'rgba(255,255,255,.7)', fontSize: 13, fontWeight: '800' }}>{t.cups} of {cg} glasses</Text></View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
               {Array.from({ length: Math.max(cg, t.cups) }).map((_, i) => <Pressable key={i} accessibilityLabel={'Glass ' + (i + 1)} onPress={() => put({ cups: t.cups === i + 1 ? i : i + 1 })} style={{ width: '17.5%', flexGrow: 1, alignItems: 'center', paddingVertical: 2 }}><GlassIcon full={i < t.cups} size={50} /></Pressable>)}
             </View>
@@ -236,8 +246,9 @@ export default function Habit() {
           </Glass>
 
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View><Ttl k="sleep" t="Sleep Tracker" /><Lbl t="Last night" /></View>
+            <Ttl nm k="sleep" t="Sleep Tracker" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+              <Lbl t="Last night" />
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Step t="−" label="Less sleep" onPress={() => put({ sleep: Math.max(0, t.sleep - 0.5) })} />
                 <Text style={{ color: W, fontSize: 22, fontWeight: '800', minWidth: 58, textAlign: 'center' }}>{t.sleep.toFixed(1)}h</Text>

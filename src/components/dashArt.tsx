@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { G, Rect, Circle, Path, Polygon, Polyline, Ellipse, Line, Text as SvgText } from 'react-native-svg';
+import Svg, { G, Rect, Circle, Path, Polygon, Polyline, Ellipse, Line, Defs, RadialGradient, LinearGradient, Stop, Text as SvgText } from 'react-native-svg';
 
 export const PlannerArt = () => (
 <Svg width="100%" height="100%" viewBox="0 0 170 82" preserveAspectRatio="xMidYMid slice">
@@ -86,3 +86,19 @@ export const CARDS = [
   { k: 'Record', title: 'My Record', sub: 'Logs & records', c1: 'rgba(255,143,171,.55)', c2: 'rgba(183,148,255,.35)' },
   { k: 'Habit', title: 'Habit Tracker & Health', sub: 'Mood · Sleep · Water · Goals', c1: 'rgba(183,148,255,.55)', c2: 'rgba(94,231,223,.3)' },
 ];
+
+export const HabitBanner = () => (
+<Svg width="100%" height="100%" viewBox="0 0 360 130" preserveAspectRatio="xMaxYMid slice">
+<Defs>
+<RadialGradient id="hbglow" cx="0.5" cy="0.5" r="0.5"><Stop offset="0" stopColor="#ff9ec4" stopOpacity=".55"/><Stop offset="1" stopColor="#ff9ec4" stopOpacity="0"/></RadialGradient>
+<LinearGradient id="hbheart" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#fff"/><Stop offset="1" stopColor="#ffd0e6"/></LinearGradient>
+<LinearGradient id="hbline" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#ff5f8f" stopOpacity="0"/><Stop offset=".45" stopColor="#ff5f8f" stopOpacity=".9"/><Stop offset="1" stopColor="#ff5f8f"/></LinearGradient>
+</Defs>
+<Circle cx="296" cy="66" r="78" fill="url(#hbglow)"/>
+<Path d="M296 106C262 84 256 62 269 50c10-9 22-3 27 7 5-10 17-16 27-7 13 12 7 34-27 56z" fill="url(#hbheart)"/>
+<Polyline points="190,70 238,70 252,46 268,96 282,58 292,70 360,70" fill="none" stroke="url(#hbline)" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"/>
+<Path d="M304 14c6 8 9 12 9 16a9 9 0 0 1-18 0c0-4 3-8 9-16z" fill="#bff4f0"/>
+<Path d="M340 20a8 8 0 1 0 8 11 6.500 6.500 0 1 1-8-11z" fill="#fff" opacity=".95"/>
+<Circle cx="336" cy="108" r="2.600" fill="#fff" opacity=".8"/><Circle cx="250" cy="22" r="2" fill="#fff" opacity=".6"/>
+</Svg>
+);

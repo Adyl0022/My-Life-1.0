@@ -88,17 +88,16 @@ export const CARDS = [
 ];
 
 export const HabitBanner = () => (
-<Svg width="100%" height="100%" viewBox="0 0 360 130" preserveAspectRatio="xMaxYMid slice">
+<Svg width="100%" height="100%" viewBox="0 0 130 130" preserveAspectRatio="xMidYMid meet">
 <Defs>
-<RadialGradient id="hbglow" cx="0.5" cy="0.5" r="0.5"><Stop offset="0" stopColor="#ff9ec4" stopOpacity=".55"/><Stop offset="1" stopColor="#ff9ec4" stopOpacity="0"/></RadialGradient>
+<RadialGradient id="hbglow" cx="0.5" cy="0.5" r="0.5"><Stop offset="0" stopColor="#ff9ec4" stopOpacity=".6"/><Stop offset="1" stopColor="#ff9ec4" stopOpacity="0"/></RadialGradient>
 <LinearGradient id="hbheart" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#fff"/><Stop offset="1" stopColor="#ffd0e6"/></LinearGradient>
-<LinearGradient id="hbline" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#ff5f8f" stopOpacity="0"/><Stop offset=".45" stopColor="#ff5f8f" stopOpacity=".9"/><Stop offset="1" stopColor="#ff5f8f"/></LinearGradient>
 </Defs>
-<Circle cx="296" cy="66" r="78" fill="url(#hbglow)"/>
-<Path d="M296 106C262 84 256 62 269 50c10-9 22-3 27 7 5-10 17-16 27-7 13 12 7 34-27 56z" fill="url(#hbheart)"/>
-<Polyline points="190,70 238,70 252,46 268,96 282,58 292,70 360,70" fill="none" stroke="url(#hbline)" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"/>
-<Path d="M304 14c6 8 9 12 9 16a9 9 0 0 1-18 0c0-4 3-8 9-16z" fill="#bff4f0"/>
-<Path d="M340 20a8 8 0 1 0 8 11 6.500 6.500 0 1 1-8-11z" fill="#fff" opacity=".95"/>
-<Circle cx="336" cy="108" r="2.600" fill="#fff" opacity=".8"/><Circle cx="250" cy="22" r="2" fill="#fff" opacity=".6"/>
+<Circle cx="65" cy="70" r="60" fill="url(#hbglow)"/>
+<Path d="M65 108C31 86 25 64 38 52c10-9 22-3 27 7 5-10 17-16 27-7 13 12 7 34-27 56z" fill="url(#hbheart)"/>
+<Polyline points="12,72 42,72 52,50 66,98 78,60 86,72 118,72" fill="none" stroke="#ff5f8f" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"/>
+<Path d="M26 12c6 8 9 12 9 16a9 9 0 0 1-18 0c0-4 3-8 9-16z" fill="#bff4f0"/>
+<Path d="M108 12a8 8 0 1 0 8 11 6.500 6.500 0 1 1-8-11z" fill="#fff" opacity=".95"/>
+<Circle cx="120" cy="104" r="2.600" fill="#fff" opacity=".8"/><Circle cx="10" cy="104" r="2" fill="#fff" opacity=".6"/><Circle cx="66" cy="14" r="2" fill="#fff" opacity=".6"/>
 </Svg>
 );

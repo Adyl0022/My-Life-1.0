@@ -114,8 +114,8 @@ function Moon() {
   const v = useRef(new Animated.Value(0)).current;
   useEffect(() => { const a = loop(v, 4000, 0, 1, Easing.inOut(Easing.ease), true); a.start(); return () => a.stop(); }, [v]);
   return (
-    <Animated.View pointerEvents="none" style={{ position: 'absolute', right: 52, top: 92, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -6] }) }] }}>
-      <Svg width={76} height={76} viewBox="0 0 76 76"><Path d="M44 10a28 28 0 1 0 26 38 22 22 0 1 1-26-38z" fill="#fff7dc" opacity={0.97} /></Svg>
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', right: 48, top: 99, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -3] }) }] }}>
+      <Svg width={36} height={36} viewBox="0 0 76 76"><Path d="M44 10a28 28 0 1 0 26 38 22 22 0 1 1-26-38z" fill="#fff7dc" opacity={0.97} /></Svg>
     </Animated.View>
   );
 }

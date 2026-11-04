@@ -58,8 +58,6 @@ export default function Notes() {
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
       <LinearGradient colors={['#0b1030', '#231452', '#0b2c46']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
       <Blob size={320} color="rgba(255,196,107,.2)" style={{ right: -110, top: -50 }} />
-      <Blob size={340} color="rgba(94,231,223,.07)" style={{ left: -120, bottom: 40 }} />
-      <Blob size={240} color="rgba(183,148,255,.1)" style={{ left: 30, top: 330 }} />
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: 0.72 }}><NotesArt /></View>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 16 + TOP, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -118,7 +116,6 @@ export default function Notes() {
         {draft && (
           <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
             <LinearGradient colors={['#0a0f2c', '#1a1048', '#0c2b4d']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
-            <View style={{ position: 'absolute', left: 0, top: 0, right: 0, height: 6, backgroundColor: COL[draft.c] }} />
             <SafeAreaView style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 12 }}>
                 <Pressable onPress={() => { closeEd(); }}><Glass radius={16} style={{ paddingHorizontal: 14, height: 44, justifyContent: 'center' }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>‹ Notes</Text></Glass></Pressable>

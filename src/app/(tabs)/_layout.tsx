@@ -49,6 +49,7 @@ function Bar({ state }: any) {
   const [BS, setBS] = useState({ w: 0, h: 0 });
   const PER = 2 * (BS.w - 3 - 53) + 2 * (BS.h - 3 - 53) + 2 * Math.PI * 26.5;
   const orb = useRef(new Animated.Value(0)).current;
+  const vis = useRef(new Animated.Value(1)).current;
   const off = orb.interpolate({ inputRange: [0, 1], outputRange: [0, -PER] });
   const offW = orb.interpolate({ inputRange: [0, 1], outputRange: [-PER * 0.15, -PER * 1.15] });
   const rip = useRef(new Animated.Value(1)).current;
@@ -72,8 +73,15 @@ function Bar({ state }: any) {
     lastIdx.current = idx;
   }, [idx, W]);
   useEffect(() => {
+    orb.setValue(0); vis.setValue(1);
+    const oa = Animated.sequence([
+      Animated.timing(orb, { toValue: 1.15, duration: 4200, easing: Easing.linear, useNativeDriver: false }),
+      Animated.timing(vis, { toValue: 0, duration: 500, useNativeDriver: true }),
+    ]);
+    oa.start();
     pops.forEach((v, i) => Animated.spring(v, { toValue: i === idx ? 1 : 0, friction: 5, tension: 160, useNativeDriver: true }).start());
     setNavCollapsed(false);
+    return () => oa.stop();
   }, [idx]);
   useEffect(() => {
     const loop = Animated.loop(Animated.sequence([
@@ -82,10 +90,9 @@ function Bar({ state }: any) {
       Animated.timing(sheen, { toValue: 0, duration: 0, useNativeDriver: true }),
     ]));
     loop.start();
-    const bl = Animated.loop(Animated.timing(orb, { toValue: 1, duration: 5200, easing: Easing.linear, useNativeDriver: false }));
-    bl.start();
+
     const un = subscribeNav((c) => Animated.timing(col, { toValue: c ? 1 : 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start());
-    return () => { loop.stop(); bl.stop(); un(); };
+    return () => { loop.stop(); un(); };
   }, []);
   const press = (r: any, i: number) => {
     if (Platform.OS !== 'web') { try { Haptics.selectionAsync(); } catch {} }
@@ -102,7 +109,7 @@ function Bar({ state }: any) {
     <Animated.View onLayout={(e) => setBS({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })} style={{ position: 'absolute', left: side, right: side, bottom: 18 }}>
       <Glass radius={28} style={{ padding: 8, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
         {BS.w > 0 && (
-          <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
+          <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: vis }}>
             {DOT.map((c, i) => (
               <Animated.View key={i} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: pops[i] }}>
                 <Svg width={BS.w} height={BS.h}>
@@ -112,7 +119,7 @@ function Bar({ state }: any) {
                 </Svg>
               </Animated.View>
             ))}
-          </View>
+          </Animated.View>
         )}
         <View style={{ flexDirection: 'row' }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
           {W > 0 && (

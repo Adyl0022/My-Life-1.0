@@ -99,13 +99,22 @@ export function usePrayer() {
   const [alarms] = useStored<Record<string, boolean>>('ml_prayer_alerts', { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true });
   const [clock, setClock] = useState(0);
   const dayId = myNow().toISOString().slice(0, 10);
-  useEffect(() => { if (Platform.OS === 'web') return; const sub = AppState.addEventListener('change', (st) => { if (st === 'active') setTick((x) => x + 1); }); return () => sub.remove(); }, []);
+  // Re-check the location when the app comes back after being away for 5+ minutes (never on permission dialogs, which only blink the app).
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    let left = 0;
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'background') left = Date.now();
+      else if (st === 'active' && left && Date.now() - left > 5 * 60 * 1000) { left = 0; setTick((x) => x + 1); }
+    });
+    return () => sub.remove();
+  }, []);
   useEffect(() => { const t = setInterval(() => setClock((c) => c + 1), 30000); return () => clearInterval(t); }, []);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      setStatus('loading');
+      setStatus((x) => (x === 'ready' ? x : 'loading'));
       const nd = myNow(); const y = nd.getUTCFullYear(), mo = nd.getUTCMonth() + 1;
       try {
         let m: Month; let lat: number, lon: number; let auto = mode.auto;

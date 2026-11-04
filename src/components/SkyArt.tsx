@@ -91,7 +91,7 @@ function Moon() {
   const v = useRef(new Animated.Value(0)).current;
   useEffect(() => { const a = loop(v, 4000, 0, 1, Easing.inOut(Easing.ease), true); a.start(); return () => a.stop(); }, [v]);
   return (
-    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 280, top: 8, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -6] }) }] }}>
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 280, top: 32, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -6] }) }] }}>
       <Svg width={76} height={76} viewBox="0 0 76 76"><Path d="M44 10a28 28 0 1 0 26 38 22 22 0 1 1-26-38z" fill="#fff7dc" opacity={0.97} /></Svg>
     </Animated.View>
   );
@@ -112,21 +112,21 @@ export function SkyArt({ period }: { period: Period }) {
     <View style={{ position: 'absolute', left: 0, top: 0, width: 390, height: 340, overflow: 'hidden' }} pointerEvents="none">
       {period === 'Morning' && (<>
         <Pulse style={{ left: 135, top: 21 }}><Glow size={330} stops={[[0, 'rgba(255,238,185,.95)'], [0.38, 'rgba(255,190,120,.45)'], [0.7, 'rgba(0,0,0,0)']]} style={{ position: 'relative' }} /></Pulse>
-        <Disc size={72} left={290} top={8} colors={['#fffbe6', '#ffd98a', '#ffb35c']} glow="rgba(255,210,130,.7)" />
+        <Disc size={72} left={290} top={34} colors={['#fffbe6', '#ffd98a', '#ffb35c']} glow="rgba(255,210,130,.7)" />
         <Cloud top={98} w={80} h={26} opacity={0.6} dur={42000} delay={0.14} />
         <Cloud top={150} w={64} h={20} opacity={0.5} dur={55000} delay={0.44} />
         <Cloud top={60} w={48} h={15} opacity={0.4} dur={48000} delay={0.62} />
       </>)}
       {period === 'Afternoon' && (<>
         <Pulse style={{ left: 108, top: -32 }}><Glow size={320} stops={[[0, 'rgba(255,252,220,.95)'], [0.38, 'rgba(255,225,140,.45)'], [0.7, 'rgba(0,0,0,0)']]} style={{ position: 'relative' }} /></Pulse>
-        <Disc size={60} left={262} top={10} colors={['#ffffff', '#fff0a8', '#ffd04d']} glow="rgba(255,236,150,.75)" />
+        <Disc size={60} left={262} top={34} colors={['#ffffff', '#fff0a8', '#ffd04d']} glow="rgba(255,236,150,.75)" />
         <Cloud top={88} w={88} h={28} opacity={0.6} dur={36000} delay={0.1} />
         <Cloud top={160} w={72} h={23} opacity={0.55} dur={52000} delay={0.38} />
         <Cloud top={44} w={56} h={18} opacity={0.4} dur={60000} delay={0.55} />
       </>)}
       {period === 'Evening' && (<>
         <Pulse style={{ left: 120, top: 0 }}><Glow size={360} stops={[[0, 'rgba(255,170,110,.9)'], [0.38, 'rgba(255,90,120,.4)'], [0.7, 'rgba(0,0,0,0)']]} style={{ position: 'relative' }} /></Pulse>
-        <Disc size={72} left={290} top={8} colors={['#fff0c8', '#ffb06b', '#ff6a5a']} glow="rgba(255,120,90,.65)" />
+        <Disc size={72} left={290} top={34} colors={['#fff0c8', '#ffb06b', '#ff6a5a']} glow="rgba(255,120,90,.65)" />
         <Cloud top={92} w={88} h={28} opacity={0.6} dur={44000} delay={0.18} color="#ffc2d1" />
         <Cloud top={146} w={68} h={22} opacity={0.5} dur={58000} delay={0.45} color="#ffd2bd" />
         <Cloud top={52} w={56} h={18} opacity={0.4} dur={66000} delay={0.52} color="#ffb3c8" />

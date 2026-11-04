@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, Modal } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, Modal, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -55,14 +55,26 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
     </Modal>
   );
 }
+function Float({ children }: { children: React.ReactNode }) {
+  const v = React.useRef(new Animated.Value(0)).current;
+  React.useEffect(() => {
+    const a = Animated.loop(Animated.sequence([
+      Animated.timing(v, { toValue: 1, duration: 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(v, { toValue: 0, duration: 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    a.start(); return () => a.stop();
+  }, [v]);
+  return <Animated.View style={{ transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [4, -8] }) }] }}>{children}</Animated.View>;
+}
+
 function Doc({ title, secs, onClose }: { title: string; secs: Sec[]; onClose: () => void }) {
   return (
     <Overlay onClose={onClose}>
-      <Glass radius={26} style={{ maxHeight: '82%', padding: 18 }}>
+      <View style={{ maxHeight: '82%', padding: 18, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
         <Text style={{ color: W, fontSize: 18, fontWeight: '800', marginBottom: 8 }}>{title}</Text>
-        <ScrollView>{secs.map((s) => (<View key={s.h} style={{ marginBottom: 12 }}><Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '700' }}>{s.h}</Text><Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 13, lineHeight: 19, marginTop: 3 }}>{s.p}</Text></View>))}</ScrollView>
+        <ScrollView>{secs.map((s) => (<View key={s.h} style={{ marginBottom: 12 }}><Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '700' }}>{s.h}</Text><Text style={{ color: '#fff', fontSize: 13.5, lineHeight: 20, marginTop: 3 }}>{s.p}</Text></View>))}</ScrollView>
         <View style={{ flexDirection: 'row', marginTop: 8 }}><Btn t="Close" onPress={onClose} /></View>
-      </Glass>
+      </View>
     </Overlay>
   );
 }
@@ -203,7 +215,7 @@ export default function Settings() {
           {tab === 2 && (
             <View style={{ gap: 12, marginTop: 14 }}>
               <View style={{ alignItems: 'center', paddingVertical: 8 }}>
-                <LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 72, height: 72, borderRadius: 24, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 28, fontWeight: '800' }}>M</Text></LinearGradient>
+                <Float><LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 72, height: 72, borderRadius: 24, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 28, fontWeight: '800' }}>M</Text></LinearGradient></Float>
                 <Text style={{ color: W, fontSize: 20, fontWeight: '800', marginTop: 10 }}>My Life 1.0</Text>
                 <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4, marginTop: 3 }}>YOUR LIFE, ALL IN ONE PLACE</Text>
                 <Pressable onPress={() => setChecked(!checked)} style={{ marginTop: 12, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, backgroundColor: checked ? 'rgba(94,231,181,.25)' : 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{checked ? "You're up to date" : 'Check for updates'}</Text></Pressable>

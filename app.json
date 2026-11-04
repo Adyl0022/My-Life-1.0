@@ -61,6 +61,12 @@
         {
           "photosPermission": "My Life lets you attach photos of receipts and documents to your records."
         }
+      ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "My Life counts your steps to fill in your daily habit goal."
+        }
       ]
     ],
     "backgroundColor": "#0a0f2c"

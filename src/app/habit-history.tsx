@@ -11,6 +11,7 @@ import { useStored } from '../lib/store';
 import { TOP } from '../lib/layout';
 import { HData, HEMPTY, MOODS, MON, WD, dateOf, getDay, keyOfDate, scoreOf, actOf, cupsGoal, HDay } from '../lib/habit';
 import { Inp } from '../components/Ui';
+import { Face } from '../components/HabitIcons';
 
 const SH = ['rgba(255,255,255,.1)', 'rgba(94,231,223,.28)', 'rgba(94,231,223,.5)', 'rgba(94,231,223,.75)', '#5ee7df'];
 const Lbl = ({ t }: { t: string }) => <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12, fontWeight: '600' }}>{t}</Text>;
@@ -88,8 +89,8 @@ export default function HabitHistory() {
                 </View>);
               return (
                 <View style={{ marginTop: 6 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-                    {MOODS.map((m, i) => <Pressable key={m[0]} accessibilityLabel={m[0]} onPress={() => put({ mood: s.x.mood === i ? -1 : i })} style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: m[1], opacity: s.x.mood === i ? 1 : 0.4, borderWidth: s.x.mood === i ? 2.5 : 0, borderColor: W }} />)}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, paddingHorizontal: 6 }}>
+                    {MOODS.map((m, i) => <Pressable key={m[0]} accessibilityLabel={m[0]} onPress={() => put({ mood: s.x.mood === i ? -1 : i })} style={{ width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', borderWidth: s.x.mood === i ? 2.5 : 0, borderColor: W }}><Face i={i} size={36} on={s.x.mood === i} /></Pressable>)}
                   </View>
                   <Stp l="Water" v={s.x.cups + ' / ' + cg} onM={() => put({ cups: Math.max(0, s.x.cups - 1) })} onP={() => put({ cups: s.x.cups + 1 })} />
                   <Stp l="Sleep" v={s.x.sleep.toFixed(1) + ' h'} onM={() => put({ sleep: Math.max(0, s.x.sleep - 0.5) })} onP={() => put({ sleep: Math.min(14, s.x.sleep + 0.5) })} />

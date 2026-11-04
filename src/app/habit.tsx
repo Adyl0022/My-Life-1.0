@@ -8,13 +8,14 @@ import { useRouter } from 'expo-router';
 import { Glass } from '../components/Glass';
 import { Blob } from '../components/Bg';
 import { Inp, W } from '../components/Ui';
+import { Face, GlassIcon, HeadIcon } from '../components/HabitIcons';
 import { useStored } from '../lib/store';
 import { TOP } from '../lib/layout';
 import { HData, HEMPTY, MOODS, WD, MON, GLASS, dateOf, getDay, keyOfDate, goalPctOf, HDay, BLANK as BLANKD, cupsGoal, latestKg, hoursBetween, bestStreakAll, avgOf } from '../lib/habit';
 
 const T = '#5ee7df';
 const Lbl = ({ t }: { t: string }) => <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12, fontWeight: '600' }}>{t}</Text>;
-const Ttl = ({ t }: { t: string }) => <Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>{t}</Text>;
+const Ttl = ({ t, k }: { t: string; k?: string }) => <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: k ? 9 : 0 }}>{k ? <HeadIcon k={k} /> : null}<Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>{t}</Text></View>;
 const Step = ({ t, onPress, label }: { t: string; onPress: () => void; label: string }) => (
   <Pressable accessibilityLabel={label} onPress={onPress} style={{ width: 38, height: 38, borderRadius: 13, backgroundColor: 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 20, fontWeight: '700', marginTop: -2 }}>{t}</Text></Pressable>
 );
@@ -61,24 +62,46 @@ export default function Habit() {
   // streak: consecutive days reaching 70%
   let streak = 0; { const startOff = gp >= 70 ? 0 : -1; for (let o = startOff; o > -400; o--) { if (goalPctOf(getDay(h, o), goal, cg) >= 70) streak++; else break; } }
   const tip = t.sleep <= 0 ? ['Log your sleep', 'Use + and − to record last night.', 'rgba(255,255,255,.1)'] : t.sleep < 6 ? ['Short night', 'Try to rest earlier tonight.', 'rgba(255,143,171,.25)'] : t.sleep < 7 ? ['Almost there', 'A little more sleep helps.', 'rgba(255,196,107,.25)'] : t.sleep <= 9 ? ['Well rested', 'Great sleep, keep it up.', 'rgba(125,240,198,.25)'] : ['Long sleep', 'A bit much, try to keep it steady.', 'rgba(124,156,255,.25)'];
+  // Steps: Health Connect first (all-day count), then the phone's step sensor while the app is open
+  const [hcOn, setHcOn] = useState(false); const [stepIn, setStepIn] = useState('');
+  const setSteps = (n: number) => { const x = getDay(hRef.current, 0); put({ steps: n, ...(x.hc != null ? { adj: n - x.hc } : {}) }); };
   useEffect(() => {
-    if (!h.auto || Platform.OS === 'web') return;
-    let sub: { remove: () => void } | null = null; let alive = true; let last = 0;
-    (async () => {
+    if (!h.auto || Platform.OS === 'web') { setHcOn(false); setAutoMsg(''); return; }
+    let sub: { remove: () => void } | null = null; let alive = true; let timer: any = null; let last = 0;
+    const saveToday = (f: (td: HDay) => HDay) => { const cur = hRef.current; const key = keyOfDate(dateOf(0)); const td = { ...BLANKD, ...(cur.days[key] || {}) }; setH({ ...cur, days: { ...cur.days, [key]: f(td) } }); };
+    const startSensor = async (why: string) => {
       try {
         const { Pedometer } = require('expo-sensors');
-        if (!(await Pedometer.isAvailableAsync())) { setAutoMsg('This phone has no step sensor.'); return; }
+        if (!(await Pedometer.isAvailableAsync())) { setAutoMsg(why + ' This phone has no step sensor.'); return; }
         const perm = await Pedometer.requestPermissionsAsync();
         if (!perm.granted) { setAutoMsg('Allow Physical activity permission in phone settings to count steps.'); setH({ ...hRef.current, auto: false }); return; }
-        setAutoMsg('');
-        sub = Pedometer.watchStepCount((r: { steps: number }) => {
-          if (!alive) return; const d = r.steps - last; last = r.steps; if (d <= 0) return;
-          const cur = hRef.current; const key = keyOfDate(dateOf(0)); const td = { ...BLANKD, ...(cur.days[key] || {}) };
-          setH({ ...cur, days: { ...cur.days, [key]: { ...td, steps: td.steps + d } } });
-        });
+        setAutoMsg(why);
+        sub = Pedometer.watchStepCount((r: { steps: number }) => { if (!alive) return; const d = r.steps - last; last = r.steps; if (d > 0) saveToday((td) => ({ ...td, steps: td.steps + d })); });
       } catch (e) { setAutoMsg('Step counting is not available on this device.'); }
+    };
+    (async () => {
+      try {
+        const HC = require('react-native-health-connect');
+        const st = await HC.getSdkStatus();
+        if (st !== HC.SdkAvailabilityStatus.SDK_AVAILABLE) { await startSensor(st === HC.SdkAvailabilityStatus.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED ? 'Update Health Connect in Play Store for all-day counting. For now steps count while this app is open.' : 'Health Connect is not on this phone, so steps count while this app is open.'); return; }
+        await HC.initialize();
+        let g = await HC.getGrantedPermissions();
+        if (!g.some((x: any) => x.recordType === 'Steps')) g = await HC.requestPermission([{ accessType: 'read', recordType: 'Steps' }]);
+        if (!g.some((x: any) => x.recordType === 'Steps')) { await startSensor('Health Connect access was not allowed, so steps count while this app is open.'); return; }
+        const read = async () => {
+          const s0 = new Date(); s0.setHours(0, 0, 0, 0);
+          const r = await HC.aggregateRecord({ recordType: 'Steps', timeRangeFilter: { operationType: 'between', startTime: s0.toISOString(), endTime: new Date().toISOString() } });
+          const n = Math.round((r && r.COUNT_TOTAL) || 0); return n;
+        };
+        const n0 = await read();
+        if (!alive) return;
+        if (n0 <= 0) { await startSensor('No steps in Health Connect yet. Install Samsung Health or Google Fit for all-day counting. For now steps count while this app is open.'); return; }
+        setHcOn(true); setAutoMsg('');
+        const sync = async () => { try { const n = await read(); if (alive) saveToday((td) => ({ ...td, hc: n, steps: Math.max(0, n + (td.adj || 0)) })); } catch (e) {} };
+        await sync(); timer = setInterval(sync, 60000);
+      } catch (e) { await startSensor('Health Connect is not available, so steps count while this app is open.'); }
     })();
-    return () => { alive = false; sub && sub.remove(); };
+    return () => { alive = false; sub && sub.remove(); timer && clearInterval(timer); };
   }, [h.auto]);
   const dow = dateOf(0).getDay(); const sunnahDay = dow === 1 || dow === 4;
   type Sg = { t: string; b: string; tag: string; to?: string };
@@ -132,7 +155,7 @@ export default function Habit() {
           {/* Steps */}
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Ttl t="Steps & Distance" />
+              <Ttl k="steps" t="Steps & Distance" />
               <Pressable onPress={() => { setEdit(!edit); setGv(String(goal)); }}><View style={{ paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12, fontWeight: '700' }}>Goal {goal.toLocaleString('en-MY')} ✎</Text></View></Pressable>
             </View>
             {edit && (
@@ -154,38 +177,46 @@ export default function Habit() {
             <View style={{ height: 10, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.14)', marginTop: 10, overflow: 'hidden' }}><LinearGradient colors={['#7c9cff', T]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 10, width: (stepPct * 100 + '%') as any }} /></View>
             <Bars vals={wk.map((x) => x.d.steps)} labels={wl} max={Math.max(goal, ...wk.map((x) => x.d.steps))} goal={goal} color={T} hi={6} />
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-              <Pressable onPress={() => put({ steps: t.steps + 500 })} style={{ flex: 1, paddingVertical: 11, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.14)', alignItems: 'center' }}><Text style={{ color: W, fontWeight: '800', fontSize: 13 }}>+500 steps</Text></Pressable>
-              <Pressable onPress={() => put({ steps: Math.max(0, t.steps - 500) })} style={{ paddingVertical: 11, paddingHorizontal: 18, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.08)', alignItems: 'center' }}><Text style={{ color: W, fontWeight: '800', fontSize: 13 }}>−500</Text></Pressable>
+              <Pressable onPress={() => setSteps(t.steps + 500)} style={{ flex: 1, paddingVertical: 11, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.14)', alignItems: 'center' }}><Text style={{ color: W, fontWeight: '800', fontSize: 13 }}>+500 steps</Text></Pressable>
+              <Pressable onPress={() => setSteps(Math.max(0, t.steps - 500))} style={{ paddingVertical: 11, paddingHorizontal: 18, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.08)', alignItems: 'center' }}><Text style={{ color: W, fontWeight: '800', fontSize: 13 }}>−500</Text></Pressable>
             </View>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, alignItems: 'center' }}>
+              <Inp value={stepIn} onChangeText={(v: string) => setStepIn(v.replace(/[^0-9]/g, ''))} keyboardType="number-pad" placeholder="Type steps" style={{ flex: 1 }} />
+              <Pressable onPress={() => { const n = parseInt(stepIn, 10); if (n > 0) { setSteps(t.steps + n); setStepIn(''); } }} style={{ paddingVertical: 11, paddingHorizontal: 14, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.14)' }}><Text style={{ color: W, fontWeight: '800', fontSize: 13 }}>Add</Text></Pressable>
+              <Pressable onPress={() => { const n = parseInt(stepIn, 10); if (n >= 0 && stepIn !== '') { setSteps(Math.min(n, 200000)); setStepIn(''); } }} style={{ paddingVertical: 11, paddingHorizontal: 14, borderRadius: 14, backgroundColor: T }}><Text style={{ color: '#0d1030', fontWeight: '800', fontSize: 13 }}>Set total</Text></Pressable>
+            </View>
+            <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11, marginTop: 6 }}>Add puts the number on top of today's steps. Set total replaces today's steps with the number.</Text>
             {Platform.OS !== 'web' && (
               <Pressable onPress={() => setH({ ...h, auto: !h.auto })} style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={{ width: 46, height: 26, borderRadius: 13, backgroundColor: h.auto ? T : 'rgba(255,255,255,.2)', padding: 3, alignItems: h.auto ? 'flex-end' : 'flex-start' }}><View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: W }} /></View>
-                <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>Count steps automatically</Text><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5 }}>Uses your phone's step sensor while the app is open.</Text></View>
+                <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>Count steps automatically</Text><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5 }}>All-day count from Health Connect when it has data.</Text></View>
               </Pressable>
             )}
             {!!autoMsg && <Text style={{ color: '#ffc46b', fontSize: 11.5, marginTop: 6 }}>{autoMsg}</Text>}
-            <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, marginTop: 10, lineHeight: 16 }}>{Platform.OS === 'web' ? 'Add steps by hand here. On the phone app you can turn on automatic counting.' : 'Steps are counted only while My Life is open. You can always add or correct steps by hand.'}</Text>
+            <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, marginTop: 10, lineHeight: 16 }}>{Platform.OS === 'web' ? 'Add steps by hand here. On the phone app you can turn on automatic counting.' : !h.auto ? 'Turn this on to count steps. You can always add or correct steps by hand.' : hcOn ? 'Counting all day through Health Connect. Open My Life to refresh the total.' : 'You can always add or correct steps by hand.'}</Text>
           </Glass>
 
-          <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
-            <Glass radius={24} style={{ flex: 1, padding: 14 }}>
-              <Ttl t="Mood" /><Lbl t="How do you feel?" />
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
-                {MOODS.map((m, i) => <Pressable key={m[0]} accessibilityLabel={m[0]} onPress={() => put({ mood: t.mood === i ? -1 : i })} style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: m[1], opacity: t.mood === i ? 1 : 0.4, borderWidth: t.mood === i ? 2.5 : 0, borderColor: W }} />)}
-              </View>
-              <Text style={{ color: W, fontSize: 14, fontWeight: '800', marginTop: 12 }}>{t.mood >= 0 ? MOODS[t.mood][0] : 'Tap one'}</Text>
-            </Glass>
-            <Glass radius={24} style={{ flex: 1, padding: 14 }}>
-              <Ttl t="Drink Water" /><Lbl t={t.cups + ' of ' + cg + ' glasses'} />
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-                {Array.from({ length: Math.max(cg, t.cups) }).map((_, i) => <Pressable key={i} accessibilityLabel={'Glass ' + (i + 1)} onPress={() => put({ cups: t.cups === i + 1 ? i : i + 1 })} style={{ width: '22%', flexGrow: 1, height: 26, borderRadius: 8, backgroundColor: i < t.cups ? '#7c9cff' : 'rgba(255,255,255,.14)' }} />)}
-              </View>
-              <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 11, marginTop: 8 }}>{(t.cups * GLASS / 1000).toFixed(2)} of {(cg * GLASS / 1000).toFixed(1)} L{kg > 0 ? ' · for ' + kg + ' kg' : ''}</Text>
-            </Glass>
-          </View>
+          <Glass radius={24} style={{ marginTop: 12, paddingVertical: 16, paddingHorizontal: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}><Ttl k="mood" t="Mood" /><Text style={{ color: t.mood >= 0 ? MOODS[t.mood][1] : 'rgba(255,255,255,.6)', fontSize: 13, fontWeight: '800' }}>{t.mood >= 0 ? MOODS[t.mood][0] : 'How do you feel?'}</Text></View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
+              {MOODS.map((m, i) => { const on = t.mood === i; return (
+                <Pressable key={m[0]} accessibilityLabel={m[0]} onPress={() => put({ mood: on ? -1 : i })} style={{ alignItems: 'center', width: 58, gap: 7 }}>
+                  <View style={{ width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', borderWidth: on ? 2.5 : 0, borderColor: W, transform: [{ scale: on ? 1.08 : 1 }] }}><Face i={i} size={on ? 44 : 44} on={on} /></View>
+                  <Text style={{ color: on ? W : 'rgba(255,255,255,.6)', fontSize: 11, fontWeight: on ? '800' : '500' }}>{m[0]}</Text>
+                </Pressable>); })}
+            </View>
+          </Glass>
+
+          <Glass radius={24} style={{ marginTop: 12, paddingVertical: 16, paddingHorizontal: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}><Ttl k="water" t="Drink Water" /><Text style={{ color: t.cups >= cg ? '#7df0c6' : 'rgba(255,255,255,.7)', fontSize: 13, fontWeight: '800' }}>{t.cups} of {cg} glasses</Text></View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+              {Array.from({ length: Math.max(cg, t.cups) }).map((_, i) => <Pressable key={i} accessibilityLabel={'Glass ' + (i + 1)} onPress={() => put({ cups: t.cups === i + 1 ? i : i + 1 })} style={{ width: '17.5%', flexGrow: 1, alignItems: 'center', paddingVertical: 2 }}><GlassIcon full={i < t.cups} size={50} /></Pressable>)}
+            </View>
+            <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 11.5, marginTop: 10 }}>{(t.cups * GLASS / 1000).toFixed(2)} of {(cg * GLASS / 1000).toFixed(1)} L{kg > 0 ? ' · based on ' + kg + ' kg' : ''}</Text>
+          </Glass>
 
           <Glass radius={24} style={{ marginTop: 12, padding: 14 }}>
-            <Ttl t="Today's note" /><Lbl t="Why do you feel this way? (optional)" />
+            <Ttl k="note" t="Today's note" /><Lbl t="Why do you feel this way? (optional)" />
             <Inp value={t.note || ''} onChangeText={(v: string) => put({ note: v })} placeholder="e.g. Long shift, but a good rest" multiline style={{ marginTop: 8, minHeight: 44 }} />
             <Pressable onPress={() => put({ fast: !t.fast })} style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View style={{ width: 24, height: 24, borderRadius: 8, borderWidth: 1.5, borderColor: t.fast ? T : 'rgba(255,255,255,.4)', backgroundColor: t.fast ? T : 'transparent', alignItems: 'center', justifyContent: 'center' }}>{t.fast && <Text style={{ color: '#0d1030', fontWeight: '800', fontSize: 14 }}>✓</Text>}</View>
@@ -194,7 +225,7 @@ export default function Habit() {
           </Glass>
 
           <Glass radius={24} style={{ marginTop: 12, padding: 14 }}>
-            <Ttl t="Goal Tracker" />
+            <Ttl k="goal" t="Goal Tracker" />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8 }}>
               <Text style={{ color: W, fontSize: 30, fontWeight: '800' }}>{gp}%</Text>
               <View style={{ flex: 1 }}>
@@ -206,7 +237,7 @@ export default function Habit() {
 
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View><Ttl t="Sleep Tracker" /><Lbl t="Last night" /></View>
+              <View><Ttl k="sleep" t="Sleep Tracker" /><Lbl t="Last night" /></View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Step t="−" label="Less sleep" onPress={() => put({ sleep: Math.max(0, t.sleep - 0.5) })} />
                 <Text style={{ color: W, fontSize: 22, fontWeight: '800', minWidth: 58, textAlign: 'center' }}>{t.sleep.toFixed(1)}h</Text>
@@ -224,7 +255,7 @@ export default function Habit() {
           </Glass>
 
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Ttl t="Life Link" /><Lbl t="Suggestions from your day" />
+            <Ttl k="link" t="Life Link" /><Lbl t="Suggestions from your day" />
             <View style={{ gap: 8, marginTop: 10 }}>
               {sgs.map((s, i) => (
                 <Pressable key={i} disabled={!s.to} onPress={() => s.to && router.push(s.to as any)} style={{ padding: 12, borderRadius: 16, backgroundColor: 'rgba(255,255,255,.09)' }}>
@@ -238,13 +269,13 @@ export default function Habit() {
 
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View><Ttl t="Habit Streak" /><Lbl t="Days reaching 70% of your goal" /></View>
+              <View><Ttl k="streak" t="Habit Streak" /><Lbl t="Days reaching 70% of your goal" /></View>
               <View style={{ alignItems: 'flex-end' }}><Text style={{ color: W, fontSize: 28, fontWeight: '800' }}>{streak}</Text><Lbl t={streak === 1 ? 'day' : 'days'} /></View>
             </View>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
               {wk.map((x, i) => { const ok = goalPctOf(x.d, goal, cg) >= 70; return (
                 <View key={i} style={{ flex: 1, alignItems: 'center', gap: 5 }}>
-                  <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: ok ? T : 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center' }}>{ok && <Text style={{ color: '#0d1030', fontWeight: '800' }}>✓</Text>}</View>
+                  <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: ok ? T : 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center' }}>{ok && <HeadIcon k="streak" size={22} />}</View>
                   <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 10.5 }}>{WD[x.dt.getDay()]}</Text>
                 </View>); })}
             </View>
@@ -252,7 +283,7 @@ export default function Habit() {
           </Glass>
 
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Ttl t="Weight & BMI" /><Lbl t={kg > 0 ? 'Your water goal follows your weight' : 'Add your weight to personalise your water goal'} />
+            <Ttl k="weight" t="Weight & BMI" /><Lbl t={kg > 0 ? 'Your water goal follows your weight' : 'Add your weight to personalise your water goal'} />
             {kg > 0 && (
               <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 18, marginTop: 10 }}>
                 <View><Text style={{ color: W, fontSize: 28, fontWeight: '800' }}>{kg}</Text><Lbl t="kg" /></View>
@@ -270,7 +301,7 @@ export default function Habit() {
           </Glass>
 
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Ttl t="Water & You" /><Lbl t="How water links to your mood and sleep" />
+            <Ttl k="insight" t="Water & You" /><Lbl t="How water links to your mood and sleep" />
             {insOk ? (
               <View style={{ gap: 8, marginTop: 10 }}>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -283,7 +314,7 @@ export default function Habit() {
           </Glass>
 
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Ttl t="This week" /><Lbl t="Last 7 days compared with the 7 before" />
+            <Ttl k="week" t="This week" /><Lbl t="Last 7 days compared with the 7 before" />
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
               {([['Water', (x: HDay) => x.cups, 'glasses', 1], ['Sleep', (x: HDay) => x.sleep, 'h', 1], ['Steps', (x: HDay) => x.steps, 'steps', 0]] as [string, (x: HDay) => number, string, number][]).map((r) => (
                 <View key={r[0]} style={{ flex: 1, padding: 10, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.08)' }}>
@@ -294,7 +325,7 @@ export default function Habit() {
           </Glass>
 
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Ttl t="Badges" /><Lbl t={'Best streak so far: ' + best + (best === 1 ? ' day' : ' days')} />
+            <Ttl k="badge" t="Badges" /><Lbl t={'Best streak so far: ' + best + (best === 1 ? ' day' : ' days')} />
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
               {[7, 30, 100].map((n) => { const on = best >= n; return (
                 <View key={n} style={{ flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 16, backgroundColor: on ? 'rgba(94,231,223,.22)' : 'rgba(255,255,255,.07)', borderWidth: 1, borderColor: on ? T : 'rgba(255,255,255,.1)' }}>

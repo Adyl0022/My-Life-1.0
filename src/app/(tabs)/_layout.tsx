@@ -30,7 +30,7 @@ function Bar({ state }: any) {
   const n = routes.length || 4;
   const [W, setW] = useState(0);
   const tw = W / n;
-  const bw = tw + 10;
+  const bw = tw + 14;
   const idx = state.index;
   const posOf = (i: number) => i * tw + tw / 2 - bw / 2;
   const tx = useRef(new Animated.Value(0)).current;
@@ -65,15 +65,15 @@ function Bar({ state }: any) {
     <>
     <LinearGradient pointerEvents="none" colors={home ? ['rgba(10,15,44,0)', tint(.35), tint(.6)] : ['rgba(10,15,44,0)', 'rgba(10,15,44,.92)', 'rgba(10,15,44,.98)']} locations={[0, 0.55, 1]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 104 }} />
     <View style={{ position: 'absolute', left: 20, right: 20, bottom: 18 }}>
-      <Glass radius={28} style={{ padding: 6, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
+      <Glass radius={28} style={{ padding: 8, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
         <View style={{ flexDirection: 'row' }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
           {W > 0 && (
-            <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: bw, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,.45)', transform: [{ translateX: tx }, { scaleX: sx }] }}>
+            <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: -5, bottom: -5, width: bw, borderRadius: 27, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,.45)', transform: [{ translateX: tx }, { scaleX: sx }] }}>
               <LinearGradient colors={['rgba(255,255,255,.36)', 'rgba(255,255,255,.14)']} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
               <Animated.View style={{ position: 'absolute', top: -10, bottom: -10, width: bw * 0.34, left: 0, transform: [{ translateX: sheen.interpolate({ inputRange: [0, 1], outputRange: [-bw * 0.5, bw * 1.2] }) }, { skewX: '-22deg' }] }}>
                 <LinearGradient colors={['rgba(255,255,255,0)', 'rgba(255,255,255,.55)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
               </Animated.View>
-              <View style={{ position: 'absolute', bottom: 3, left: '50%', marginLeft: -11, width: 22, height: 3, borderRadius: 3, backgroundColor: '#8fe9e2', opacity: 0.95 }} />
+              <View style={{ position: 'absolute', bottom: 6, left: '50%', marginLeft: -11, width: 22, height: 3, borderRadius: 3, backgroundColor: '#8fe9e2', opacity: 0.95 }} />
             </Animated.View>
           )}
           {state.routes.map((r: any, i: number) => {
@@ -81,7 +81,7 @@ function Bar({ state }: any) {
             const on = idx === i;
             const pop = pops[ITEMS.findIndex((x) => x.name === r.name)];
             return (
-              <Pressable key={r.key} onPress={() => router.navigate((r.name === 'index' ? '/' : '/' + r.name) as any)} accessibilityLabel={item.label} style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 22 }}>
+              <Pressable key={r.key} onPress={() => router.navigate((r.name === 'index' ? '/' : '/' + r.name) as any)} accessibilityLabel={item.label} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 22 }}>
                 <Animated.View style={{ transform: [{ translateY: pop.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.16] }) }] }}>
                   <Icon name={r.name} color={on ? '#fff' : 'rgba(255,255,255,.65)'} />
                 </Animated.View>

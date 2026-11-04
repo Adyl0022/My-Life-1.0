@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Pressable } from 'react-native';
+import { Text } from '../components/Txt';
 import { ZikirScreen } from '../components/ZikirScreen';
 import { MATHURAT, dayKey } from '../lib/islamic';
 export default function Mathurat() {

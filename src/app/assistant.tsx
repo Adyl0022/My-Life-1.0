@@ -1,6 +1,7 @@
 import { useName } from '../lib/store';
 import React from 'react';
-import { View, Text, TextInput, ScrollView, Pressable } from 'react-native';
+import { View, TextInput, ScrollView, Pressable } from 'react-native';
+import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';

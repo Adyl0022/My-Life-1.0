@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Animated, Easing } from 'react-native';
+import { View, ScrollView, Pressable, Animated, Easing } from 'react-native';
+import { Text } from '../../components/Txt';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';

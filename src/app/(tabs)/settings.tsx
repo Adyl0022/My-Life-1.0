@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, Modal, Animated, Easing } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, Modal, Animated, Easing } from 'react-native';
+import { Text } from '../../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';

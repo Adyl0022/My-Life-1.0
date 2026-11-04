@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated, Easing } from 'react-native';
+import { View, Animated, Easing } from 'react-native';
+import { Text } from './Txt';
 import Svg, { Defs, RadialGradient, LinearGradient as LG, Stop, Circle, Ellipse, Path, ClipPath, G } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 

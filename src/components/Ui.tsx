@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TextInput, Pressable, Modal, Platform } from 'react-native';
+import { View, TextInput, Pressable, Modal, Platform } from 'react-native';
+import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export const W = '#fff';

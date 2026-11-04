@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, ScrollView, Pressable } from 'react-native';
+import { Text } from './Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Glass } from './Glass';
 import { IslamicBg, Header, ToolBar, VerseBlock, Pending, Credit } from './IslamicUi';

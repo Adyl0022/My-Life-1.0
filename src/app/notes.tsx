@@ -133,12 +133,14 @@ export default function Notes() {
                 </View>
                 <TextInput multiline value={draft.s} onChangeText={(v) => upd({ s: v })} placeholder="Start writing..." placeholderTextColor="rgba(255,255,255,.4)" style={{ color: W, fontSize: 16, lineHeight: 24, marginTop: 14, minHeight: 280, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
               </ScrollView>
-              <Glass radius={22} style={{ marginHorizontal: 16, marginBottom: 12, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Glass radius={22} style={{ marginHorizontal: 16, marginBottom: 12, padding: 10, gap: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 {[['☐', 'Add checklist item', () => addLine('☐ ')], ['•', 'Add bullet', () => addLine('• ')], ['1.', 'Add numbered item', numLine], ['Date', 'Insert date and time', stamp]].map(([t, l, f]: any) => (
                   <Pressable key={l} accessibilityLabel={l} onPress={f} style={{ minWidth: 36, height: 36, paddingHorizontal: t === 'Date' ? 8 : 0, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: t.length > 1 ? 12.5 : 18, fontWeight: t.length > 1 ? '700' : '400' }}>{t}</Text></Pressable>
                 ))}
-                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 5 }}>
-                  {COL.map((c, i) => <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: c, borderWidth: draft.c === i ? 2 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.25)' }} />)}
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 6 }}>
+                  {COL.map((c, i) => <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: c, borderWidth: draft.c === i ? 2 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.25)' }} />)}
                 </View>
               </Glass>
               {confirmDel && (

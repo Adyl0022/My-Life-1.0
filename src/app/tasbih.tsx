@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Pressable } from 'react-native';
+import { View, ScrollView, Pressable, Animated, Easing } from 'react-native';
 import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,7 +24,14 @@ export default function Tasbih() {
   const [p, setP] = useState(0); const [target, setTarget] = useState(33); const [count, setCount] = useState(0); const [done, setDone] = useState(false);
   const today = st.day === dayKey() ? st : { day: dayKey(), total: 0, rounds: 0 };
   const cur = PRE[p]; const C = 2 * Math.PI * 98;
+  const fx = React.useRef(new Animated.Value(1)).current;
+  const pop = React.useRef(new Animated.Value(1)).current;
+  const burst = () => {
+    fx.setValue(0); Animated.timing(fx, { toValue: 1, duration: 600, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    Animated.sequence([Animated.timing(pop, { toValue: 1.14, duration: 110, useNativeDriver: true }), Animated.timing(pop, { toValue: 1, duration: 170, useNativeDriver: true })]).start();
+  };
   const tap = () => {
+    burst();
     const c = count + 1;
     if (c >= target) { setCount(0); setDone(true); setSt({ ...today, total: today.total + 1, rounds: today.rounds + 1 }); }
     else { setCount(c); setDone(false); setSt({ ...today, total: today.total + 1 }); }
@@ -46,11 +53,20 @@ export default function Tasbih() {
             <Text style={{ color: W, fontSize: 34, lineHeight: 60, textAlign: 'center' }}>{cur[1]}</Text>
             <Text style={{ color: '#8fe9e2', fontSize: 13, fontWeight: '700' }}>{cur[0]}</Text>
             <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 13, marginTop: 2 }}>{lang === 'en' ? cur[3] : cur[2]}</Text>
-            <Pressable accessibilityLabel="Tap to count" onPress={tap} style={{ marginTop: 14, width: 220, height: 220, alignItems: 'center', justifyContent: 'center' }}>
+            <Pressable accessibilityLabel="Tap to count" onPress={tap} style={({ pressed }) => ({ marginTop: 14, width: 220, height: 220, alignItems: 'center', justifyContent: 'center', transform: [{ scale: pressed ? 0.95 : 1 }] })}>
               <View style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}>
                 <Svg width={220} height={220} viewBox="0 0 220 220"><Circle cx={110} cy={110} r={98} stroke="rgba(255,255,255,.14)" strokeWidth={10} fill="none" /><Circle cx={110} cy={110} r={98} stroke="#5ee7df" strokeWidth={10} fill="none" strokeLinecap="round" strokeDasharray={`${C}`} strokeDashoffset={C - C * (count / target)} /></Svg>
               </View>
-              <Text style={{ color: W, fontSize: 64, fontWeight: '800' }}>{count}</Text>
+              <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: 220, height: 220 }}>
+                <Animated.View style={{ position: 'absolute', left: 10, top: 10, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(143,233,226,.28)', opacity: fx.interpolate({ inputRange: [0, 1], outputRange: [0.9, 0] }), transform: [{ scale: fx.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.15] }) }] }} />
+                <Animated.View style={{ position: 'absolute', left: 0, top: 0, width: 220, height: 220, borderRadius: 110, borderWidth: 2, borderColor: 'rgba(143,233,226,.9)', opacity: fx.interpolate({ inputRange: [0, 0.01, 1], outputRange: [0, 0.95, 0] }), transform: [{ scale: fx.interpolate({ inputRange: [0, 1], outputRange: [0.82, 1.32] }) }] }} />
+                {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
+                  <View key={a} style={{ position: 'absolute', left: 107, top: 107, width: 6, height: 6, transform: [{ rotate: a + 'deg' }] }}>
+                    <Animated.View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff', opacity: fx.interpolate({ inputRange: [0, 0.01, 1], outputRange: [0, 1, 0] }), transform: [{ translateY: fx.interpolate({ inputRange: [0, 1], outputRange: [-96, -128] }) }, { scale: fx.interpolate({ inputRange: [0, 1], outputRange: [1, 0.3] }) }] }} />
+                  </View>
+                ))}
+              </View>
+              <Animated.Text style={{ color: W, fontSize: 64, fontWeight: '800', transform: [{ scale: pop }], textShadowColor: 'rgba(143,233,226,.35)', textShadowRadius: 18 }}>{count}</Animated.Text>
               <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 13 }}>of {target}</Text>
               <Text style={{ color: done ? '#7df0c6' : 'rgba(255,255,255,.6)', fontSize: 12, marginTop: 4 }}>{done ? 'Round complete' : 'Tap to count'}</Text>
             </Pressable>

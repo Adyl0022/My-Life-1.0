@@ -12,6 +12,6 @@ export default function Mathurat() {
       <Text style={{ flex: 1, color: 'rgba(255,255,255,.7)', fontSize: 11.5, textAlign: 'right' }}>{pe === 0 ? 'Morning edition · after Subuh' : 'Evening edition · after Asar'}</Text>
     </View>
   );
-  return <ZikirScreen key={pe} title="Al-Ma'thurat Sughra" sub="28 parts · Malaysian edition" parts={MATHURAT} storeKey={'mathurat_' + dayKey() + '_' + pe} bmKey="mathurat" start={9} evening={pe === 1} headExtra={head}
-    footNote="Morning (Asbahna) and evening (Amsaina) differ only in a few doa wordings. Quran parts are shown from verified text. Doa and dhikr parts will be added only from a verified source, checked by someone knowledgeable." />;
+  return <ZikirScreen title="Al-Ma'thurat Sughra" sub="28 parts · Malaysian edition" parts={MATHURAT} storeKey={'mathurat_' + dayKey() + '_' + pe} bmKey="mathurat" start={9} evening={pe === 1} headExtra={head}
+    footNote="Morning (Asbahna) and evening (Amsaina) differ only in a few doa wordings. Quran parts come from the full Quran text. Dhikr, selawat and doa parts are a DRAFT compiled from standard hadith adhkar and common Malaysian guides, with rumi and Malay/English meanings added. They have NOT yet been checked by a qualified person, so please have them reviewed before relying on them." />;
 }

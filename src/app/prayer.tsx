@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path, G, Text as SText } from 'react-native-svg';
 import { Glass } from '../components/Glass';
-import { IslamicBg, Header } from '../components/IslamicUi';
+import { IslamicBg, Header, Ic } from '../components/IslamicUi';
 import { Sheet, SBtn, W } from '../components/Ui';
 import { usePrayer, ZONES, qiblaBearing } from '../lib/prayer';
 import { useStored } from '../lib/store';
@@ -55,10 +55,10 @@ export default function Prayer() {
             <Glass radius={24} style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
               {pr.times.map((p, i) => (
                 <View key={p.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, borderBottomWidth: i === pr.times.length - 1 ? 0 : 1, borderBottomColor: 'rgba(255,255,255,.1)' }}>
-                  <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: COL[p.key], alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} /></View>
+                  <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: COL[p.key], alignItems: 'center', justifyContent: 'center' }}><Ic n={({ fajr: 'moon', syuruk: 'sunrise', dhuhr: 'sun', asr: 'sun', maghrib: 'sunset', isha: 'moon' } as any)[p.key]} size={20} /></View>
                   <Text style={{ flex: 1, color: n && n.idx === i ? '#7df0c6' : W, fontSize: 15, fontWeight: n && n.idx === i ? '800' : '600' }}>{p.name}</Text>
                   <Text style={{ color: n && n.idx === i ? '#7df0c6' : W, fontSize: 15, fontWeight: '700' }}>{p.time12}</Text>
-                  {p.key !== 'syuruk' ? <Pressable accessibilityLabel="Toggle alert" onPress={() => setAlarms({ ...alarms, [p.key]: !alarms[p.key] })} style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: alarms[p.key] ? 'rgba(52,211,153,.45)' : 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 14 }}>🔔</Text></Pressable> : <View style={{ width: 34 }} />}
+                  {p.key !== 'syuruk' ? <Pressable accessibilityLabel="Toggle alert" onPress={() => setAlarms({ ...alarms, [p.key]: !alarms[p.key] })} style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: alarms[p.key] ? 'rgba(52,211,153,.45)' : 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Ic n={alarms[p.key] ? 'bell' : 'bellOff'} size={18} color={alarms[p.key] ? '#fff' : 'rgba(255,255,255,.55)'} /></Pressable> : <View style={{ width: 34 }} />}
                 </View>
               ))}
             </Glass>

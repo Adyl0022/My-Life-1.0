@@ -1,8 +1,9 @@
 import { useStored } from './store';
 import data from '../data/quranData.json';
 import full from '../data/quranFull.json';
+import { ZTEXT } from '../data/zikirText';
 
-export type Verse = { n: number; ar: string; ms: string; en: string };
+export type Verse = { n: number; ar: string; ms: string; en: string; rumi?: string };
 const FULL: any[] = (full as any).default || (full as any);
 const LEGACY: Record<number, [string, string, string, string]> = { 1: ['fatihah', 'Surah Al-Fatihah', 'ٱلْفَاتِحَة', '7 verses'], 18: ['kahfi', 'Surah Al-Kahfi', 'ٱلْكَهْف', '110 verses'], 36: ['yasin', 'Surah Yasin', 'يسٓ', 'With doa after recitation'], 67: ['mulk', 'Surah Al-Mulk', 'ٱلْمُلْك', '30 verses'] };
 export type SurahInfo = { title: string; ar: string; sub: string; verses: Verse[]; bismillah: boolean; num: number };
@@ -18,6 +19,11 @@ FULL.forEach((f: any) => {
   SURAH[key] = info;
   SURAH_LIST.push({ key, num: f.n, title, ar: info.ar, sub: f.tr + ' · ' + f.v.length + ' verses', place: f.ty === 'meccan' ? 'Makkiyyah' : 'Madaniyyah' });
 });
+// Four featured readings: Al-Mulk, Al-Kahfi (first 10 + last 10 verses), Yasin, As-Sajdah
+const kahf = SURAH['kahfi'];
+SURAH['kahfi10'] = { title: 'Al-Kahfi · first 10 & last 10', ar: kahf.ar, sub: 'Friday reading · verses 1–10 and 101–110', bismillah: true, num: 18 } as SurahInfo;
+Object.defineProperty(SURAH['kahfi10'], 'verses', { enumerable: true, get: () => kahf.verses.filter((v) => v.n <= 10 || v.n >= 101) });
+export const FEATURED = ['mulk', 'kahfi10', 'yasin', '32'];
 export const REFS: Record<string, Verse[]> = (data as any).refs;
 export const BISMILLAH = (data as any).surah.fatihah[0] as Verse;
 
@@ -54,7 +60,9 @@ export const MATHURAT: Part[] = [
   { name: 'Subhanaka Allahumma wa bihamdika', kind: 'Selawat' },
 ];
 export const KIND_COL: Record<string, [string, string]> = { Quran: ['rgba(94,231,181,.25)', '#7df0c6'], Dhikr: ['rgba(255,196,107,.25)', '#ffd593'], Selawat: ['rgba(124,156,255,.28)', '#a9bcff'], Doa: ['rgba(255,143,171,.25)', '#ffb3c6'], Intro: ['rgba(255,255,255,.14)', '#ffffff'] };
-export function partVerses(p: Part): Verse[] | null {
+export function partVerses(p: Part, evening = false): Verse[] | null {
+  const z = ZTEXT[p.name];
+  if (z) { const t = evening && z.e ? z.e : z.m; return [{ n: 1, ar: t.ar, ms: t.ms, en: t.en, rumi: t.rumi }]; }
   if (p.surah) return SURAH[p.surah].verses;
   if (p.refs) return p.refs.flatMap((r) => REFS[r]);
   return null;

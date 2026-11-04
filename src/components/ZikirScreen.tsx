@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
 import { Text } from './Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,13 +13,14 @@ export function ZikirScreen({ title, sub, parts, storeKey, bmKey, start, evening
   const [sel, setSel] = useState(start);
   const [count, setCount] = useState(0);
   const [toast, setToast] = useState('');
+  useEffect(() => { setSel(start); setCount(0); }, [storeKey]);
   const say = (t: string) => { setToast(t); setTimeout(() => setToast(''), 1500); };
   const rd = isl.read[storeKey] || {};
   const nRead = Object.keys(rd).filter((k) => rd[k]).length;
   const p = parts[sel];
   const isRead = !!rd[sel];
   const setRead = (i: number, v: boolean) => setIsl({ ...isl, read: { ...isl.read, [storeKey]: { ...rd, [i]: v } } });
-  const verses = partVerses(p);
+  const verses = partVerses(p, !!evening);
   const pc = KIND_COL[p.kind];
   const saved = !!isl.bm[bmKey];
   const tap33 = () => { if (count >= 33) { setCount(0); setRead(sel, false); return; } const c = count + 1; setCount(c); if (c >= 33) setRead(sel, true); };

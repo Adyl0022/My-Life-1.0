@@ -61,8 +61,8 @@ export default function Planner() {
     setEdit(null);
   };
 
-  const EditBox = ({ kind }: { kind: 'event' | 'task' }) => (
-    <Glass radius={20} style={{ padding: 14, gap: 8 }}>
+  const editBox = (kind: 'event' | 'task') => (
+    <View style={{ padding: 18, gap: 10, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
       <Text style={{ color: '#8fe9e2', fontSize: 11.5, fontWeight: '700', letterSpacing: 1 }}>{kind === 'event' ? 'EDIT EVENT' : 'EDIT TASK'}</Text>
       <Inp value={edit.name} onChangeText={(v: string) => setEdit({ ...edit, name: v })} placeholder={kind === 'event' ? 'Event name' : 'Task name'} />
       {kind === 'task' && <Inp value={edit.note} onChangeText={(v: string) => setEdit({ ...edit, note: v })} placeholder="Note (optional)" />}
@@ -75,11 +75,10 @@ export default function Planner() {
         {kind === 'task' && <SBtn t="Delete" kind="danger" onPress={() => { setD({ ...d, tasks: d.tasks.filter((y) => y.id !== edit.id) }); setEdit(null); }} />}
         <SBtn t="Save" kind="primary" onPress={saveEdit} />
       </View>
-    </Glass>
+    </View>
   );
 
   const EventRow = ({ x }: { x: Ev }) => {
-    if (edit && edit.kind === 'event' && edit.id === x.id) return <EditBox kind="event" />;
     const p = x.date.split('-'); const okd = p.length === 3;
     return (
       <Pressable onPress={() => setD({ ...d, events: d.events.map((y) => (y.id === x.id ? { ...y, done: !y.done } : y)) })}>
@@ -95,7 +94,6 @@ export default function Planner() {
     );
   };
   const TaskRow = ({ x }: { x: Tk }) => {
-    if (edit && edit.kind === 'task' && edit.id === x.id) return <EditBox kind="task" />;
     const done = x.status === 'done'; const overdue = !done && x.due && x.due < today;
     const parts: string[] = []; if (x.due) parts.push((overdue ? 'Overdue · ' : 'Due ') + dueText(x.due)); if (x.note) parts.push(x.note);
     if (!parts.length) parts.push(x.status === 'doing' ? 'In progress' : done ? 'Completed' : 'No due date');
@@ -197,6 +195,7 @@ export default function Planner() {
           )}
         </ScrollView>
 
+        {edit && <Sheet onClose={() => setEdit(null)}>{editBox(edit.kind)}</Sheet>}
         {add && (
           <Sheet onClose={() => setAdd(null)}>
             <View style={{ padding: 20, gap: 10, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>

@@ -45,6 +45,8 @@ function Bar({ state }: any) {
   const tx = useRef(new Animated.Value(0)).current;
   const sx = useRef(new Animated.Value(1)).current;
   const sheen = useRef(new Animated.Value(0)).current;
+  const beam = useRef(new Animated.Value(0)).current;
+  const [BW, setBW] = useState(0);
   const rip = useRef(new Animated.Value(1)).current;
   const col = useRef(new Animated.Value(0)).current;
   const pops = useRef(ITEMS.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))).current;
@@ -76,8 +78,14 @@ function Bar({ state }: any) {
       Animated.timing(sheen, { toValue: 0, duration: 0, useNativeDriver: true }),
     ]));
     loop.start();
+    const bl = Animated.loop(Animated.sequence([
+      Animated.timing(beam, { toValue: 1, duration: 3200, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+      Animated.delay(900),
+      Animated.timing(beam, { toValue: 0, duration: 0, useNativeDriver: true }),
+    ]));
+    bl.start();
     const un = subscribeNav((c) => Animated.timing(col, { toValue: c ? 1 : 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start());
-    return () => { loop.stop(); un(); };
+    return () => { loop.stop(); bl.stop(); un(); };
   }, []);
   const press = (r: any, i: number) => {
     if (Platform.OS !== 'web') { try { Haptics.selectionAsync(); } catch {} }
@@ -93,8 +101,15 @@ function Bar({ state }: any) {
     <LinearGradient pointerEvents="none" colors={home ? ['rgba(10,15,44,0)', tint(.35), tint(.6)] : ['rgba(10,15,44,0)', 'rgba(10,15,44,.92)', 'rgba(10,15,44,.98)']} locations={[0, 0.55, 1]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 104 }} />
     <Animated.View style={{ position: 'absolute', left: side, right: side, bottom: 18 }}>
       <Glass radius={28} style={{ padding: 8, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
-        <LinearGradient pointerEvents="none" colors={['rgba(255,255,255,0)', 'rgba(' + gc + ',.75)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', left: 26, right: 26, top: 0, height: 1.5 }} />
-        <View style={{ flexDirection: 'row' }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+        {BW > 0 && (<>
+          <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: -1, width: 110, height: 2.5, transform: [{ translateX: beam.interpolate({ inputRange: [0, 1], outputRange: [-130, BW + 20] }) }] }}>
+            <LinearGradient colors={['rgba(' + gc + ',0)', 'rgba(' + gc + ',.95)', 'rgba(255,255,255,1)', 'rgba(' + gc + ',0)']} locations={[0, 0.5, 0.8, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1, borderRadius: 2 }} />
+          </Animated.View>
+          <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, bottom: -1, width: 110, height: 2.5, transform: [{ translateX: beam.interpolate({ inputRange: [0, 1], outputRange: [BW + 20, -130] }) }] }}>
+            <LinearGradient colors={['rgba(' + gc + ',0)', 'rgba(' + gc + ',.9)', 'rgba(255,255,255,1)', 'rgba(' + gc + ',0)']} locations={[0, 0.5, 0.8, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1, borderRadius: 2 }} />
+          </Animated.View>
+        </>)}
+        <View style={{ flexDirection: 'row' }} onLayout={(e) => { setW(e.nativeEvent.layout.width); setBW(e.nativeEvent.layout.width + 16); }}>
           {W > 0 && (
             <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: -5, bottom: -5, width: bw, borderRadius: 27, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,.45)', transform: [{ translateX: tx }, { scaleX: sx }] }}>
               <LinearGradient colors={['rgba(255,255,255,.26)', 'rgba(255,255,255,.1)']} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />

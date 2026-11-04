@@ -96,8 +96,8 @@ export default function Home() {
                   </LinearGradient>
                   <View style={{ flex: 1, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>{c.title}</Text>
-                      <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 12 }}>{c.sub}</Text>
+                      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>{c.title}</Text>
+                      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{ color: 'rgba(255,255,255,.72)', fontSize: 11, marginTop: 1 }}>{c.sub}</Text>
                     </View>
                     <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,.18)', borderWidth: 1, borderColor: 'rgba(255,255,255,.35)', alignItems: 'center', justifyContent: 'center' }}><ChipIcon k={c.k} /></View>
                   </View>
@@ -111,8 +111,8 @@ export default function Home() {
                 <Glass style={{ flex: 1, flexDirection: 'row' }}>
                   <View style={{ flex: 1, paddingLeft: 22, paddingRight: 8, justifyContent: 'center' }}>
                     <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,.18)', borderWidth: 1, borderColor: 'rgba(255,255,255,.35)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}><ChipIcon k="Habit" /></View>
-                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>{c.title}</Text>
-                    <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 12, lineHeight: 18, marginTop: 6 }}>{c.sub}</Text>
+                    <Text numberOfLines={2} style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>{c.title}</Text>
+                    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{ color: 'rgba(255,255,255,.72)', fontSize: 11, marginTop: 4 }}>{c.sub}</Text>
                   </View>
                   <LinearGradient colors={[c.c1, c.c2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 170 }}>{ARTS.Habit()}</LinearGradient>
                 </Glass>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, Modal, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { Glass } from '../../components/Glass';
 import { Blob } from '../../components/Bg';
@@ -17,17 +18,42 @@ const AR = [24, 28, 33, 38];
 
 const Ttl = ({ t }: { t: string }) => <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>{t}</Text>;
 const Lbl = ({ t, style }: { t: string; style?: any }) => <Text style={[{ color: DIM, fontSize: 11.5, marginTop: 2, lineHeight: 16 }, style]}>{t}</Text>;
-const Dot = ({ c = 'rgba(255,255,255,.14)' }: { c?: string }) => <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: c, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} /></View>;
+const TILE: Record<string, [string, string]> = {
+  ev: ['#7c9cff', '#5b7bff'], pr: ['#34d399', '#12a58a'], zk: ['#ffc46b', '#ff8f5a'], wt: ['#5ee7df', '#4a8dff'], qh: ['#b794ff', '#7059e8'],
+  export: ['#5ee7b5', '#26b8c9'], lang: ['#c79bff', '#ff8fab'], pw: ['#7c9cff', '#9a7bff'], nd: ['#ffc46b', '#ff7a6b'], dev: ['#8aa4d8', '#5d6fa8'], bk: ['#5ee7df', '#3aa6c9'], log: ['#ff8fab', '#b794ff'],
+};
+function Glyph({ k }: { k: string }) {
+  const p = { stroke: '#fff', strokeWidth: 1.9, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24">
+      {k === 'ev' && <><Rect x={4} y={5} width={16} height={15} rx={3} {...p} /><Path d="M4 10h16M8 3v4M16 3v4M9 15l2 2 4-4" {...p} /></>}
+      {k === 'pr' && <Path d="M3 21h18M5 21v-7M19 21v-7M7 14a5 5 0 0 1 10 0M12 4v3M10 21v-3a2 2 0 0 1 4 0v3" {...p} />}
+      {k === 'zk' && <>{Array.from({ length: 8 }, (_, i) => { const t = (i / 8) * Math.PI * 2; return <Circle key={i} cx={12 + 7 * Math.cos(t)} cy={11 + 7 * Math.sin(t)} r={1.7} fill="#fff" />; })}<Path d="M12 18.5v3.2" {...p} /></>}
+      {k === 'wt' && <Path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z" {...p} />}
+      {k === 'qh' && <Path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" {...p} />}
+      {k === 'export' && <Path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14" {...p} />}
+      {k === 'lang' && <><Circle cx={12} cy={12} r={9} {...p} /><Path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" {...p} /></>}
+      {k === 'pw' && <><Rect x={5} y={11} width={14} height={10} rx={3} {...p} /><Path d="M8 11V8a4 4 0 0 1 8 0v3M12 15v2" {...p} /></>}
+      {k === 'nd' && <Path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM12 8v5M12 16v.4" {...p} />}
+      {k === 'dev' && <><Rect x={7} y={2.5} width={10} height={19} rx={3} {...p} /><Path d="M11 18h2" {...p} /></>}
+      {k === 'bk' && <Path d="M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9.5 3.7 3.7 0 0 1 17.5 18zM12 15v-5M9.5 12L12 9.5 14.5 12" {...p} />}
+      {k === 'log' && <><Circle cx={12} cy={12} r={9} {...p} /><Path d="M12 7v5l3 2" {...p} /></>}
+    </Svg>
+  );
+}
+const Dot = ({ c = 'rgba(255,255,255,.14)', k }: { c?: string; k?: string }) => k && TILE[k]
+  ? <LinearGradient colors={TILE[k]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Glyph k={k} /></LinearGradient>
+  : <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: c, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} /></View>;
 const Chev = () => <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 20 }}>›</Text>;
 const Sw = ({ on }: { on: boolean }) => (
   <LinearGradient colors={on ? G : ['rgba(255,255,255,.22)', 'rgba(255,255,255,.22)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 44, height: 26, borderRadius: 13, padding: 3 }}>
     <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff', marginLeft: on ? 18 : 0 }} />
   </LinearGradient>
 );
-function Row({ ic, t, sub, right, onPress, last }: { ic?: string; t: string; sub?: string; right?: React.ReactNode; onPress?: () => void; last?: boolean }) {
+function Row({ ic, k, t, sub, right, onPress, last }: { ic?: string; k?: string; t: string; sub?: string; right?: React.ReactNode; onPress?: () => void; last?: boolean }) {
   return (
     <Pressable onPress={onPress} disabled={!onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, borderBottomWidth: last ? 0 : 1, borderBottomColor: 'rgba(255,255,255,.1)' }}>
-      {ic ? <Dot c={ic} /> : null}
+      {ic || k ? <Dot c={ic} k={k} /> : null}
       <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 14, fontWeight: '600' }}>{t}</Text>{sub ? <Lbl t={sub} /> : null}</View>
       {right}
     </Pressable>
@@ -158,18 +184,18 @@ export default function Settings() {
 
               <Glass style={{ paddingVertical: 8, paddingHorizontal: 16 }}>
                 <View style={{ paddingTop: 8 }}><Ttl t="Reminders and notifications" /></View>
-                {TOG.map(([k, t, s], i) => <Row key={k} ic="rgba(124,156,255,.35)" t={t} sub={s} last={i === TOG.length - 1} onPress={() => setTg({ ...tg, [k]: !tg[k] })} right={<Sw on={!!tg[k]} />} />)}
+                {TOG.map(([k, t, s], i) => <Row key={k} k={k} ic="x" t={t} sub={s} last={i === TOG.length - 1} onPress={() => setTg({ ...tg, [k]: !tg[k] })} right={<Sw on={!!tg[k]} />} />)}
               </Glass>
 
               <Pressable onPress={() => router.push('/export' as any)}>
                 <Glass style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <Dot c="rgba(94,231,181,.35)" />
+                  <Dot k="export" />
                   <View style={{ flex: 1 }}><Ttl t="Export all my data" /><Lbl t="Everything in one file: Excel, PDF, CSV or a full backup" /></View>
                   <Chev />
                 </Glass>
               </Pressable>
 
-              <Glass style={{ paddingHorizontal: 16 }}><Row ic="rgba(183,148,255,.35)" t="Language" last right={<Text style={{ color: DIM, fontSize: 12.5 }}>English</Text>} /></Glass>
+              <Glass style={{ paddingHorizontal: 16 }}><Row k="lang" t="Language" last right={<Text style={{ color: DIM, fontSize: 12.5 }}>English</Text>} /></Glass>
               <Pressable onPress={() => setDlg('out')}><Glass style={{ paddingVertical: 14, alignItems: 'center' }}><Text style={{ color: '#ffb3bf', fontSize: 14, fontWeight: '700' }}>Log out</Text></Glass></Pressable>
             </View>
           )}
@@ -181,20 +207,20 @@ export default function Settings() {
                 <View style={{ flex: 1 }}><Ttl t="Your data is protected" /><Lbl t="Encrypted sync is on · Last synced just now" /></View>
               </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
-                <Row ic="rgba(124,156,255,.35)" t="Change password" onPress={() => setDlg('pw')} right={<Chev />} />
-                <Row ic="rgba(255,196,107,.35)" t="Alert on new device sign-in" last onPress={() => setAlertNew(!alertNew)} right={<Sw on={alertNew} />} />
+                <Row k="pw" t="Change password" onPress={() => setDlg('pw')} right={<Chev />} />
+                <Row k="nd" t="Alert on new device sign-in" last onPress={() => setAlertNew(!alertNew)} right={<Sw on={alertNew} />} />
               </Glass>
               <Glass style={{ padding: 16 }}>
                 <Ttl t="Logged-in Devices" /><Lbl t={devs.length + ' signed in'} />
                 <View style={{ marginTop: 6 }}>
-                  {devs.map((d, i) => <Row key={d.id} ic="rgba(255,255,255,.14)" t={d.name} sub={d.note} last={i === devs.length - 1}
+                  {devs.map((d, i) => <Row key={d.id} k="dev" t={d.name} sub={d.note} last={i === devs.length - 1}
                     right={!d.cur ? <Pressable onPress={() => setDevs(devs.filter((x) => x.id !== d.id))}><Text style={{ color: '#ffb3bf', fontSize: 12.5, fontWeight: '700' }}>Log out</Text></Pressable> : undefined} />)}
                 </View>
                 <View style={{ flexDirection: 'row', marginTop: 10 }}><Btn t="Log out all other devices" onPress={() => setDevs(devs.filter((x) => x.cur))} /></View>
               </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
-                <Row ic="rgba(94,231,223,.35)" t="Encrypted backup & restore" onPress={() => setDlg('backup')} right={<Chev />} />
-                <Row ic="rgba(255,143,171,.35)" t="Security activity log" last onPress={() => setDlg('log')} right={<Text style={{ color: DIM, fontSize: 12.5 }}>30 days</Text>} />
+                <Row k="bk" t="Encrypted backup & restore" onPress={() => setDlg('backup')} right={<Chev />} />
+                <Row k="log" t="Security activity log" last onPress={() => setDlg('log')} right={<Text style={{ color: DIM, fontSize: 12.5 }}>30 days</Text>} />
               </Glass>
               <Glass style={{ padding: 16 }}>
                 <Ttl t="Account and data" />

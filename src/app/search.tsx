@@ -8,6 +8,7 @@ import { Glass } from '../components/Glass';
 import { Blob } from '../components/Bg';
 import { SEARCH_INDEX } from '../data/searchIndex';
 import { ROUTES } from '../lib/routes';
+import { TOP } from '../lib/layout';
 
 const MODS = ['All', 'Planner', 'Islamic', 'Finance', 'Record', 'Habit', 'System'];
 
@@ -27,7 +28,7 @@ export default function Search() {
       <LinearGradient colors={['#0a0f2c', '#1a1048', '#0c2b4d']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
       <Blob size={320} color="rgba(124,156,255,.5)" style={{ right: -100, top: -40 }} />
       <Blob size={340} color="rgba(183,148,255,.35)" style={{ left: -120, bottom: 0 }} />
-      <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 34 }}>
+      <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 12 + TOP }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Pressable onPress={() => router.back()} accessibilityLabel="Back">
             <Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>

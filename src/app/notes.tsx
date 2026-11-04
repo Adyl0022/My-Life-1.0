@@ -7,6 +7,7 @@ import { Glass } from '../components/Glass';
 import { Blob } from '../components/Bg';
 import { Inp, SBtn, Sheet, Toast, W, GP } from '../components/Ui';
 import { useStored } from '../lib/store';
+import { TOP } from '../lib/layout';
 
 type Note = { id: number; t: string; s: string; c: number; pin: boolean; u: number; r: string };
 type Data = { notes: Note[]; seq: number };
@@ -57,7 +58,7 @@ export default function Notes() {
       <Blob size={320} color="rgba(255,196,107,.35)" style={{ right: -100, top: -40 }} />
       <Blob size={340} color="rgba(124,156,255,.35)" style={{ left: -120, bottom: 40 }} />
       <SafeAreaView style={{ flex: 1 }}>
-        <View style={{ paddingHorizontal: 20, paddingTop: 38, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: 16 + TOP, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Pressable onPress={() => router.back()} accessibilityLabel="Back"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 24, marginTop: -3 }}>‹</Text></Glass></Pressable>
           <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Notes</Text><Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12 }}>{sorted.length === notes.length ? notes.length + (notes.length === 1 ? ' note' : ' notes') : sorted.length + ' of ' + notes.length + ' notes'}</Text></View>
           <Pressable onPress={openNew} accessibilityLabel="New note"><LinearGradient colors={['#ffc46b', '#ff8f5a']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 26, marginTop: -2 }}>+</Text></LinearGradient></Pressable>

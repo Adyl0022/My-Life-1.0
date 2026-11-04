@@ -8,6 +8,7 @@ import { Glass } from '../components/Glass';
 import { Blob } from '../components/Bg';
 import { Inp, DateField, Pill, SBtn, Sheet, Toast, todayStr, W, GP } from '../components/Ui';
 import { useStored } from '../lib/store';
+import { TOP } from '../lib/layout';
 
 type Ev = { id: number; name: string; date: string; remind: string; done: boolean };
 type Tk = { id: number; name: string; note: string; prio: string; due: string; cat: string; status: 'todo' | 'doing' | 'done' };
@@ -132,7 +133,7 @@ export default function Planner() {
       <Blob size={320} color="rgba(124,156,255,.5)" style={{ right: -100, top: -40 }} />
       <Blob size={340} color="rgba(183,148,255,.3)" style={{ left: -120, bottom: 40 }} />
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 38, paddingBottom: 60 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 60 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Pressable onPress={() => router.back()} accessibilityLabel="Back"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 24, marginTop: -3 }}>‹</Text></Glass></Pressable>
             <Text style={{ flex: 1, color: W, fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Daily Planner</Text>

@@ -10,6 +10,7 @@ import { Blob } from '../components/Bg';
 import { OrbSvg } from '../components/Orb';
 import { AssistantBase } from '../lib/assistantBase';
 import { ROUTES } from '../lib/routes';
+import { TOP } from '../lib/layout';
 
 const stroke = { stroke: '#fff', strokeWidth: 2, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 
@@ -163,7 +164,7 @@ export default function Assistant() {
       <LinearGradient colors={['#0a0f2c', '#1a1048', '#0c2b4d']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
       <Blob size={320} color="rgba(183,148,255,.5)" style={{ right: -100, top: -40 }} />
       <Blob size={340} color="rgba(94,231,223,.3)" style={{ left: -120, bottom: 80 }} />
-      <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 34 }}>
+      <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 12 + TOP }}>
         <Chat ref={chat} userName={name} onBack={() => router.back()} go={go} onScroll={() => chat.current?.scrollRef?.scrollToEnd({ animated: true })} />
         {!!note && <View style={{ position: 'absolute', left: 20, right: 20, bottom: 230, alignItems: 'center' }}><Glass radius={999} style={{ paddingVertical: 9, paddingHorizontal: 18, backgroundColor: 'rgba(20,26,70,.92)' }}><Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '700' }}>{note}</Text></Glass></View>}
       </SafeAreaView>

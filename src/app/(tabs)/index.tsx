@@ -12,6 +12,7 @@ import { Orb, OrbSvg } from '../../components/Orb';
 import { useUsage } from '../../lib/usage';
 import { useName } from '../../lib/store';
 import { THEMES, LINES, periodOf } from '../../lib/theme';
+import { TOP } from '../../lib/layout';
 
 const ARTS: Record<string, () => React.ReactElement> = { Planner: PlannerArt, Islamic: IslamicArt, Finance: FinanceArt, Record: RecordArt, Habit: HabitArt };
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -48,7 +49,7 @@ export default function Home() {
       <Drift dur={13000} delay={1500}><LinearGradient colors={['rgba(255,255,255,.35)', 'rgba(255,255,255,.04)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', left: 316, top: 262, width: 58, height: 58, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,.3)' }} /></Drift>
       <Drift dur={15000} delay={3000}><LinearGradient colors={['rgba(255,255,255,.28)', 'rgba(255,255,255,.03)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', left: 150, top: 300, width: 88, height: 28, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,.25)' }} /></Drift>
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false} bounces={false} overScrollMode="never" scrollEnabled={canScroll} onLayout={(e) => setBox((b) => ({ ...b, h: e.nativeEvent.layout.height }))} onContentSizeChange={(_, h) => setBox((b) => ({ ...b, c: h }))} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 38, paddingBottom: 110 }}>
+        <ScrollView showsVerticalScrollIndicator={false} bounces={false} overScrollMode="never" scrollEnabled={canScroll} onLayout={(e) => setBox((b) => ({ ...b, h: e.nativeEvent.layout.height }))} onContentSizeChange={(_, h) => setBox((b) => ({ ...b, c: h }))} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20 + TOP, paddingBottom: 110 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,.88)' }}>Good {period} · {DAYS[now.getDay()]}, {now.getDate()} {MON[now.getMonth()]}</Text>

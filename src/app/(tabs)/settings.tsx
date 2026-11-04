@@ -7,6 +7,7 @@ import { Glass } from '../../components/Glass';
 import { Blob } from '../../components/Bg';
 import { useStored, clearMine, DEFAULT_NAME } from '../../lib/store';
 import { PRIVACY, TERMS, WHATS_NEW, LICENCES, Sec } from '../../lib/legal';
+import { TOP } from '../../lib/layout';
 
 const W = '#fff', DIM = 'rgba(255,255,255,.7)';
 const G = ['#34d399', '#5ee7df'] as [string, string];
@@ -107,7 +108,7 @@ export default function Settings() {
       <Blob size={320} color="rgba(124,156,255,.5)" style={{ right: -100, top: -40 }} />
       <Blob size={340} color="rgba(94,231,223,.3)" style={{ left: -120, bottom: 60 }} />
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 38, paddingBottom: 130 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 130 }}>
           <Text style={{ color: W, fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Settings</Text>
           <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)', marginTop: 14 }}>
             {['General', 'Security', 'About'].map((n, i) => (

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Glass } from '../../components/Glass';
 
 const ITEMS: { name: string; label: string }[] = [
@@ -21,8 +22,10 @@ function Icon({ name, color }: { name: string; color: string }) {
 function Bar({ state }: any) {
   const router = useRouter();
   return (
+    <>
+    <LinearGradient pointerEvents="none" colors={['rgba(10,15,44,0)', 'rgba(10,15,44,.92)', 'rgba(10,15,44,.98)']} locations={[0, 0.55, 1]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 104 }} />
     <View style={{ position: 'absolute', left: 20, right: 20, bottom: 18 }}>
-      <Glass radius={28} style={{ flexDirection: 'row', padding: 6 }}>
+      <Glass radius={28} style={{ flexDirection: 'row', padding: 6, backgroundColor: 'rgba(24,28,72,.78)' }}>
         {state.routes.map((r: any, i: number) => {
           const item = ITEMS.find((x) => x.name === r.name); if (!item) return null;
           const on = state.index === i;
@@ -35,6 +38,7 @@ function Bar({ state }: any) {
         })}
       </Glass>
     </View>
+    </>
   );
 }
 export default function TabsLayout() {

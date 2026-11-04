@@ -8,6 +8,7 @@ import { IslamicBg, Header } from '../components/IslamicUi';
 import { W } from '../components/Ui';
 import { useIslamic, SURAH } from '../lib/islamic';
 import { usePrayer } from '../lib/prayer';
+import { TOP } from '../lib/layout';
 
 const Item = ({ t, s, c, onPress }: { t: string; s: string; c: string; onPress: () => void }) => (
   <Pressable onPress={onPress}><Glass radius={22} style={{ padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -42,7 +43,7 @@ export default function IslamicHub() {
             </Pressable>
           ))}
         </View>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 36, paddingBottom: 50, gap: 12 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14 + TOP, paddingBottom: 50, gap: 12 }}>
           {tab === 0 && (<>
             <Pressable onPress={() => go('/prayer')}>
               <Glass radius={26} style={{ padding: 18 }}>

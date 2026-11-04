@@ -42,6 +42,12 @@
         {
           "locationWhenInUsePermission": "My Life uses your location to find your JAKIM prayer zone and the Qibla direction."
         }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "enforceContrast": false
+        }
       ]
     ],
     "backgroundColor": "#0a0f2c"

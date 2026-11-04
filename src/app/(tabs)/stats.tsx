@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PageIn } from '../../components/PageIn';
 import { navScroll } from '../../lib/navbar';
 import { View, ScrollView, Pressable } from 'react-native';
 import { Text } from '../../components/Txt';
@@ -30,6 +31,7 @@ export default function Stats() {
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
       <LinearGradient colors={['#0a0f2c', '#1a1048', '#0c2b4d']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
+      <PageIn i={1}>
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView onScroll={navScroll} scrollEventThrottle={16} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 130 }}>
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Stats</Text>
@@ -85,6 +87,7 @@ export default function Stats() {
           <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 12, lineHeight: 18, marginTop: 12, marginHorizontal: 4 }}>Counted on this device and kept for 30 days.</Text>
         </ScrollView>
       </SafeAreaView>
+      </PageIn>
     </View>
   );
 }

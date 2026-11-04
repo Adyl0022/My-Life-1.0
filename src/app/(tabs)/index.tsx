@@ -1,4 +1,5 @@
 import React from 'react';
+import { PageIn } from '../../components/PageIn';
 import { View, ScrollView, Pressable, Animated, Easing } from 'react-native';
 import { Text } from '../../components/Txt';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -59,6 +60,7 @@ export default function Home() {
       <Drift dur={11000}><View style={{ position: 'absolute', left: 18, top: 214, width: 74, height: 74, borderRadius: 37, borderWidth: 2, borderColor: 'rgba(255,255,255,.32)' }} /></Drift>
       <Drift dur={13000} delay={1500}><LinearGradient colors={['rgba(255,255,255,.35)', 'rgba(255,255,255,.04)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', left: 316, top: 262, width: 58, height: 58, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,.3)' }} /></Drift>
       <Drift dur={15000} delay={3000}><LinearGradient colors={['rgba(255,255,255,.28)', 'rgba(255,255,255,.03)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', left: 150, top: 300, width: 88, height: 28, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,.25)' }} /></Drift>
+      <PageIn i={0}>
       <SafeAreaView edges={['left', 'right']} style={{ flex: 1 }}>
         <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: HEAD, paddingBottom: 104 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -144,6 +146,7 @@ export default function Home() {
           </Glass>
         </View>
       </SafeAreaView>
+      </PageIn>
     </Bg>
   );
 }

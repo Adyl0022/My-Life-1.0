@@ -92,12 +92,8 @@ function Bar({ state }: any) {
     <>
     <LinearGradient pointerEvents="none" colors={home ? ['rgba(10,15,44,0)', tint(.35), tint(.6)] : ['rgba(10,15,44,0)', 'rgba(10,15,44,.92)', 'rgba(10,15,44,.98)']} locations={[0, 0.55, 1]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 104 }} />
     <Animated.View style={{ position: 'absolute', left: side, right: side, bottom: 18 }}>
-      <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-          <View key={i} style={{ position: 'absolute', left: -i * 2.2, right: -i * 2.2, top: -i * 1.2 + 4, bottom: -i * 2.6, borderRadius: 28 + i * 2.6, backgroundColor: 'rgba(' + gc + ',0.02)' }} />
-        ))}
-      </View>
       <Glass radius={28} style={{ padding: 8, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
+        <LinearGradient pointerEvents="none" colors={['rgba(255,255,255,0)', 'rgba(' + gc + ',.75)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', left: 26, right: 26, top: 0, height: 1.5 }} />
         <View style={{ flexDirection: 'row' }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
           {W > 0 && (
             <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: -5, bottom: -5, width: bw, borderRadius: 27, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,.45)', transform: [{ translateX: tx }, { scaleX: sx }] }}>

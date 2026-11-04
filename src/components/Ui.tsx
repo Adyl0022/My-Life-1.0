@@ -1,6 +1,6 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import React from 'react';
-import { View, TextInput, Pressable, Modal, Platform } from 'react-native';
+import { View, TextInput, Pressable, Modal, Platform, Keyboard, Dimensions, ScrollView } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -37,11 +37,23 @@ export const SBtn = ({ t, onPress, kind = 'glass', style }: { t: string; onPress
   </Pressable>
 );
 export function Sheet({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  const [kb, setKb] = React.useState(0);
+  const [h, setH] = React.useState(0);
+  React.useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const a = Keyboard.addListener('keyboardDidShow', (e: any) => setKb(e.endCoordinates.height));
+    const b = Keyboard.addListener('keyboardDidHide', () => setKb(0));
+    return () => { a.remove(); b.remove(); };
+  }, []);
+  const full = Dimensions.get('window').height;
+  const pad = h >= full - 120 ? kb : 0;
   return (
-    <Modal transparent animationType="fade" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(5,8,25,.72)', justifyContent: 'center', padding: 20 }}>
+    <Modal transparent statusBarTranslucent animationType="fade" onRequestClose={onClose}>
+      <View onLayout={(e) => setH(e.nativeEvent.layout.height)} style={{ flex: 1, backgroundColor: 'rgba(5,8,25,.72)', paddingBottom: pad }}>
         <Pressable onPress={onClose} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
-        {children}
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }} showsVerticalScrollIndicator={false}>
+          {children}
+        </ScrollView>
       </View>
     </Modal>
   );

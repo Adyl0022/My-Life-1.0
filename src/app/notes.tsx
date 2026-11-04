@@ -108,8 +108,8 @@ export default function Notes() {
           <Sheet onClose={() => setMenuId(0)}>
             <View style={{ padding: 16, gap: 8, borderRadius: 24, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
               <Text style={{ color: W, fontSize: 15, fontWeight: '800', marginBottom: 4 }} numberOfLines={1}>{menuNote.t || 'Untitled'}</Text>
-              <SBtn t={menuNote.pin ? 'Unpin' : 'Pin to top'} onPress={() => { setData({ ...data, notes: notes.map((x) => (x.id === menuNote.id ? { ...x, pin: !x.pin } : x)) }); setMenuId(0); say(menuNote.pin ? 'Unpinned' : 'Pinned to top'); }} />
-              <SBtn t="Delete" kind="danger" onPress={() => { del(menuNote.id); setMenuId(0); say('Note deleted'); }} />
+              <SBtn t={menuNote.pin ? 'Unpin' : 'Pin to top'} style={{ flex: 0 }} onPress={() => { setData({ ...data, notes: notes.map((x) => (x.id === menuNote.id ? { ...x, pin: !x.pin } : x)) }); setMenuId(0); say(menuNote.pin ? 'Unpinned' : 'Pinned to top'); }} />
+              <SBtn t="Delete" kind="danger" style={{ flex: 0 }} onPress={() => { del(menuNote.id); setMenuId(0); say('Note deleted'); }} />
             </View>
           </Sheet>
         )}

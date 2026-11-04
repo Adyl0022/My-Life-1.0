@@ -147,37 +147,52 @@ export function FuelCard({ d, upd }: P<Ext>) {
 
 // 4. Parts schedule ------------------------------------------------------------
 const PRESET: [string, number][] = [['Front tyre', 15000], ['Rear tyre', 12000], ['Battery', 24000], ['Brake pads', 12000], ['Chain and sprocket', 20000], ['Spark plug', 8000]];
-export function PartsCard({ d, upd, latest }: P<Ext> & { latest: number }) {
-  const [open, setOpen] = useState(false); const [nm, setNm] = useState(''); const [dt, setDt] = useState(todayStr()); const [od, setOd] = useState(''); const [life, setLife] = useState('');
+const Lbl = ({ t, s }: { t: string; s?: string }) => <View style={{ marginBottom: 4 }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{t}</Text>{s ? <Text style={{ color: dim, fontSize: 11, marginTop: 1, lineHeight: 15 }}>{s}</Text> : null}</View>;
+export function PartsCard({ d, upd, latest, addNow }: P<Ext> & { latest: number; addNow: (odo: number) => void }) {
+  const [open, setOpen] = useState(false); const [nm, setNm] = useState(''); const [dt, setDt] = useState(todayStr()); const [od, setOd] = useState(''); const [life, setLife] = useState(''); const [cur, setCur] = useState('');
   const list = d.parts || [];
+  const odN = parseInt(od, 10); const tooHigh = latest > 0 && odN > latest;
   const pick = (n: string, l: number) => { setNm(n); setLife(String(l)); if (!od && latest > 0) setOd(String(latest)); };
   const save = () => { const o = parseInt(od, 10), l = parseInt(life, 10); if (!nm.trim() || !(o >= 0) || !(l > 0)) return; upd((x) => ({ ...x, parts: [...(x.parts || []), { id: Date.now(), name: nm.trim(), date: dt, odo: o, life: l }] })); setOpen(false); setNm(''); setOd(''); setLife(''); };
+  const ok = !!nm.trim() && odN >= 0 && parseInt(life, 10) > 0;
   return (
-    <Card title="Parts Schedule" sub="Tyres, battery, brakes and chain" right={!open ? <Btn t="+ Add part" h={34} w={12} onPress={() => { setOpen(true); setDt(todayStr()); if (latest > 0) setOd(String(latest)); }} /> : undefined}>
-      {open ? (
-        <View style={{ marginTop: 10, gap: 8 }}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>{PRESET.map(([n, l]) => <Chip key={n} t={n} on={nm === n} onPress={() => pick(n, l)} />)}</View>
-          <Inp value={nm} onChangeText={setNm} placeholder="Part name" />
-          <DateField value={dt} onChange={setDt} />
-          <View style={{ flexDirection: 'row', gap: 8 }}><Inp style={{ flex: 1 }} keyboardType="number-pad" value={od} onChangeText={setOd} placeholder="Odometer when changed" /><Inp style={{ flex: 1 }} keyboardType="number-pad" value={life} onChangeText={setLife} placeholder="Lasts (km)" /></View>
-          <Text style={{ color: dim, fontSize: 11.5 }}>"Lasts (km)" is a rough guide only. Follow your owner's manual and what the mechanic says.</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}><Btn t="Save part" onPress={save} /><Pressable onPress={() => setOpen(false)} style={{ height: 42, paddingHorizontal: 16, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 12, fontWeight: '700' }}>Cancel</Text></Pressable></View>
+    <Card title="Parts Schedule" sub="Tyres, battery, brakes and chain" right={!open ? <Btn t="+ Add part" h={34} w={12} onPress={() => { setOpen(true); setDt(todayStr()); setNm(''); setLife(''); setOd(latest > 0 ? String(latest) : ''); }} /> : undefined}>
+      {latest <= 0 && list.length > 0 ? (
+        <View style={{ marginTop: 10, padding: 12, borderRadius: 16, backgroundColor: 'rgba(124,156,255,.16)', borderWidth: 1, borderColor: 'rgba(124,156,255,.4)', gap: 8 }}>
+          <Text style={{ color: '#a9bcff', fontSize: 12.5, fontWeight: '800' }}>One more step</Text>
+          <Text style={{ color: 'rgba(255,255,255,.88)', fontSize: 12, lineHeight: 17 }}>To count how many km each part has left, My Record needs your current odometer. Type what your meter shows now.</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}><Inp style={{ flex: 1 }} keyboardType="number-pad" value={cur} onChangeText={setCur} placeholder="Current odometer (km)" /><Btn t="Save" onPress={() => { const o = parseInt(cur, 10); if (o >= 0) { addNow(o); setCur(''); } }} /></View>
         </View>
       ) : null}
-      {list.length === 0 && !open ? <Text style={{ marginTop: 10, color: dim, fontSize: 12 }}>No parts yet. Add a part and its odometer reading to see when it is due.</Text> : null}
+      {open ? (
+        <View style={{ marginTop: 10, gap: 10 }}>
+          <View style={{ padding: 12, borderRadius: 16, backgroundColor: 'rgba(94,231,181,.12)', borderWidth: 1, borderColor: 'rgba(94,231,181,.35)' }}>
+            <Text style={{ color: '#7df0c6', fontSize: 12.5, fontWeight: '800' }}>How to fill this in</Text>
+            <Text style={{ color: 'rgba(255,255,255,.88)', fontSize: 12, lineHeight: 18, marginTop: 4 }}>{'1. Tap a part below, or type your own.\n2. Pick the day you changed it (today if you just did).\n3. Type the km your meter showed on that day. Not sure? Use your current odometer.\n4. "Lasts" is how far the part usually goes before you change it. The suggested number is only a guide, so ask your mechanic or check your manual.'}</Text>
+          </View>
+          <View><Lbl t="Part" /><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>{PRESET.map(([n, l]) => <Chip key={n} t={n} on={nm === n} onPress={() => pick(n, l)} />)}</View><Inp value={nm} onChangeText={setNm} placeholder="Part name" /></View>
+          <View><Lbl t="Date changed" /><DateField value={dt} onChange={setDt} /></View>
+          <View><Lbl t="Odometer on that day (km)" s={latest > 0 ? 'Your latest reading is ' + num(latest) + ' km.' : 'Type the km shown on your meter.'} /><Inp keyboardType="number-pad" value={od} onChangeText={setOd} placeholder="e.g. 12500" />{tooHigh ? <Text style={{ color: '#ffd593', fontSize: 11.5, marginTop: 4 }}>This is higher than your latest odometer ({num(latest)} km). Please check the number.</Text> : null}</View>
+          <View><Lbl t="Lasts about (km)" s="Distance before the next change." /><Inp keyboardType="number-pad" value={life} onChangeText={setLife} placeholder="e.g. 15000" /></View>
+          <View style={{ flexDirection: 'row', gap: 8 }}><View style={{ opacity: ok ? 1 : 0.5 }}><Btn t="Save part" onPress={save} /></View><Pressable onPress={() => setOpen(false)} style={{ height: 42, paddingHorizontal: 16, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 12, fontWeight: '700' }}>Cancel</Text></Pressable></View>
+        </View>
+      ) : null}
+      {list.length === 0 && !open ? <Text style={{ marginTop: 10, color: dim, fontSize: 12, lineHeight: 18 }}>No parts yet. Tap + Add part, choose a part such as Rear tyre, and enter the date and odometer when you changed it. My Record then counts down the km left.</Text> : null}
       <View style={{ marginTop: 6 }}>
         {list.map((p, i) => {
-          const used = latest > 0 ? Math.max(0, latest - p.odo) : 0; const left = p.life - used; const pct = Math.min(100, Math.round((used / p.life) * 100));
-          const st = latest <= 0 ? { t: 'Add an odometer reading', c: dim, b: '#7c9cff' } : left <= 0 ? { t: 'Overdue by ' + num(-left) + ' km', c: '#ffb3c6', b: '#ff5f8f' } : left <= p.life * 0.15 ? { t: 'Due soon · ' + num(left) + ' km left', c: '#ffd593', b: '#ffc46b' } : { t: num(left) + ' km left', c: '#7df0c6', b: '#34d399' };
+          const used = latest > 0 ? Math.max(0, latest - p.odo) : 0; const left = p.life - used; const pct = latest > 0 ? Math.min(100, Math.round((used / p.life) * 100)) : 0;
+          const st = latest <= 0 ? { t: 'Waiting for your current odometer', c: dim, b: '#7c9cff' } : p.odo > latest ? { t: 'Check the odometer: ' + num(p.odo) + ' km is higher than your current ' + num(latest) + ' km. Delete this part and add it again.', c: '#ffd593', b: '#ffc46b' } : left <= 0 ? { t: 'Overdue by ' + num(-left) + ' km', c: '#ffb3c6', b: '#ff5f8f' } : left <= p.life * 0.15 ? { t: 'Due soon · ' + num(left) + ' km left', c: '#ffd593', b: '#ffc46b' } : { t: num(left) + ' km left', c: '#7df0c6', b: '#34d399' };
           return (
             <View key={p.id} style={{ paddingVertical: 9, borderBottomWidth: i === list.length - 1 ? 0 : 1, borderBottomColor: 'rgba(255,255,255,.1)' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>{p.name}</Text><Text style={{ color: dim, fontSize: 11.5, marginTop: 1 }}>Changed {fd(p.date)} at {num(p.odo)} km</Text></View>
-                <Pressable onPress={() => upd((x) => ({ ...x, parts: (x.parts || []).map((y: Pt) => y.id === p.id ? { ...y, date: todayStr(), odo: latest > 0 ? latest : y.odo } : y) }))} style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 11, fontWeight: '700' }}>Changed today</Text></Pressable>
+                <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>{p.name}</Text><Text style={{ color: dim, fontSize: 11.5, marginTop: 1 }}>Changed {fd(p.date)} at {num(p.odo)} km · lasts about {num(p.life)} km</Text></View>
                 <Sq t="✕" label="Delete" c="#ff9aa9" onPress={() => upd((x) => ({ ...x, parts: (x.parts || []).filter((y: Pt) => y.id !== p.id) }))} />
               </View>
               <View style={{ height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,.12)', marginTop: 7, overflow: 'hidden' }}><View style={{ width: pct + '%', height: '100%', backgroundColor: st.b }} /></View>
-              <Text style={{ color: st.c, fontSize: 11.5, fontWeight: '700', marginTop: 4 }}>{st.t}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, gap: 8 }}>
+                <Text style={{ flex: 1, color: st.c, fontSize: 11.5, fontWeight: '700' }}>{st.t}</Text>
+                {latest > 0 ? <Pressable onPress={() => upd((x) => ({ ...x, parts: (x.parts || []).map((y: Pt) => y.id === p.id ? { ...y, date: todayStr(), odo: latest } : y) }))} style={{ paddingVertical: 5, paddingHorizontal: 10, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 11, fontWeight: '700' }}>Just changed it</Text></Pressable> : null}
+              </View>
             </View>
           );
         })}

@@ -105,6 +105,7 @@ export default function Record() {
   const upd = (fn: (v: Veh) => Veh, extra?: Partial<Data>) => setSt({ ...st, ...extra, data: { ...st.data, [catName]: fn({ ...d }) } });
   const sorted = d.readings.slice().sort(byDate);
   const latest = sorted.length ? sorted[sorted.length - 1].odo : 0;
+  const allOdo = Math.max(latest, ...(d.yreadings || []).map((r) => r.odo), ...(d.fuel || []).map((f) => f.odo || 0));
   const now = new Date();
   const km = (from: string, to: string) => {
     const inR = sorted.filter((r) => r.date >= from && r.date < to); if (!inR.length) return null;
@@ -324,7 +325,7 @@ export default function Record() {
               {d.exps.map((e, i) => <Row key={e.id} last={i === d.exps.length - 1}><Text style={{ flex: 1, color: W, fontSize: 14 }} numberOfLines={1}>{e.name}<Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12 }}>{'  · ' + fmtDate(e.date)}</Text></Text><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>RM {money(e.amt)}</Text><Del onPress={() => upd((x) => ({ ...x, exps: x.exps.filter((y) => y.id !== e.id) }))} /></Row>)}
             </View>
           </Glass>
-          <PartsCard d={d} upd={(fn) => upd(fn)} latest={latest} />
+          <PartsCard d={d} upd={(fn) => upd(fn)} latest={allOdo} addNow={(o) => upd((x) => ({ ...x, readings: [...x.readings, { id: Date.now(), date: t0, odo: o }] }))} />
           <DocsCard d={d} upd={(fn) => upd(fn)} />
           <ExportCard name={catName} d={d} latest={latest} />
         </ScrollView>

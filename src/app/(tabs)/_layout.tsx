@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Pressable, Animated, Easing } from 'react-native';
+import { View, Pressable, Animated, Easing, Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { subscribeNav, setNavCollapsed } from '../../lib/navbar';
 import { Text } from '../../components/Txt';
 import { Tabs, useRouter } from 'expo-router';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
@@ -21,26 +23,35 @@ function Icon({ name, color }: { name: string; color: string }) {
     </Svg>
   );
 }
+const BUB = [
+  ['rgba(143,233,226,.46)', 'rgba(124,156,255,.2)'],
+  ['rgba(183,148,255,.5)', 'rgba(124,156,255,.2)'],
+  ['rgba(255,143,171,.5)', 'rgba(255,196,107,.2)'],
+  ['rgba(150,185,255,.46)', 'rgba(143,233,226,.18)'],
+];
+const DOT = ['#8fe9e2', '#b794ff', '#ff8fab', '#9bb8ff'];
+const PGLOW: Record<string, string> = { Morning: '255,210,122', Afternoon: '124,196,255', Evening: '255,140,107', Night: '124,156,255' };
 function Bar({ state }: any) {
   const router = useRouter();
   const home = state.index === 0;
-  const th = THEMES[periodOf(new Date())];
+  const period = periodOf(new Date());
+  const th = THEMES[period];
   const tint = (a: number) => { const h = th.colors[th.colors.length - 1]; return 'rgba(' + parseInt(h.slice(1, 3), 16) + ',' + parseInt(h.slice(3, 5), 16) + ',' + parseInt(h.slice(5, 7), 16) + ',' + a + ')'; };
-  const routes = state.routes.filter((r: any) => ITEMS.find((x) => x.name === r.name));
-  const n = routes.length || 4;
   const [W, setW] = useState(0);
-  const tw = W / n;
+  const tw = W / ITEMS.length;
   const bw = tw + 14;
   const idx = state.index;
   const posOf = (i: number) => i * tw + tw / 2 - bw / 2;
   const tx = useRef(new Animated.Value(0)).current;
   const sx = useRef(new Animated.Value(1)).current;
   const sheen = useRef(new Animated.Value(0)).current;
+  const rip = useRef(new Animated.Value(1)).current;
+  const col = useRef(new Animated.Value(0)).current;
   const pops = useRef(ITEMS.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))).current;
-  const first = useRef(true);
+  const lastIdx = useRef(-1);
   useEffect(() => {
     if (!W) return;
-    if (first.current) { first.current = false; tx.setValue(posOf(idx)); }
+    if (lastIdx.current === -1 || lastIdx.current === idx) { tx.setValue(posOf(idx)); }
     else {
       Animated.parallel([
         Animated.spring(tx, { toValue: posOf(idx), friction: 9, tension: 120, useNativeDriver: true }),
@@ -49,9 +60,15 @@ function Bar({ state }: any) {
           Animated.spring(sx, { toValue: 1, friction: 6, tension: 140, useNativeDriver: true }),
         ]),
       ]).start();
+      rip.setValue(0);
+      Animated.timing(rip, { toValue: 1, duration: 650, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
     }
-    pops.forEach((v, i) => Animated.spring(v, { toValue: i === idx ? 1 : 0, friction: 5, tension: 160, useNativeDriver: true }).start());
+    lastIdx.current = idx;
   }, [idx, W]);
+  useEffect(() => {
+    pops.forEach((v, i) => Animated.spring(v, { toValue: i === idx ? 1 : 0, friction: 5, tension: 160, useNativeDriver: true }).start());
+    setNavCollapsed(false);
+  }, [idx]);
   useEffect(() => {
     const loop = Animated.loop(Animated.sequence([
       Animated.timing(sheen, { toValue: 1, duration: 1300, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
@@ -59,21 +76,44 @@ function Bar({ state }: any) {
       Animated.timing(sheen, { toValue: 0, duration: 0, useNativeDriver: true }),
     ]));
     loop.start();
-    return () => loop.stop();
+    const un = subscribeNav((c) => Animated.timing(col, { toValue: c ? 1 : 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start());
+    return () => { loop.stop(); un(); };
   }, []);
+  const press = (r: any, i: number) => {
+    if (Platform.OS !== 'web') { try { Haptics.selectionAsync(); } catch {} }
+    if (i !== idx) router.navigate((r.name === 'index' ? '/' : '/' + r.name) as any);
+  };
+  const side = col.interpolate({ inputRange: [0, 1], outputRange: [20, 48] });
+  const lblH = col.interpolate({ inputRange: [0, 1], outputRange: [13, 0] });
+  const lblO = col.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
+  const padV = col.interpolate({ inputRange: [0, 1], outputRange: [10, 9] });
+  const gc = PGLOW[period];
   return (
     <>
     <LinearGradient pointerEvents="none" colors={home ? ['rgba(10,15,44,0)', tint(.35), tint(.6)] : ['rgba(10,15,44,0)', 'rgba(10,15,44,.92)', 'rgba(10,15,44,.98)']} locations={[0, 0.55, 1]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 104 }} />
-    <View style={{ position: 'absolute', left: 20, right: 20, bottom: 18 }}>
+    <Animated.View style={{ position: 'absolute', left: side, right: side, bottom: 18 }}>
+      <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <View key={i} style={{ position: 'absolute', left: -i * 2.2, right: -i * 2.2, top: -i * 1.2 + 4, bottom: -i * 2.6, borderRadius: 28 + i * 2.6, backgroundColor: 'rgba(' + gc + ',0.02)' }} />
+        ))}
+      </View>
       <Glass radius={28} style={{ padding: 8, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
         <View style={{ flexDirection: 'row' }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
           {W > 0 && (
             <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: -5, bottom: -5, width: bw, borderRadius: 27, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,.45)', transform: [{ translateX: tx }, { scaleX: sx }] }}>
-              <LinearGradient colors={['rgba(255,255,255,.36)', 'rgba(255,255,255,.14)']} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
+              <LinearGradient colors={['rgba(255,255,255,.26)', 'rgba(255,255,255,.1)']} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
+              {BUB.map((c, i) => (
+                <Animated.View key={i} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: pops[i] }}>
+                  <LinearGradient colors={c as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1 }} />
+                </Animated.View>
+              ))}
+              <Animated.View style={{ position: 'absolute', left: '50%', top: '50%', width: bw * 1.3, height: bw * 1.3, marginLeft: -bw * 0.65, marginTop: -bw * 0.65, borderRadius: bw, backgroundColor: 'rgba(255,255,255,.55)', opacity: rip.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.5, 0] }), transform: [{ scale: rip.interpolate({ inputRange: [0, 1], outputRange: [0.15, 1] }) }] }} />
               <Animated.View style={{ position: 'absolute', top: -10, bottom: -10, width: bw * 0.34, left: 0, transform: [{ translateX: sheen.interpolate({ inputRange: [0, 1], outputRange: [-bw * 0.5, bw * 1.2] }) }, { skewX: '-22deg' }] }}>
                 <LinearGradient colors={['rgba(255,255,255,0)', 'rgba(255,255,255,.55)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
               </Animated.View>
-              <View style={{ position: 'absolute', bottom: 6, left: '50%', marginLeft: -11, width: 22, height: 3, borderRadius: 3, backgroundColor: '#8fe9e2', opacity: 0.95 }} />
+              {DOT.map((c, i) => (
+                <Animated.View key={i} style={{ position: 'absolute', bottom: 6, left: '50%', marginLeft: -11, width: 22, height: 3, borderRadius: 3, backgroundColor: c, opacity: pops[i] }} />
+              ))}
             </Animated.View>
           )}
           {state.routes.map((r: any, i: number) => {
@@ -81,17 +121,21 @@ function Bar({ state }: any) {
             const on = idx === i;
             const pop = pops[ITEMS.findIndex((x) => x.name === r.name)];
             return (
-              <Pressable key={r.key} onPress={() => router.navigate((r.name === 'index' ? '/' : '/' + r.name) as any)} accessibilityLabel={item.label} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 22 }}>
-                <Animated.View style={{ transform: [{ translateY: pop.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.16] }) }] }}>
-                  <Icon name={r.name} color={on ? '#fff' : 'rgba(255,255,255,.65)'} />
+              <Pressable key={r.key} onPress={() => press(r, i)} accessibilityLabel={item.label} style={{ flex: 1, borderRadius: 22 }}>
+                <Animated.View style={{ alignItems: 'center', paddingVertical: padV }}>
+                  <Animated.View style={{ transform: [{ translateY: pop.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.16] }) }] }}>
+                    <Icon name={r.name} color={on ? '#fff' : 'rgba(255,255,255,.65)'} />
+                  </Animated.View>
+                  <Animated.View style={{ height: lblH, opacity: lblO, overflow: 'hidden', marginTop: 2 }}>
+                    <Text style={{ fontSize: 10.5, fontWeight: '700', color: on ? '#fff' : 'rgba(255,255,255,.65)' }}>{item.label}</Text>
+                  </Animated.View>
                 </Animated.View>
-                <Text style={{ fontSize: 10.5, fontWeight: '700', marginTop: 2, color: on ? '#fff' : 'rgba(255,255,255,.65)' }}>{item.label}</Text>
               </Pressable>
             );
           })}
         </View>
       </Glass>
-    </View>
+    </Animated.View>
     </>
   );
 }

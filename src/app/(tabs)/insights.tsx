@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { navScroll } from '../../lib/navbar';
 import { View, ScrollView, Pressable } from 'react-native';
 import { Text } from '../../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,7 +39,7 @@ export default function Insights() {
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
       <LinearGradient colors={['#0a0f2c', '#1a1048', '#0c2b4d']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 130 }}>
+        <ScrollView onScroll={navScroll} scrollEventThrottle={16} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 130 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ flex: 1, color: '#fff', fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Insights</Text>
             <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)' }}>

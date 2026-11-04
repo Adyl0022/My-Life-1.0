@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Pressable } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Pressable, Animated, Easing } from 'react-native';
 import { Text } from '../../components/Txt';
 import { Tabs, useRouter } from 'expo-router';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
@@ -26,21 +26,70 @@ function Bar({ state }: any) {
   const home = state.index === 0;
   const th = THEMES[periodOf(new Date())];
   const tint = (a: number) => { const h = th.colors[th.colors.length - 1]; return 'rgba(' + parseInt(h.slice(1, 3), 16) + ',' + parseInt(h.slice(3, 5), 16) + ',' + parseInt(h.slice(5, 7), 16) + ',' + a + ')'; };
+  const routes = state.routes.filter((r: any) => ITEMS.find((x) => x.name === r.name));
+  const n = routes.length || 4;
+  const [W, setW] = useState(0);
+  const tw = W / n;
+  const bw = tw + 10;
+  const idx = state.index;
+  const posOf = (i: number) => i * tw + tw / 2 - bw / 2;
+  const tx = useRef(new Animated.Value(0)).current;
+  const sx = useRef(new Animated.Value(1)).current;
+  const sheen = useRef(new Animated.Value(0)).current;
+  const pops = useRef(ITEMS.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))).current;
+  const first = useRef(true);
+  useEffect(() => {
+    if (!W) return;
+    if (first.current) { first.current = false; tx.setValue(posOf(idx)); }
+    else {
+      Animated.parallel([
+        Animated.spring(tx, { toValue: posOf(idx), friction: 9, tension: 120, useNativeDriver: true }),
+        Animated.sequence([
+          Animated.timing(sx, { toValue: 1.32, duration: 170, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.spring(sx, { toValue: 1, friction: 6, tension: 140, useNativeDriver: true }),
+        ]),
+      ]).start();
+    }
+    pops.forEach((v, i) => Animated.spring(v, { toValue: i === idx ? 1 : 0, friction: 5, tension: 160, useNativeDriver: true }).start());
+  }, [idx, W]);
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(sheen, { toValue: 1, duration: 1300, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      Animated.delay(1700),
+      Animated.timing(sheen, { toValue: 0, duration: 0, useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, []);
   return (
     <>
     <LinearGradient pointerEvents="none" colors={home ? ['rgba(10,15,44,0)', tint(.35), tint(.6)] : ['rgba(10,15,44,0)', 'rgba(10,15,44,.92)', 'rgba(10,15,44,.98)']} locations={[0, 0.55, 1]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 104 }} />
     <View style={{ position: 'absolute', left: 20, right: 20, bottom: 18 }}>
-      <Glass radius={28} style={{ flexDirection: 'row', padding: 6, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
-        {state.routes.map((r: any, i: number) => {
-          const item = ITEMS.find((x) => x.name === r.name); if (!item) return null;
-          const on = state.index === i;
-          return (
-            <Pressable key={r.key} onPress={() => router.navigate((r.name === 'index' ? '/' : '/' + r.name) as any)} accessibilityLabel={item.label} style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 22, backgroundColor: on ? 'rgba(255,255,255,.2)' : 'transparent' }}>
-              <Icon name={r.name} color={on ? '#fff' : 'rgba(255,255,255,.65)'} />
-              <Text style={{ fontSize: 10.5, fontWeight: '700', marginTop: 2, color: on ? '#fff' : 'rgba(255,255,255,.65)' }}>{item.label}</Text>
-            </Pressable>
-          );
-        })}
+      <Glass radius={28} style={{ padding: 6, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
+        <View style={{ flexDirection: 'row' }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+          {W > 0 && (
+            <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: bw, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,.45)', transform: [{ translateX: tx }, { scaleX: sx }] }}>
+              <LinearGradient colors={['rgba(255,255,255,.36)', 'rgba(255,255,255,.14)']} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
+              <Animated.View style={{ position: 'absolute', top: -10, bottom: -10, width: bw * 0.34, left: 0, transform: [{ translateX: sheen.interpolate({ inputRange: [0, 1], outputRange: [-bw * 0.5, bw * 1.2] }) }, { skewX: '-22deg' }] }}>
+                <LinearGradient colors={['rgba(255,255,255,0)', 'rgba(255,255,255,.55)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
+              </Animated.View>
+              <View style={{ position: 'absolute', bottom: 3, left: '50%', marginLeft: -11, width: 22, height: 3, borderRadius: 3, backgroundColor: '#8fe9e2', opacity: 0.95 }} />
+            </Animated.View>
+          )}
+          {state.routes.map((r: any, i: number) => {
+            const item = ITEMS.find((x) => x.name === r.name); if (!item) return null;
+            const on = idx === i;
+            const pop = pops[ITEMS.findIndex((x) => x.name === r.name)];
+            return (
+              <Pressable key={r.key} onPress={() => router.navigate((r.name === 'index' ? '/' : '/' + r.name) as any)} accessibilityLabel={item.label} style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 22 }}>
+                <Animated.View style={{ transform: [{ translateY: pop.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.16] }) }] }}>
+                  <Icon name={r.name} color={on ? '#fff' : 'rgba(255,255,255,.65)'} />
+                </Animated.View>
+                <Text style={{ fontSize: 10.5, fontWeight: '700', marginTop: 2, color: on ? '#fff' : 'rgba(255,255,255,.65)' }}>{item.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </Glass>
     </View>
     </>

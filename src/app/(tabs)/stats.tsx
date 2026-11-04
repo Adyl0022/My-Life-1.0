@@ -30,7 +30,7 @@ export default function Stats() {
       <Blob size={320} color="rgba(124,156,255,.5)" style={{ right: -100, top: -40 }} />
       <Blob size={340} color="rgba(94,231,223,.3)" style={{ left: -120, bottom: 0 }} />
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 130 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 38, paddingBottom: 130 }}>
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Stats</Text>
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 14 }}>
             <Glass radius={22} style={{ flex: 1, padding: 14 }}>

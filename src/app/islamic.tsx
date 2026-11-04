@@ -42,7 +42,7 @@ export default function IslamicHub() {
             </Pressable>
           ))}
         </View>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 50, gap: 12 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 36, paddingBottom: 50, gap: 12 }}>
           {tab === 0 && (<>
             <Pressable onPress={() => go('/prayer')}>
               <Glass radius={26} style={{ padding: 18 }}>

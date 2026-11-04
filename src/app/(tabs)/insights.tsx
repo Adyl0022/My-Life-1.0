@@ -38,7 +38,7 @@ export default function Insights() {
       <Blob size={320} color="rgba(183,148,255,.5)" style={{ right: -100, top: -40 }} />
       <Blob size={340} color="rgba(94,231,223,.3)" style={{ left: -120, bottom: 60 }} />
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 130 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 38, paddingBottom: 130 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ flex: 1, color: '#fff', fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Insights</Text>
             <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)' }}>

@@ -90,7 +90,18 @@ export default function Notes() {
                   <Glass radius={22} style={{ padding: 14, minHeight: 110 }}>
                     <View style={{ width: 28, height: 4, borderRadius: 2, backgroundColor: COL[n.c], marginBottom: 8 }} />
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}><Text numberOfLines={1} style={{ flex: 1, color: W, fontSize: 14.5, fontWeight: '800' }}>{n.t.trim() || 'Untitled'}</Text>{n.pin ? <Text style={{ color: '#ffd593', fontSize: 10, fontWeight: '800' }}>PIN</Text> : null}</View>
-                    <Text numberOfLines={grid ? 4 : 3} style={{ color: 'rgba(255,255,255,.75)', fontSize: 12.5, lineHeight: 18, marginTop: 4 }}>{n.s.trim() || 'No additional text'}</Text>
+                    <View style={{ marginTop: 4 }}>
+                      {(n.s.trim() ? n.s.split('\n').map((l, i) => ({ l, i })).filter((o) => o.l.trim()).slice(0, grid ? 4 : 3) : [{ l: 'No additional text', i: -1 }]).map(({ l: ln, i: li }) => {
+                        const ck = /^\s*[☐☑]/.test(ln);
+                        if (!ck) return <Text key={li} numberOfLines={1} style={{ color: 'rgba(255,255,255,.75)', fontSize: 12.5, lineHeight: 18 }}>{ln || ' '}</Text>;
+                        const on = /^\s*☑/.test(ln);
+                        return (
+                          <Pressable key={li} hitSlop={4} onPress={() => { const all = n.s.split('\n'); all[li] = all[li].replace(/[☐☑]/, on ? '☐' : '☑'); setData({ ...data, notes: notes.map((x) => x.id === n.id ? { ...x, s: all.join('\n') } : x) }); }}>
+                            <Text numberOfLines={1} style={{ color: on ? 'rgba(255,255,255,.45)' : 'rgba(255,255,255,.85)', fontSize: 12.5, lineHeight: 20, textDecorationLine: on ? 'line-through' : 'none' }}>{on ? '☑' : '☐'}<Text>{ln.replace(/^\s*[☐☑]/, '')}</Text></Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
                     <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                       <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 10.5 }}>{when(n.u)}</Text>
                       {tot ? <Text style={{ color: '#8fe9e2', fontSize: 10.5 }}>✓ {dn}/{tot}</Text> : null}

@@ -58,13 +58,14 @@ export const MATHURAT: Part[] = [
   { name: "A'udzu bi kalimatillahit-tammat", kind: 'Doa', count: '3×' }, { name: 'Doa: refuge from worry, sadness and debt', kind: 'Doa' }, { name: 'Doa: Allahumma afini fi badani', kind: 'Doa' },
   { name: 'Doa: refuge from disbelief and poverty', kind: 'Doa', count: '3×' }, { name: 'Sayyidul Istighfar: Allahumma anta Rabbi', kind: 'Dhikr' }, { name: 'Astaghfirullahal-lazi', kind: 'Dhikr', count: '3×' },
   { name: 'Subhanaka Allahumma wa bihamdika', kind: 'Selawat' },
+  { name: 'Doa: Allahumma bika asbahna / amsayna', kind: 'Doa' }, { name: 'Doa Rabithah', kind: 'Doa' }, { name: "Doa Penutup Al-Ma'thurat", kind: 'Doa' },
 ];
 export const KIND_COL: Record<string, [string, string]> = { Quran: ['rgba(94,231,181,.25)', '#7df0c6'], Dhikr: ['rgba(255,196,107,.25)', '#ffd593'], Selawat: ['rgba(124,156,255,.28)', '#a9bcff'], Doa: ['rgba(255,143,171,.25)', '#ffb3c6'], Intro: ['rgba(255,255,255,.14)', '#ffffff'] };
 export function partVerses(p: Part, evening = false): Verse[] | null {
   const z = ZTEXT[p.name];
-  if (z) { const t = evening && z.e ? z.e : z.m; return [{ n: 1, ar: t.ar, ms: t.ms, en: t.en, rumi: t.rumi }]; }
+  if (z) { const t = evening && z.e ? z.e : z.m; return [t, ...(z.more || [])].map((x, i) => ({ n: i + 1, ar: x.ar, ms: x.ms, en: x.en, rumi: x.rumi })); }
   if (p.surah) return SURAH[p.surah].verses;
   if (p.refs) return p.refs.flatMap((r) => REFS[r]);
   return null;
 }
-export const nm = (n: string, evening: boolean) => n.replace('Asbahna / Amsaina wa amsal-mulku lillah', evening ? 'Amsaina wa amsal-mulku lillah' : 'Asbahna wa asbahal-mulku lillah').replace('Asbahna / Amsaina, firm', evening ? 'Amsaina, firm' : 'Asbahna, firm').replace('asbahtu / amsaytu', evening ? 'amsaytu' : 'asbahtu').replace('ma asbaha / ma amsa', evening ? 'ma amsa' : 'ma asbaha');
+export const nm = (n: string, evening: boolean) => n.replace('Asbahna / Amsaina wa amsal-mulku lillah', evening ? 'Amsaina wa amsal-mulku lillah' : 'Asbahna wa asbahal-mulku lillah').replace('Asbahna / Amsaina, firm', evening ? 'Amsaina, firm' : 'Asbahna, firm').replace('asbahtu / amsaytu', evening ? 'amsaytu' : 'asbahtu').replace('ma asbaha / ma amsa', evening ? 'ma amsa' : 'ma asbaha').replace('bika asbahna / amsayna', evening ? 'bika amsayna' : 'bika asbahna');

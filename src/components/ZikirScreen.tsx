@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
 import { Text } from './Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +13,8 @@ export function ZikirScreen({ title, sub, parts, storeKey, bmKey, start, evening
   const [sel, setSel] = useState(start);
   const [count, setCount] = useState(0);
   const [toast, setToast] = useState('');
+  const sc = useRef<any>(null);
+  useEffect(() => { sc.current?.scrollTo?.({ y: 0, animated: false }); }, [sel, storeKey]);
   useEffect(() => { setSel(start); setCount(0); }, [storeKey]);
   const say = (t: string) => { setToast(t); setTimeout(() => setToast(''), 1500); };
   const rd = isl.read[storeKey] || {};
@@ -35,7 +37,7 @@ export function ZikirScreen({ title, sub, parts, storeKey, bmKey, start, evening
             <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: isRead ? 'rgba(52,211,153,.55)' : pc[0], alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontWeight: '800' }}>{isRead ? '✓' : sel + 1}</Text></View>
             <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 15, fontWeight: '800' }} numberOfLines={2}>{nm(p.name, !!evening)}</Text><Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11.5, marginTop: 1 }}>Part {sel + 1} of {parts.length} · {nRead} read today</Text></View>
           </View>
-          <ScrollView style={{ marginTop: 8 }}>
+          <ScrollView ref={sc} style={{ marginTop: 8 }}>
             {p.custom === 'tahlil33' ? (
               <View style={{ alignItems: 'center', paddingVertical: 6 }}>
                 <Text style={{ color: W, fontSize: AR_SIZE[size] + 8, lineHeight: (AR_SIZE[size] + 8) * 1.8, textAlign: 'center' }}>لَا إِلَٰهَ إِلَّا ٱللَّهُ</Text>
@@ -47,11 +49,19 @@ export function ZikirScreen({ title, sub, parts, storeKey, bmKey, start, evening
             ) : verses ? verses.map((v, i) => <VerseBlock key={i} v={v} size={size} lang={lang} showNum={verses.length > 1} last={i === verses.length - 1} />)
               : <Pending kind={p.kind} />}
           </ScrollView>
-          {!p.custom && (
-            <Pressable onPress={() => setRead(sel, !isRead)} style={{ alignSelf: 'center', marginTop: 10, paddingVertical: 7, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: isRead ? 'rgba(52,211,153,.7)' : 'rgba(255,255,255,.2)', backgroundColor: isRead ? 'rgba(52,211,153,.3)' : 'rgba(255,255,255,.12)' }}>
-              <Text style={{ color: isRead ? '#bff7df' : W, fontSize: 12.5, fontWeight: '700' }}>{isRead ? 'Read ✓ · tap to undo' : 'Tap to mark as read'}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, gap: 8 }}>
+            <Pressable disabled={sel === 0} onPress={() => { setSel(sel - 1); setCount(0); }} style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,.2)', backgroundColor: 'rgba(255,255,255,.1)', opacity: sel === 0 ? 0.35 : 1 }}>
+              <Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>‹ Back</Text>
             </Pressable>
-          )}
+            {!p.custom ? (
+              <Pressable onPress={() => setRead(sel, !isRead)} style={{ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: isRead ? 'rgba(52,211,153,.7)' : 'rgba(255,255,255,.2)', backgroundColor: isRead ? 'rgba(52,211,153,.3)' : 'rgba(255,255,255,.12)' }}>
+                <Text style={{ color: isRead ? '#bff7df' : W, fontSize: 12, fontWeight: '700' }}>{isRead ? 'Read ✓' : 'Mark read'}</Text>
+              </Pressable>
+            ) : <View />}
+            <Pressable onPress={() => { if (sel >= parts.length - 1) { if (!p.custom) setRead(sel, true); say('Selesai · completed ✓'); return; } if (!p.custom && !isRead) setRead(sel, true); const n = sel + 1; setSel(n); setCount(parts[n].custom && rd[n] ? 33 : 0); }} style={{ paddingVertical: 8, paddingHorizontal: 18, borderRadius: 999, backgroundColor: '#34d399' }}>
+              <Text style={{ color: '#06281c', fontSize: 12.5, fontWeight: '800' }}>{sel >= parts.length - 1 ? 'Finish ✓' : 'Next ›'}</Text>
+            </Pressable>
+          </View>
         </Glass>
         <Glass radius={26} style={{ flex: 1, marginHorizontal: 20, marginTop: 12, marginBottom: 12 }}>
           <ScrollView contentContainerStyle={{ padding: 8 }}>

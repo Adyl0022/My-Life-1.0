@@ -34,7 +34,7 @@ class Chat extends AssistantBase {
             </Glass>
           </Pressable>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={{ color: '#fff', fontSize: 19, fontWeight: '800', letterSpacing: -0.3 }}>My Life Assistant</Text>
+            <Text numberOfLines={1} adjustsFontSizeToFit style={{ color: '#fff', fontSize: 18, fontWeight: '800', letterSpacing: -0.3 }}>My Life Assistant</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
               <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#34d399' }} />
               <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11 }} numberOfLines={1}>{v.sub}</Text>
@@ -54,7 +54,7 @@ class Chat extends AssistantBase {
           </Pressable>
         </View>
 
-        <ScrollView ref={(r) => { (this as any).scrollRef = r; }} style={{ flex: 1, marginTop: 12 }} contentContainerStyle={{ gap: 14, paddingBottom: v.startDisp === 'grid' ? 150 : 170, paddingTop: 4 }} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={(r) => { (this as any).scrollRef = r; }} style={{ flex: 1, marginTop: 12 }} contentContainerStyle={{ gap: 14, paddingBottom: 16, paddingTop: 4 }} keyboardShouldPersistTaps="handled">
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
             <OrbSvg size={32} uid="wl" />
             <Glass radius={20} style={{ maxWidth: 300, paddingVertical: 13, paddingHorizontal: 16, borderBottomLeftRadius: 6 }}><Text style={{ color: '#fff', fontSize: 14.5, lineHeight: 22 }}>{v.welcome}</Text></Glass>
@@ -117,7 +117,7 @@ class Chat extends AssistantBase {
           )}
         </ScrollView>
 
-        <View style={{ position: 'absolute', left: -20, right: -20, bottom: 0, paddingBottom: 18, paddingTop: 14, backgroundColor: 'rgba(10,15,44,.94)' }}>
+        <View style={{ marginHorizontal: -20, paddingBottom: 16, paddingTop: 12, backgroundColor: 'rgba(10,15,44,.94)' }}>
           {v.startDisp === 'grid' && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }} style={{ flexGrow: 0 }}>
             {v.cats.map((c: any) => (

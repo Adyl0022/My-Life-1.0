@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable, Animated, Easing } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Bg, Blob } from '../../components/Bg';
 import { Glass } from '../../components/Glass';
@@ -29,6 +29,7 @@ function Drift({ dur, delay = 0, children }: { dur: number; delay?: number; chil
 
 let bannerShown = false;
 function Banner() {
+  const insets = useSafeAreaInsets();
   const v = React.useRef(new Animated.Value(0)).current;
   const [show] = React.useState(() => { const r = !bannerShown; bannerShown = true; return r; });
   React.useEffect(() => {
@@ -37,7 +38,7 @@ function Banner() {
   }, [v, show]);
   if (!show) return null;
   return (
-    <Animated.View pointerEvents="none" style={{ position: 'absolute', bottom: 108, left: 0, right: 0, alignItems: 'center', zIndex: 8, opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [60, 0] }) }] }}>
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', top: insets.top + TOP + 6, left: 0, right: 0, alignItems: 'center', zIndex: 8, opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-90, 0] }) }] }}>
       <LinearGradient colors={['rgba(124,156,255,.34)', 'rgba(10,16,40,.74)', 'rgba(94,231,223,.24)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: 'row', alignItems: 'center', gap: 9, paddingVertical: 6, paddingLeft: 8, paddingRight: 14, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(143,233,226,.65)' }}>
         <OrbSvg size={26} uid="bn" />
         <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800', letterSpacing: 0.3 }}>My Life Assistant</Text>
@@ -69,7 +70,7 @@ export default function Home() {
       <Drift dur={13000} delay={1500}><LinearGradient colors={['rgba(255,255,255,.35)', 'rgba(255,255,255,.04)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', left: 316, top: 262, width: 58, height: 58, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,.3)' }} /></Drift>
       <Drift dur={15000} delay={3000}><LinearGradient colors={['rgba(255,255,255,.28)', 'rgba(255,255,255,.03)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', left: 150, top: 300, width: 88, height: 28, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,.25)' }} /></Drift>
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false} bounces={false} overScrollMode="never" scrollEnabled={canScroll} onLayout={(e) => setBox((b) => ({ ...b, h: e.nativeEvent.layout.height }))} onContentSizeChange={(_, h) => setBox((b) => ({ ...b, c: h }))} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20 + TOP, paddingBottom: 110 }}>
+        <ScrollView showsVerticalScrollIndicator={false} bounces={false} overScrollMode="never" scrollEnabled={canScroll} onLayout={(e) => setBox((b) => ({ ...b, h: e.nativeEvent.layout.height }))} onContentSizeChange={(_, h) => setBox((b) => ({ ...b, c: h }))} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 58 + TOP, paddingBottom: 110 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,.88)' }}>Good {period} · {DAYS[now.getDay()]}, {now.getDate()} {MON[now.getMonth()]}</Text>

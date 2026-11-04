@@ -2,7 +2,7 @@ import React from 'react';
 import Svg, { G, Rect, Circle, Path, Polygon, Polyline, Ellipse, Line, Defs, RadialGradient, LinearGradient, Stop, Text as SvgText } from 'react-native-svg';
 
 export const PlannerArt = () => (
-<Svg width="100%" height="100%" viewBox="0 0 170 82" preserveAspectRatio="xMidYMid slice">
+<Svg width="100%" height="100%" viewBox="0 -8 170 98" preserveAspectRatio="xMidYMid meet">
 <Rect x="22" y="14" width="54" height="56" rx="8" fill="#fff" opacity=".93"/>
 <Rect x="22" y="14" width="54" height="16" rx="8" fill="#5b7bff"/><Rect x="22" y="22" width="54" height="8" fill="#5b7bff"/>
 <Rect x="34" y="8" width="5" height="12" rx="2.5" fill="#fff"/><Rect x="59" y="8" width="5" height="12" rx="2.5" fill="#fff"/>
@@ -16,8 +16,8 @@ export const PlannerArt = () => (
 );
 
 export const IslamicArt = () => (
-<Svg width="100%" height="100%" viewBox="0 0 170 82" preserveAspectRatio="xMidYMid slice">
-<Rect x="0" y="70" width="170" height="12" fill="#0b3a33" opacity=".45"/>
+<Svg width="100%" height="100%" viewBox="0 -8 170 98" preserveAspectRatio="xMidYMid meet">
+<Rect x="0" y="70" width="170" height="20" fill="#0b3a33" opacity=".45"/>
 <Rect x="46" y="48" width="78" height="26" fill="#fff" opacity=".93"/>
 <Path d="M54 48a31 31 0 0 1 62 0z" fill="#fff" opacity=".97"/>
 <Path d="M85 17v-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
@@ -31,7 +31,7 @@ export const IslamicArt = () => (
 );
 
 export const FinanceArt = () => (
-<Svg width="100%" height="100%" viewBox="0 0 170 82" preserveAspectRatio="xMidYMid slice">
+<Svg width="100%" height="100%" viewBox="0 -8 170 98" preserveAspectRatio="xMidYMid meet">
 <Rect x="20" y="48" width="14" height="24" rx="3" fill="#fff" opacity=".55"/>
 <Rect x="40" y="38" width="14" height="34" rx="3" fill="#fff" opacity=".75"/>
 <Rect x="60" y="26" width="14" height="46" rx="3" fill="#fff" opacity=".97"/>
@@ -45,7 +45,7 @@ export const FinanceArt = () => (
 );
 
 export const RecordArt = () => (
-<Svg width="100%" height="100%" viewBox="0 0 170 82" preserveAspectRatio="xMidYMid slice">
+<Svg width="100%" height="100%" viewBox="0 -8 170 98" preserveAspectRatio="xMidYMid meet">
 <Rect x="26" y="10" width="64" height="62" rx="8" fill="#fff" opacity=".95"/>
 <Rect x="26" y="10" width="11" height="62" rx="5" fill="#ff8fab"/>
 <Path d="M48 24h32M48 34h26" stroke="#ffc9d8" strokeWidth="3" strokeLinecap="round"/>

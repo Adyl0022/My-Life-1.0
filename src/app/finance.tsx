@@ -188,7 +188,7 @@ export default function Finance() {
               <Stat l="Change" v={diffTxt} vc={gd > 0 ? '#ffb3a0' : gd < 0 ? '#7df0c6' : W} bg={gd > 0 ? 'rgba(255,143,107,.16)' : gd < 0 ? 'rgba(94,231,181,.16)' : undefined} />
             </View>
             <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 6 }}>{note}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, height: 122, marginTop: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, height: 150, marginTop: 22 }}>
               {gm.map((x, i) => {
                 const dd = x.v - x.prev;
                 return (
@@ -247,7 +247,7 @@ export default function Finance() {
           {/* Income trend */}
           <Glass radius={24} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Income Trend</Text><Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12 }}>Last 6 months · tap to open</Text></View>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, height: 86, marginTop: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, height: 104, marginTop: 18 }}>
               {tr.map((x) => {
                 const h = x.t > 0 ? Math.max(8, Math.round((x.t / maxT) * 56)) : 6; const sel = x.key === ym;
                 const r = { width: '100%' as const, height: h, borderTopLeftRadius: 6, borderTopRightRadius: 6, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 };

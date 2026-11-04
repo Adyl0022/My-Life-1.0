@@ -73,8 +73,8 @@ const Arrow = ({ t, onPress, op, label }: { t: string; onPress: () => void; op: 
 const Del = ({ onPress }: { onPress: () => void }) => <Pressable accessibilityLabel="Delete" onPress={onPress} style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ff9aa9', fontSize: 14 }}>✕</Text></Pressable>;
 const AddB = ({ t, onPress, w = 16 }: { t: string; onPress: () => void; w?: number }) => <Pressable onPress={onPress}><LinearGradient colors={PG} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 42, paddingHorizontal: w, borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 12, fontWeight: '800' }}>{t}</Text></LinearGradient></Pressable>;
 type Bar = { label: string; sub?: string; top: string; h: number; hot: boolean; delta: string; dc: string; warm?: boolean };
-const Bars = ({ bars, height = 128 }: { bars: Bar[]; height?: number }) => (
-  <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, height, marginTop: 12 }}>
+const Bars = ({ bars, height = 158 }: { bars: Bar[]; height?: number }) => (
+  <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, height, marginTop: 22 }}>
     {bars.map((b, i) => {
       const r = { width: '100%' as const, height: b.h, borderTopLeftRadius: 6, borderTopRightRadius: 6, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 };
       return (

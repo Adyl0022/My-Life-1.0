@@ -31,6 +31,13 @@ const BUB = [
 ];
 const DOT = ['#8fe9e2', '#b794ff', '#ff8fab', '#9bb8ff'];
 const PGLOW: Record<string, string> = { Morning: '255,210,122', Afternoon: '124,196,255', Evening: '255,140,107', Night: '124,156,255' };
+function iconAnim(name: string, v: Animated.Value): any {
+  const m = (inp: number[], out: any[]) => v.interpolate({ inputRange: inp, outputRange: out });
+  if (name === 'index') return { transform: [{ translateY: m([0, 0.22, 0.45, 0.62, 0.78, 1], [0, -9, 0, -4, 0, 0]) }, { scaleY: m([0, 0.45, 0.5, 0.58, 1], [1, 1, 0.85, 1, 1]) }] };
+  if (name === 'stats') return { transformOrigin: 'bottom', transform: [{ scaleY: m([0, 0.35, 0.6, 0.8, 1], [0.25, 1.2, 0.92, 1.05, 1]) }] };
+  if (name === 'insights') return { transform: [{ rotate: m([0, 1], ['0deg', '360deg']) }, { scale: m([0, 0.4, 0.7, 1], [1, 1.35, 0.95, 1]) }] };
+  return { transform: [{ rotate: m([0, 0.6, 0.8, 1], ['0deg', '110deg', '88deg', '90deg']) }] };
+}
 function Bar({ state }: any) {
   const router = useRouter();
   const home = state.index === 0;
@@ -47,6 +54,7 @@ function Bar({ state }: any) {
   const sheen = useRef(new Animated.Value(0)).current;
   const rip = useRef(new Animated.Value(1)).current;
   const col = useRef(new Animated.Value(0)).current;
+  const ia = useRef(ITEMS.map(() => new Animated.Value(1))).current;
   const pops = useRef(ITEMS.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))).current;
   const lastIdx = useRef(-1);
   useEffect(() => {
@@ -66,6 +74,8 @@ function Bar({ state }: any) {
     lastIdx.current = idx;
   }, [idx, W]);
   useEffect(() => {
+    ia[idx].setValue(0);
+    Animated.timing(ia[idx], { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: true }).start();
     pops.forEach((v, i) => Animated.spring(v, { toValue: i === idx ? 1 : 0, friction: 5, tension: 160, useNativeDriver: true }).start());
     setNavCollapsed(false);
   }, [idx]);
@@ -120,7 +130,7 @@ function Bar({ state }: any) {
               <Pressable key={r.key} onPress={() => press(r, i)} accessibilityLabel={item.label} style={{ flex: 1, borderRadius: 22 }}>
                 <Animated.View style={{ alignItems: 'center', paddingVertical: padV }}>
                   <Animated.View style={{ transform: [{ translateY: pop.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.16] }) }] }}>
-                    <Icon name={r.name} color={on ? '#fff' : 'rgba(255,255,255,.65)'} />
+                    <Animated.View style={iconAnim(r.name, ia[ITEMS.findIndex((x) => x.name === r.name)])}><Icon name={r.name} color={on ? '#fff' : 'rgba(255,255,255,.65)'} /></Animated.View>
                   </Animated.View>
                   <Animated.View style={{ height: lblH, opacity: lblO, overflow: 'hidden', marginTop: 2 }}>
                     <Text style={{ fontSize: 10.5, fontWeight: '700', color: on ? '#fff' : 'rgba(255,255,255,.65)' }}>{item.label}</Text>

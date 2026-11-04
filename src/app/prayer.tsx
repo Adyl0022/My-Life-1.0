@@ -57,6 +57,7 @@ export default function Prayer() {
               <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 10.5, fontWeight: '700', letterSpacing: 1.2 }}>{pr.mode.auto ? 'YOUR LOCATION' : 'SELECTED ZONE'}</Text>
               <Text style={{ color: W, fontSize: 14, fontWeight: '800', marginTop: 1 }} numberOfLines={2}>{pr.mode.auto && pr.locName ? pr.locName : zn}</Text>
               <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginTop: 1 }}>{pl ? 'Zone ' + pl.zone + (pr.mode.auto ? ' · ' + pl.lat.toFixed(3) + ', ' + pl.lon.toFixed(3) : '') : '—'}</Text>
+              {pr.updAt ? <Text style={{ color: 'rgba(255,255,255,.45)', fontSize: 10.5, marginTop: 2 }}>{'Last update at ' + (() => { const u = new Date(pr.updAt); return u.getDate() + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][u.getMonth()] + ', ' + (((u.getHours() + 11) % 12) + 1) + ':' + String(u.getMinutes()).padStart(2, '0') + (u.getHours() < 12 ? ' am' : ' pm'); })()}</Text> : null}
             </View>
             {pr.mode.auto ? <Pressable onPress={pr.refreshLoc} accessibilityLabel="Refresh location" style={{ paddingVertical: 9, paddingHorizontal: 12, borderRadius: 999, backgroundColor: 'rgba(52,211,153,.3)', borderWidth: 1, borderColor: 'rgba(52,211,153,.6)' }}><Text style={{ color: W, fontSize: 12, fontWeight: '800' }}>{pr.status === 'loading' ? 'Finding…' : '⟳ Refresh'}</Text></Pressable> : null}
           </Glass>

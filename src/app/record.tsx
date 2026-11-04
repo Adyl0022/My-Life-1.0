@@ -9,11 +9,12 @@ import { Glass } from '../components/Glass';
 import { Blob } from '../components/Bg';
 import { Inp, DateField, Sheet, SBtn, todayStr, W } from '../components/Ui';
 import { useStored } from '../lib/store';
+import { Ext, ProfileCard, RenewCard, FuelCard, PartsCard, DocsCard, ExportCard, renewStatus } from '../components/RecordExtras';
 import { TOP } from '../lib/layout';
 
 type Rd = { id: number; date: string; odo: number };
 type Ex = { id: number; name: string; amt: number; date: string };
-type Veh = { readings: Rd[]; yreadings: Rd[]; exps: Ex[] };
+type Veh = Ext & { readings: Rd[]; yreadings: Rd[]; exps: Ex[] };
 type Data = { cats: string[]; sel: number; data: Record<string, Veh>; nextId: number };
 const EMPTY: Data = { cats: ['Motorcycle'], sel: 0, data: {}, nextId: 1 };
 const blank = (): Veh => ({ readings: [], yreadings: [], exps: [] });
@@ -168,6 +169,11 @@ export default function Record() {
   if (sPrevV > 0 && sCurV > sPrevV * 1.3) sg.push({ p: 2, kind: 'warn', title: 'Maintenance spending is up ' + Math.round(((sCurV - sPrevV) / sPrevV) * 100) + '%', text: 'You spent RM ' + num(sCurV - sPrevV) + ' more than last month. Check if it was a one-off or a part to keep an eye on.', tag: 'Spending' });
   if (d.exps.length === 0) sg.push({ p: 4, kind: 'info', title: 'No maintenance recorded yet', text: 'Note oil changes, tyres and repairs so you can see the real cost of keeping your ' + word + ' running.', tag: 'Spending', act: 'exp', actText: '+ Add spending' });
   if (latest > 0) sg.push({ p: 6, kind: 'info', title: 'Plan your next service', text: 'Odometer is ' + num(latest) + ' km. Compare it with the service interval in your owner\'s manual.', tag: 'Service' });
+  ([['roadtax', 'Road tax'], ['insurance', 'Insurance'], ['licence', 'Driving licence']] as const).forEach(([k, l]) => {
+    const rs = renewStatus(d.renew && d.renew[k]);
+    if (rs.n < 0) sg.push({ p: 0.5, kind: 'bad', title: l + ' has expired', text: l + ' ' + rs.txt.toLowerCase() + '. Renew it as soon as you can.', tag: 'Renewal' });
+    else if (rs.n <= 30) sg.push({ p: 1.5, kind: 'warn', title: l + ' expires soon', text: l + ': ' + rs.txt.toLowerCase() + '. Plan your renewal now.', tag: 'Renewal' });
+  });
   const sugg = sg.sort((x, y) => x.p - y.p).slice(0, 3).concat([{ p: 99, kind: 'good', title: 'Tip of the day', text: TIPS[(now.getDate() - 1) % 31], tag: 'Tip' }]);
 
   const nextId = () => st.nextId;
@@ -235,6 +241,8 @@ export default function Record() {
             </View>
           ) : null}
 
+          <ProfileCard d={d} upd={(fn) => upd(fn)} name={catName} />
+
           {/* Suggestions */}
           <Glass radius={24} style={{ marginTop: 12, padding: 14 }}>
             <LinearGradient colors={['rgba(255,143,171,.2)', 'rgba(183,148,255,.1)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: -1 }} />
@@ -253,6 +261,8 @@ export default function Record() {
             </View>
             <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11, marginTop: 8 }}>General tips only. Always follow the service schedule in your owner's manual.</Text>
           </Glass>
+
+          <RenewCard d={d} upd={(fn) => upd(fn)} />
 
           {/* Monthly mileage */}
           <Glass radius={24} style={{ marginTop: 12, padding: 14 }}>
@@ -294,6 +304,8 @@ export default function Record() {
             </View>
           </Glass>
 
+          <FuelCard d={d} upd={(fn) => upd(fn)} />
+
           {/* Maintenance spending */}
           <Glass radius={24} style={{ marginTop: 12, padding: 14 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Maintenance Spending</Text><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>RM {money(expTotal)}</Text></View>
@@ -312,6 +324,9 @@ export default function Record() {
               {d.exps.map((e, i) => <Row key={e.id} last={i === d.exps.length - 1}><Text style={{ flex: 1, color: W, fontSize: 14 }} numberOfLines={1}>{e.name}<Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12 }}>{'  · ' + fmtDate(e.date)}</Text></Text><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>RM {money(e.amt)}</Text><Del onPress={() => upd((x) => ({ ...x, exps: x.exps.filter((y) => y.id !== e.id) }))} /></Row>)}
             </View>
           </Glass>
+          <PartsCard d={d} upd={(fn) => upd(fn)} latest={latest} />
+          <DocsCard d={d} upd={(fn) => upd(fn)} />
+          <ExportCard name={catName} d={d} latest={latest} />
         </ScrollView>
 
         {quick ? (

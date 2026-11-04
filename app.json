@@ -55,6 +55,12 @@
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#34d399"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "My Life lets you attach photos of receipts and documents to your records."
+        }
       ]
     ],
     "backgroundColor": "#0a0f2c"

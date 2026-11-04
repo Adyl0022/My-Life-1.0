@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export const W = '#fff';
 export const GP = ['#7c9cff', '#b794ff'] as [string, string];
-export const Inp = (p: any) => <TextInput placeholderTextColor="rgba(255,255,255,.4)" {...p} style={[{ color: W, fontSize: 14, paddingVertical: 10, paddingHorizontal: 13, borderRadius: 14, backgroundColor: 'rgba(0,0,0,.28)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', outlineStyle: 'none' } as any, p.style]} />;
+export const Inp = (p: any) => <TextInput placeholderTextColor="rgba(255,255,255,.4)" {...p} style={[{ minWidth: 0, color: W, fontSize: 14, paddingVertical: 10, paddingHorizontal: 13, borderRadius: 14, backgroundColor: 'rgba(0,0,0,.28)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', outlineStyle: 'none' } as any, p.style]} />;
 export function DateField({ value, onChange, style }: { value: string; onChange: (v: string) => void; style?: any }) {
   if (Platform.OS === 'web') {
     return React.createElement('input', { type: 'date', value, onChange: (e: any) => onChange(e.target.value), style: { color: '#fff', colorScheme: 'dark', fontSize: 14, padding: '10px 12px', borderRadius: 14, background: 'rgba(0,0,0,.28)', border: '1px solid rgba(255,255,255,.14)', outline: 'none', fontFamily: 'inherit', minWidth: 0, ...(style || {}) } });

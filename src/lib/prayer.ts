@@ -95,6 +95,7 @@ export function usePrayer() {
   const [month, setMonth] = useState<Month | null>(null);
   const [month2, setMonth2] = useState<Month | null>(null);
   const [locName, setLocName] = useState('');
+  const [updAt, setUpdAt] = useStored<number>('ml_prayer_upd', 0);
   const freshRef = useRef(false);
   const [alarms] = useStored<Record<string, boolean>>('ml_prayer_alerts', { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true });
   const [clock, setClock] = useState(0);
@@ -143,7 +144,7 @@ export function usePrayer() {
           if (alive) setLocName('');
         }
         const t = dayFrom(m, nd); if (!t) throw new Error('nodate');
-        if (alive) { setMonth(m); setTimes(t); setPlace({ zone: m.zone, lat, lon, auto }); setStatus('ready'); }
+        if (alive) { setMonth(m); setTimes(t); setPlace({ zone: m.zone, lat, lon, auto }); setStatus('ready'); setUpdAt(Date.now()); }
         // Next month too, when the alert window (12 days) crosses the month end.
         const dim = new Date(Date.UTC(y, mo, 0)).getUTCDate();
         if (nd.getUTCDate() + 12 > dim) { try { const m2 = await get(mo === 12 ? y + 1 : y, mo === 12 ? 1 : mo + 1); if (alive) setMonth2(m2); } catch (e) { if (alive) setMonth2(null); } } else if (alive) setMonth2(null);
@@ -171,5 +172,5 @@ export function usePrayer() {
   const next = pick(times);
   const solat = times.filter((t) => t.key !== 'syuruk');
   const nextSolat = pick(solat);
-  return { times, next, nextSolat, status, place, mode, setMode, retry: () => setTick((x) => x + 1), refreshLoc: () => { freshRef.current = true; setTick((x) => x + 1); }, locName, clock };
+  return { times, next, nextSolat, status, place, mode, setMode, retry: () => setTick((x) => x + 1), refreshLoc: () => { freshRef.current = true; setTick((x) => x + 1); }, locName, updAt, clock };
 }

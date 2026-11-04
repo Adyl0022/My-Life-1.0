@@ -4,7 +4,7 @@ import { View, Text, TextInput, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { Glass } from '../components/Glass';
 import { Blob } from '../components/Bg';
 import { OrbSvg } from '../components/Orb';
@@ -12,6 +12,7 @@ import { AssistantBase } from '../lib/assistantBase';
 import { ROUTES } from '../lib/routes';
 import { TOP } from '../lib/layout';
 
+const STARS: [number, number, number, number][] = Array.from({ length: 34 }, (_, i) => [(i * 37 + 11) % 100, (i * 53 + 7) % 96, 0.6 + ((i * 7) % 6) / 10, 0.25 + ((i * 13) % 6) / 10]);
 const stroke = { stroke: '#fff', strokeWidth: 2, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 
 class Chat extends AssistantBase {
@@ -49,9 +50,6 @@ class Chat extends AssistantBase {
               </Pressable>
             ))}
           </View>
-          <Pressable onPress={v.clear} accessibilityLabel="Clear chat" style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}>
-            <View><Svg width={18} height={18} viewBox="0 0 24 24"><Path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" {...stroke} /></Svg></View>
-          </Pressable>
         </View>
 
         <ScrollView ref={(r) => { (this as any).scrollRef = r; }} style={{ flex: 1, marginTop: 12 }} contentContainerStyle={{ gap: 14, paddingBottom: 16, paddingTop: 4 }} keyboardShouldPersistTaps="handled">
@@ -166,6 +164,15 @@ export default function Assistant() {
       <LinearGradient colors={['#0a0f2c', '#1a1048', '#0c2b4d']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
       <Blob size={320} color="rgba(183,148,255,.5)" style={{ right: -100, top: -40 }} />
       <Blob size={340} color="rgba(94,231,223,.3)" style={{ left: -120, bottom: 80 }} />
+      <Blob size={300} color="rgba(255,143,171,.28)" style={{ left: -110, top: 150 }} />
+      <Blob size={260} color="rgba(124,156,255,.35)" style={{ right: -90, top: 420 }} />
+      <Svg pointerEvents="none" width="100%" height="100%" style={{ position: 'absolute', left: 0, top: 0 }}>
+        {STARS.map((t, i) => <Circle key={i} cx={t[0] + '%'} cy={t[1] + '%'} r={t[2]} fill="#fff" opacity={t[3]} />)}
+        <Circle cx="88%" cy="9%" r={70} stroke="rgba(255,255,255,.07)" strokeWidth={1.2} fill="none" />
+        <Circle cx="88%" cy="9%" r={110} stroke="rgba(255,255,255,.05)" strokeWidth={1.2} fill="none" />
+        <Circle cx="88%" cy="9%" r={150} stroke="rgba(255,255,255,.035)" strokeWidth={1.2} fill="none" />
+        <Circle cx="6%" cy="70%" r={90} stroke="rgba(94,231,223,.08)" strokeWidth={1.2} fill="none" />
+      </Svg>
       <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 12 + TOP }}>
         <Chat ref={chat} userName={name} onBack={() => router.back()} go={go} onScroll={() => chat.current?.scrollRef?.scrollToEnd({ animated: true })} />
         {!!note && <View style={{ position: 'absolute', left: 20, right: 20, bottom: 230, alignItems: 'center' }}><Glass radius={999} style={{ paddingVertical: 9, paddingHorizontal: 18, backgroundColor: 'rgba(20,26,70,.92)' }}><Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '700' }}>{note}</Text></Glass></View>}

@@ -52,8 +52,6 @@ export default function Home() {
   const router = useRouter();
   const name = useName();
   const go = (k: string) => { const r = ({ Planner: '/planner', Islamic: '/islamic' } as Record<string, string>)[k]; if (r) router.push(r as any); };
-  const [box, setBox] = React.useState({ h: 0, c: 0 });
-  const canScroll = box.c > box.h + 60;
   const usage = useUsage(16);
   const mins = Math.floor(usage.today.sec / 60);
   const maxM = Math.max(...usage.series, 1);
@@ -70,7 +68,7 @@ export default function Home() {
       <Drift dur={13000} delay={1500}><LinearGradient colors={['rgba(255,255,255,.35)', 'rgba(255,255,255,.04)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', left: 316, top: 262, width: 58, height: 58, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,.3)' }} /></Drift>
       <Drift dur={15000} delay={3000}><LinearGradient colors={['rgba(255,255,255,.28)', 'rgba(255,255,255,.03)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', left: 150, top: 300, width: 88, height: 28, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,.25)' }} /></Drift>
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false} bounces={false} overScrollMode="never" scrollEnabled={canScroll} onLayout={(e) => setBox((b) => ({ ...b, h: e.nativeEvent.layout.height }))} onContentSizeChange={(_, h) => setBox((b) => ({ ...b, c: h }))} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 58 + TOP, paddingBottom: 110 }}>
+        <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 58 + TOP, paddingBottom: 104 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,.88)' }}>Good {period} · {DAYS[now.getDay()]}, {now.getDate()} {MON[now.getMonth()]}</Text>
@@ -87,10 +85,12 @@ export default function Home() {
             </View>
           </View>
           <Text style={{ marginTop: 10, fontSize: 11.5, fontWeight: '700', letterSpacing: 1.6, color: '#d9fff9' }}>YOUR LIFE, ALL IN ONE PLACE</Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
-            {CARDS.filter((c) => c.k !== 'Habit').map((c) => (
-              <Pressable key={c.k} onPress={() => go(c.k)} style={({ pressed }) => ({ width: '47.8%', transform: [{ scale: pressed ? 0.95 : 1 }] })}>
-                <Glass style={{ height: 128 }}>
+          <View style={{ flex: 1, gap: 10, marginTop: 10 }}>
+            {(() => { const L = CARDS.filter((c) => c.k !== 'Habit'); return [L.slice(0, 2), L.slice(2)]; })().map((row, ri) => (
+              <View key={ri} style={{ flex: 1, flexDirection: 'row', gap: 10, minHeight: 100 }}>
+            {row.map((c) => (
+              <Pressable key={c.k} onPress={() => go(c.k)} style={({ pressed }) => ({ flex: 1, transform: [{ scale: pressed ? 0.95 : 1 }] })}>
+                <Glass style={{ flex: 1 }}>
                   <LinearGradient colors={[c.c1, c.c2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 70 }}>
                     {ARTS[c.k]()}
                   </LinearGradient>
@@ -104,9 +104,11 @@ export default function Home() {
                 </Glass>
               </Pressable>
             ))}
+              </View>
+            ))}
             {(() => { const c = CARDS.find((x) => x.k === 'Habit')!; return (
-              <Pressable onPress={() => go('Habit')} style={({ pressed }) => ({ width: '100%', transform: [{ scale: pressed ? 0.97 : 1 }] })}>
-                <Glass style={{ height: 136, flexDirection: 'row' }}>
+              <Pressable onPress={() => go('Habit')} style={({ pressed }) => ({ flex: 1.1, minHeight: 100, transform: [{ scale: pressed ? 0.97 : 1 }] })}>
+                <Glass style={{ flex: 1, flexDirection: 'row' }}>
                   <View style={{ flex: 1, paddingLeft: 22, paddingRight: 8, justifyContent: 'center' }}>
                     <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,.18)', borderWidth: 1, borderColor: 'rgba(255,255,255,.35)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}><ChipIcon k="Habit" /></View>
                     <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>{c.title}</Text>
@@ -130,7 +132,7 @@ export default function Home() {
               ))}
             </View>
           </Glass>
-        </ScrollView>
+        </View>
       </SafeAreaView>
       <Banner />
     </Bg>

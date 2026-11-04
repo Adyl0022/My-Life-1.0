@@ -1,3 +1,4 @@
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import React from 'react';
 import { View, TextInput, Pressable, Modal, Platform } from 'react-native';
 import { Text } from './Txt';
@@ -10,7 +11,17 @@ export function DateField({ value, onChange, style }: { value: string; onChange:
   if (Platform.OS === 'web') {
     return React.createElement('input', { type: 'date', value, onChange: (e: any) => onChange(e.target.value), style: { color: '#fff', colorScheme: 'dark', fontSize: 14, padding: '10px 12px', borderRadius: 14, background: 'rgba(0,0,0,.28)', border: '1px solid rgba(255,255,255,.14)', outline: 'none', fontFamily: 'inherit', minWidth: 0, ...(style || {}) } });
   }
-  return <Inp style={style} value={value} onChangeText={onChange} placeholder="YYYY-MM-DD" maxLength={10} />;
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(value + 'T12:00:00') : new Date();
+  const fmt = (x: Date) => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+  const box = { paddingVertical: 11, paddingHorizontal: 14, borderRadius: 14, backgroundColor: 'rgba(0,0,0,.28)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', justifyContent: 'center' as const };
+  if (Platform.OS === 'ios') {
+    return <View style={[box, { paddingVertical: 4, alignItems: 'flex-start' }, style]}><DateTimePicker value={d} mode="date" display="compact" themeVariant="dark" onChange={(_: any, x?: Date) => x && onChange(fmt(x))} /></View>;
+  }
+  return (
+    <Pressable style={[box, style]} onPress={() => DateTimePickerAndroid.open({ value: d, mode: 'date', onChange: (e: any, x?: Date) => { if (e.type === 'set' && x) onChange(fmt(x)); } })}>
+      <Text style={{ color: value ? '#fff' : 'rgba(255,255,255,.5)', fontSize: 14 }}>{value || 'Tap to pick date'}</Text>
+    </Pressable>
+  );
 }
 export const Pill = ({ t, onPress, on, style }: { t: string; onPress: () => void; on?: boolean; style?: any }) => (
   <Pressable onPress={onPress} style={style}>

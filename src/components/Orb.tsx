@@ -34,10 +34,13 @@ export function OrbSvg({ size, uid }: { size: number; uid: string }) {
 export function Orb({ size = 42, badge = true, onPress }: { size?: number; badge?: boolean; onPress?: () => void }) {
   const v = useRef(new Animated.Value(0)).current;
   useEffect(() => { const a = Animated.loop(Animated.sequence([Animated.timing(v, { toValue: 1, duration: 1400, useNativeDriver: false }), Animated.timing(v, { toValue: 0, duration: 1400, useNativeDriver: false })])); a.start(); return () => a.stop(); }, [v]);
+  const spin = useRef(new Animated.Value(0)).current;
+  useEffect(() => { const a = Animated.loop(Animated.timing(spin, { toValue: 1, duration: 9000, easing: Easing.linear, useNativeDriver: true })); a.start(); return () => a.stop(); }, [spin]);
+  const rot = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
   const shadowOpacity = v.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0.95] });
   return (
     <Animated.View accessibilityLabel="Ask My Life assistant" onTouchEnd={onPress} style={{ width: size, height: size, borderRadius: size / 2, shadowColor: '#8fe9e2', shadowRadius: 14, shadowOpacity: shadowOpacity as any, shadowOffset: { width: 0, height: 0 } }}>
-      <OrbSvg size={size} uid={'o' + size} />
+      <Animated.View style={{ transform: [{ rotate: rot }] }}><OrbSvg size={size} uid={'o' + size} /></Animated.View>
       {badge && (
         <LinearGradient colors={['#ff8fab', '#b794ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', right: -7, bottom: -5, paddingHorizontal: 6, borderRadius: 999, borderWidth: 1.5, borderColor: 'rgba(255,255,255,.85)' }}>
           <Text style={{ fontSize: 9, fontWeight: '800', letterSpacing: 0.4, color: '#fff', lineHeight: 13 }}>AI</Text>

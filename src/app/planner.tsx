@@ -133,7 +133,7 @@ export default function Planner() {
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
       <LinearGradient colors={['#0a0f2c', '#1a1048', '#0c2b4d']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
       <Blob size={300} color="rgba(124,156,255,.38)" style={{ right: -100, top: -40 }} />
-      <Blob size={320} color="rgba(94,231,223,.22)" style={{ left: -110, bottom: 60 }} />
+      <Blob size={320} color="rgba(94,231,223,.08)" style={{ left: -110, bottom: 60 }} />
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: 0.78 }}><PlannerArt /></View>
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 60 }}>
@@ -200,7 +200,7 @@ export default function Planner() {
 
         {add && (
           <Sheet onClose={() => setAdd(null)}>
-            <Glass radius={26} style={{ padding: 20, gap: 10 }}>
+            <View style={{ padding: 20, gap: 10, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
               <Text style={{ color: W, fontSize: 17, fontWeight: '800' }}>{add.kind === 'task' ? 'New task' : 'New event'}</Text>
               <Inp autoFocus value={add.name} onChangeText={(v: string) => setAdd({ ...add, name: v })} placeholder={add.kind === 'task' ? 'What needs to be done?' : 'Event name'} />
               {add.kind === 'task' ? (<>
@@ -212,7 +212,7 @@ export default function Planner() {
                 <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}><DateField value={add.date} onChange={(v) => setAdd({ ...add, date: v })} style={{ flex: 1 }} /><Pill t={'Reminder: ' + add.remind} onPress={() => setAdd({ ...add, remind: cyc(REM, add.remind) })} /></View>
               )}
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 4, opacity: add.name.trim() ? 1 : 0.5 }}><SBtn t="Cancel" onPress={() => setAdd(null)} /><SBtn t={add.kind === 'task' ? 'Add task' : 'Add event'} kind="primary" onPress={saveAdd} /></View>
-            </Glass>
+            </View>
           </Sheet>
         )}
         <Toast t={toast} />

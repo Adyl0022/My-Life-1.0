@@ -57,9 +57,9 @@ export default function Notes() {
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
       <LinearGradient colors={['#0b1030', '#231452', '#0b2c46']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
-      <Blob size={320} color="rgba(255,196,107,.27)" style={{ right: -110, top: -50 }} />
-      <Blob size={340} color="rgba(94,231,223,.2)" style={{ left: -120, bottom: 40 }} />
-      <Blob size={240} color="rgba(183,148,255,.16)" style={{ left: 30, top: 330 }} />
+      <Blob size={320} color="rgba(255,196,107,.2)" style={{ right: -110, top: -50 }} />
+      <Blob size={340} color="rgba(94,231,223,.07)" style={{ left: -120, bottom: 40 }} />
+      <Blob size={240} color="rgba(183,148,255,.1)" style={{ left: 30, top: 330 }} />
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: 0.72 }}><NotesArt /></View>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 16 + TOP, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -75,9 +75,9 @@ export default function Notes() {
           <Pressable onPress={() => setSort((sort + 1) % 3)}><Glass radius={16} style={{ paddingHorizontal: 12, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{SORTS[sort]}</Text></Glass></Pressable>
           <Pressable onPress={() => setGrid(!grid)} accessibilityLabel="Layout"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 16 }}>{grid ? '☰' : '▦'}</Text></Glass></Pressable>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginTop: 12 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, flexShrink: 0, marginTop: 12 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingVertical: 2, alignItems: 'center' }}>
           {FILTERS.map((n, i) => (
-            <Pressable key={n} onPress={() => setFilter(i)}><View style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, backgroundColor: filter === i ? 'rgba(255,196,107,.3)' : 'rgba(255,255,255,.1)' }}><Text style={{ color: filter === i ? W : 'rgba(255,255,255,.85)', fontSize: 12.5, fontWeight: filter === i ? '800' : '600' }}>{n}</Text></View></Pressable>
+            <Pressable key={n} onPress={() => setFilter(i)}><View style={{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: 999, backgroundColor: filter === i ? 'rgba(255,196,107,.3)' : 'rgba(255,255,255,.1)' }}><Text style={{ color: filter === i ? W : 'rgba(255,255,255,.85)', fontSize: 12.5, lineHeight: 17, fontWeight: filter === i ? '800' : '600' }}>{n}</Text></View></Pressable>
           ))}
         </ScrollView>
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>

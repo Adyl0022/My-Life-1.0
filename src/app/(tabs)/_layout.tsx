@@ -50,8 +50,10 @@ function Bar({ state }: any) {
   const PER = 2 * (BS.w - 3 - 53) + 2 * (BS.h - 3 - 53) + 2 * Math.PI * 26.5;
   const orb = useRef(new Animated.Value(0)).current;
   const vis = useRef(new Animated.Value(1)).current;
-  const off = orb.interpolate({ inputRange: [0, 1], outputRange: [0, -PER] });
-  const offW = orb.interpolate({ inputRange: [0, 1], outputRange: [-PER * 0.15, -PER * 1.15] });
+  const LEN = PER * 0.12, WH = PER * 0.04;
+  const offA = orb.interpolate({ inputRange: [0, 1], outputRange: [0, -PER] });
+  const offAW = orb.interpolate({ inputRange: [0, 1], outputRange: [WH - LEN, WH - LEN - PER] });
+  const offB = orb.interpolate({ inputRange: [0, 1], outputRange: [LEN - PER, LEN] });
   const rip = useRef(new Animated.Value(1)).current;
   const col = useRef(new Animated.Value(0)).current;
   const pops = useRef(ITEMS.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))).current;
@@ -75,7 +77,8 @@ function Bar({ state }: any) {
   useEffect(() => {
     orb.setValue(0); vis.setValue(1);
     const oa = Animated.sequence([
-      Animated.timing(orb, { toValue: 1.15, duration: 4200, easing: Easing.linear, useNativeDriver: false }),
+      Animated.timing(orb, { toValue: 0.38, duration: 2100, easing: Easing.in(Easing.quad), useNativeDriver: false }),
+      Animated.timing(orb, { toValue: 0, duration: 2100, easing: Easing.out(Easing.quad), useNativeDriver: false }),
       Animated.timing(vis, { toValue: 0, duration: 500, useNativeDriver: true }),
     ]);
     oa.start();
@@ -110,15 +113,19 @@ function Bar({ state }: any) {
       <Glass radius={28} style={{ padding: 8, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
         {BS.w > 0 && (
           <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: vis }}>
-            {DOT.map((c, i) => (
-              <Animated.View key={i} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: pops[i] }}>
-                <Svg width={BS.w} height={BS.h}>
-                  <ARect x={1.5} y={1.5} width={BS.w - 3} height={BS.h - 3} rx={26.5} fill="none" stroke={c} strokeOpacity={0.35} strokeWidth={4} strokeLinecap="round" strokeDasharray={[PER * 0.2, PER * 0.8]} strokeDashoffset={off} />
-                  <ARect x={1.5} y={1.5} width={BS.w - 3} height={BS.h - 3} rx={26.5} fill="none" stroke={c} strokeWidth={1.8} strokeLinecap="round" strokeDasharray={[PER * 0.2, PER * 0.8]} strokeDashoffset={off} />
-                  <ARect x={1.5} y={1.5} width={BS.w - 3} height={BS.h - 3} rx={26.5} fill="none" stroke="#fff" strokeOpacity={0.9} strokeWidth={1.2} strokeLinecap="round" strokeDasharray={[PER * 0.05, PER * 0.95]} strokeDashoffset={offW} />
-                </Svg>
-              </Animated.View>
-            ))}
+            <Svg width={BS.w} height={BS.h}>
+              {[0, 1].map((k) => {
+                const o = k === 0 ? offA : offB;
+                const ow = k === 0 ? offAW : offB;
+                return (
+                  <React.Fragment key={k}>
+                    <ARect x={1.5} y={1.5} width={BS.w - 3} height={BS.h - 3} rx={26.5} fill="none" stroke={DOT[idx]} strokeOpacity={0.35} strokeWidth={4} strokeLinecap="round" strokeDasharray={[LEN, PER - LEN]} strokeDashoffset={o} />
+                    <ARect x={1.5} y={1.5} width={BS.w - 3} height={BS.h - 3} rx={26.5} fill="none" stroke={DOT[idx]} strokeWidth={1.8} strokeLinecap="round" strokeDasharray={[LEN, PER - LEN]} strokeDashoffset={o} />
+                    <ARect x={1.5} y={1.5} width={BS.w - 3} height={BS.h - 3} rx={26.5} fill="none" stroke="#fff" strokeOpacity={0.9} strokeWidth={1.2} strokeLinecap="round" strokeDasharray={[WH, PER - WH]} strokeDashoffset={ow} />
+                  </React.Fragment>
+                );
+              })}
+            </Svg>
           </Animated.View>
         )}
         <View style={{ flexDirection: 'row' }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>

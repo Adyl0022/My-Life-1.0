@@ -5,7 +5,6 @@ import { subscribeNav, setNavCollapsed } from '../../lib/navbar';
 import { Text } from '../../components/Txt';
 import { Tabs, useRouter } from 'expo-router';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
-const ARect: any = Animated.createAnimatedComponent(Rect as any);
 import { LinearGradient } from 'expo-linear-gradient';
 import { THEMES, periodOf } from '../../lib/theme';
 import { Glass } from '../../components/Glass';
@@ -46,13 +45,6 @@ function Bar({ state }: any) {
   const tx = useRef(new Animated.Value(0)).current;
   const sx = useRef(new Animated.Value(1)).current;
   const sheen = useRef(new Animated.Value(0)).current;
-  const [BS, setBS] = useState({ w: 0, h: 0 });
-  const PER = 2 * (BS.w - 5 - 51) + 2 * (BS.h - 5 - 51) + 2 * Math.PI * 25.5;
-  const orb = useRef(new Animated.Value(0)).current;
-  const vis = useRef(new Animated.Value(1)).current;
-  const LEN = PER * 0.12;
-  const offA = orb.interpolate({ inputRange: [0, 1], outputRange: [0, -PER] });
-  const offB = orb.interpolate({ inputRange: [0, 1], outputRange: [LEN - PER, LEN] });
   const rip = useRef(new Animated.Value(1)).current;
   const col = useRef(new Animated.Value(0)).current;
   const pops = useRef(ITEMS.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))).current;
@@ -74,16 +66,8 @@ function Bar({ state }: any) {
     lastIdx.current = idx;
   }, [idx, W]);
   useEffect(() => {
-    orb.setValue(0); vis.setValue(1);
-    const oa = Animated.sequence([
-      Animated.timing(orb, { toValue: 0.38, duration: 2100, easing: Easing.in(Easing.quad), useNativeDriver: false }),
-      Animated.timing(orb, { toValue: 0, duration: 2100, easing: Easing.out(Easing.quad), useNativeDriver: false }),
-      Animated.timing(vis, { toValue: 0, duration: 500, useNativeDriver: true }),
-    ]);
-    oa.start();
     pops.forEach((v, i) => Animated.spring(v, { toValue: i === idx ? 1 : 0, friction: 5, tension: 160, useNativeDriver: true }).start());
     setNavCollapsed(false);
-    return () => oa.stop();
   }, [idx]);
   useEffect(() => {
     const loop = Animated.loop(Animated.sequence([
@@ -108,23 +92,8 @@ function Bar({ state }: any) {
   return (
     <>
     <LinearGradient pointerEvents="none" colors={home ? ['rgba(10,15,44,0)', tint(.35), tint(.6)] : ['rgba(10,15,44,0)', 'rgba(10,15,44,.92)', 'rgba(10,15,44,.98)']} locations={[0, 0.55, 1]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 104 }} />
-    <Animated.View onLayout={(e) => setBS({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })} style={{ position: 'absolute', left: side, right: side, bottom: 18 }}>
+    <Animated.View style={{ position: 'absolute', left: side, right: side, bottom: 18 }}>
       <Glass radius={28} style={{ padding: 8, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
-        {BS.w > 0 && (
-          <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: vis }}>
-            <Svg width={BS.w - 2} height={BS.h - 2}>
-              {[0, 1].map((k) => {
-                const o = k === 0 ? offA : offB;
-                return (
-                  <React.Fragment key={k}>
-                    <ARect x={1.5} y={1.5} width={BS.w - 5} height={BS.h - 5} rx={25.5} fill="none" stroke={DOT[idx]} strokeOpacity={0.28} strokeWidth={1.8} strokeLinecap="round" strokeDasharray={[LEN, PER - LEN]} strokeDashoffset={o} />
-                    <ARect x={1.5} y={1.5} width={BS.w - 5} height={BS.h - 5} rx={25.5} fill="none" stroke={DOT[idx]} strokeWidth={0.9} strokeLinecap="round" strokeDasharray={[LEN, PER - LEN]} strokeDashoffset={o} />
-                  </React.Fragment>
-                );
-              })}
-            </Svg>
-          </Animated.View>
-        )}
         <View style={{ flexDirection: 'row' }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
           {W > 0 && (
             <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: -5, bottom: -5, width: bw, borderRadius: 27, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,.45)', transform: [{ translateX: tx }, { scaleX: sx }] }}>

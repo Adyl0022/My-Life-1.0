@@ -187,7 +187,8 @@ function Shoot({ right = 20, top = 40, dur = 6500, delay = 0, w = 110 }: { right
 
 export function SkyArt({ period, offset = 0 }: { period: Period; offset?: number }) {
   return (
-    <View style={{ position: 'absolute', left: 0, top: offset, right: 0, height: 340, overflow: 'hidden' }} pointerEvents="none">
+    <View style={{ position: 'absolute', left: 0, top: 0, right: 0, height: 340 + offset, overflow: 'hidden' }} pointerEvents="none">
+     <View style={{ position: 'absolute', left: 0, right: 0, top: offset, height: 340 }}>
       {period === 'Morning' && (<>
         <Pulse style={{ right: -75, top: 21 }}><Glow size={330} stops={[[0, 'rgba(255,238,185,.95)'], [0.38, 'rgba(255,190,120,.45)'], [0.7, 'rgba(0,0,0,0)']]} style={{ position: 'relative' }} /></Pulse>
         <Rays right={-60} top={36} n={16} half={5.6} color="#fff3c9" opacity={0.3} />
@@ -226,6 +227,7 @@ export function SkyArt({ period, offset = 0 }: { period: Period; offset?: number
         <Sparkle x={236} y={150} size={11} delay={1100} dur={3000} />
         <Shoot right={40} top={150} dur={7500} delay={1200} w={100} />
       </>)}
+     </View>
     </View>
   );
 }

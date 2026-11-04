@@ -16,6 +16,12 @@ import { HData, HEMPTY, getDay, cupsGoal } from '../../lib/habit';
 import { THEMES, LINES, periodOf } from '../../lib/theme';
 import { TOP } from '../../lib/layout';
 
+const HALO: Record<string, string> = { Planner: '124,156,255', Islamic: '52,211,153', Finance: '255,196,107', Record: '255,143,171', Habit: '183,148,255' };
+const Halo = ({ k }: { k: string }) => (
+  <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
+    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => <View key={i} style={{ position: 'absolute', left: -i * 2.2, right: -i * 2.2, top: -i * 1.4 + 2, bottom: -i * 3.2, borderRadius: 24 + i * 2.4, backgroundColor: 'rgba(' + HALO[k] + ',0.017)' }} />)}
+  </View>
+);
 const ARTS: Record<string, () => React.ReactElement> = { Planner: PlannerArt, Islamic: IslamicArt, Finance: FinanceArt, Record: RecordArt, Habit: HabitArt };
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -82,11 +88,12 @@ export default function Home() {
               <View key={ri} style={{ flex: 1, flexDirection: 'row', gap: 10, minHeight: 100 }}>
             {row.map((c) => (
               <Pressable key={c.k} onPress={() => go(c.k)} style={({ pressed }) => ({ flex: 1, transform: [{ scale: pressed ? 0.95 : 1 }] })}>
+                <Halo k={c.k} />
                 <Glass style={{ flex: 1 }}>
-                  <LinearGradient colors={[c.c1, c.c2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 70 }}>
+                  <LinearGradient colors={[c.c1, c.c2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1 }}>
                     {ARTS[c.k]()}
                   </LinearGradient>
-                  <View style={{ flex: 1, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ height: 56, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flex: 1 }}>
                       <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>{c.title}</Text>
                       <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{ color: 'rgba(255,255,255,.72)', fontSize: 11, marginTop: 1 }}>{c.sub}</Text>
@@ -99,6 +106,7 @@ export default function Home() {
               </View>
             ))}
             <Pressable onPress={() => go('Habit')} style={({ pressed }) => ({ marginTop: 0, transform: [{ scale: pressed ? 0.97 : 1 }] })}>
+              <Halo k="Habit" />
               <Glass style={{ height: 132 }}>
                 <LinearGradient colors={['rgba(183,148,255,.55)', 'rgba(94,231,223,.22)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: -1 }} />
                 <View pointerEvents="none" style={{ position: 'absolute', right: 8, top: 0, bottom: 0, width: '36%' }}>{HabitBanner()}</View>

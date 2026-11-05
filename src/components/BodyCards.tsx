@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Pressable } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -96,11 +96,30 @@ export function WeightGoal({ h, setH }: { h: HData; setH: (v: HData) => void }) 
   );
 }
 
+type Food = [string, number, number];
+const POOL: Record<'b' | 'm' | 's', Food[]> = {
+  b: [['2 boiled eggs and a black coffee', 160, 12], ['Oats with skim milk', 220, 10], ['2 eggs on 2 slices of wholemeal bread', 330, 17], ['Oats with milk and a banana', 330, 12], ['Roti canai (1) with dhal', 350, 9], ['Peanut butter on 2 slices of bread, with a glass of milk', 480, 18], ['Nasi lemak with egg', 500, 15]],
+  m: [['Sup ayam with vegetables, no rice', 250, 28], ['Grilled fish, ulam and a small scoop of rice', 380, 30], ['Grilled chicken, vegetables and half a plate of rice', 450, 35], ['Tempeh, egg and vegetables with 1 cup of rice', 500, 24], ['Chicken rice, 1 plate', 600, 30], ['Nasi campur: chicken, vegetables, egg, 1 plate of rice', 650, 35], ['Nasi goreng ayam, 1 plate', 700, 25]],
+  s: [['Papaya, 1 bowl', 60, 1], ['An apple or an orange', 80, 1], ['1 boiled egg', 78, 6], ['A banana', 105, 1], ['Plain yoghurt, 1 cup', 120, 7], ['A glass of full cream milk', 150, 8], ['A handful of nuts', 170, 6], ['Banana with peanut butter', 290, 8]],
+};
+const pickFoods = (pool: Food[], budget: number) => {
+  const ok = pool.filter((f) => f[1] <= budget * 1.1);
+  const src = ok.length ? ok : [pool[0]];
+  return src.sort((a, b) => Math.abs(a[1] - budget) - Math.abs(b[1] - budget)).slice(0, 3).sort((a, b) => b[1] - a[1]);
+};
+const Tick = ({ ok, t }: { ok: boolean; t: string }) => (
+  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999, backgroundColor: ok ? 'rgba(125,240,198,.18)' : 'rgba(255,196,107,.18)' }}>
+    <Text style={{ color: ok ? '#7df0c6' : '#ffc46b', fontSize: 11.5, fontWeight: '800' }}>{ok ? '✓' : '•'}</Text><Text style={{ color: W, fontSize: 11.5, fontWeight: '700' }}>{t}</Text>
+  </View>
+);
 export function DailyNeeds({ h, setH }: { h: HData; setH: (v: HData) => void }) {
-  const [age, setAge] = useState(h.age ? String(h.age) : ''); const [ed, setEd] = useState(!(h.age && h.sex));
+  const [age, setAge] = useState(''); const [ed, setEd] = useState(false);
   const kg = latestKg(h); const cm = h.cm || 0; const a = h.age || 0; const sx = h.sex;
+  useEffect(() => { if (h.age) setAge(String(h.age)); }, [h.age]);
   const ok = kg > 0 && cm > 0 && a > 0 && !!sx;
-  const saveAge = (sex: 'm' | 'f' | undefined, ag: string) => { const n = parseInt(ag, 10); setH({ ...h, sex: sex || h.sex, age: n >= 12 && n <= 100 ? n : h.age }); if (n >= 12 && n <= 100 && (sex || h.sex)) setEd(false); };
+  const showEd = ed || !(a > 0 && sx);
+  const saveAge = (sex: 'm' | 'f' | undefined, ag: string) => { const n = parseInt(ag, 10); const okAge = n >= 12 && n <= 100; setH({ ...h, sex: sex || h.sex, age: okAge ? n : h.age }); if (okAge && (sex || h.sex)) setEd(false); };
+  const missing: string[] = []; if (!(kg > 0)) missing.push('weight'); if (!(cm > 0)) missing.push('height');
   let body: React.ReactNode = null;
   if (ok) {
     const bmr = 10 * kg + 6.25 * cm - 5 * a + (sx === 'm' ? 5 : -161);
@@ -112,6 +131,10 @@ export function DailyNeeds({ h, setH }: { h: HData; setH: (v: HData) => void }) 
     const floor = Math.max(bmr, sx === 'm' ? 1500 : 1200);
     const cal = mode === 'lose' ? Math.max(floor, tdee - 400) : mode === 'gain' ? tdee + 300 : tdee;
     const pro = kg * (mode === 'lose' ? 1.6 : mode === 'gain' ? 1.6 : 1.2);
+    const meals: [string, string, number, Food[]][] = [
+      ['Breakfast', '#ffc46b', 0.25, POOL.b], ['Lunch', '#7df0c6', 0.35, POOL.m], ['Dinner', '#b794ff', 0.3, POOL.m], ['Snacks', '#ff8fab', 0.1, POOL.s],
+    ];
+    const tip = mode === 'lose' ? 'Skip sweet drinks (one teh tarik is about 150 kcal) and keep protein high so you stay full.' : mode === 'gain' ? 'Eat 3 meals and 2 snacks, and add a glass of full cream milk. Regular meals matter more than huge ones.' : 'Fill half your plate with vegetables, a quarter with protein and a quarter with rice.';
     body = (
       <>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
@@ -119,20 +142,44 @@ export function DailyNeeds({ h, setH }: { h: HData; setH: (v: HData) => void }) 
           <Stat l="Protein" v={Math.round(pro / 5) * 5 + ' g'} />
           <Stat l="Water" v={(cupsGoal(h) * GLASS / 1000).toFixed(1) + ' L'} />
         </View>
-        <Text style={{ color: dim, fontSize: 11.5, marginTop: 8, lineHeight: 17 }}>{'Based on ' + lvl.toLowerCase() + ' (about ' + Math.round(st).toLocaleString() + ' steps a day). Your body burns about ' + Math.round(tdee / 10) * 10 + ' kcal a day.' + (mode === 'lose' ? ' The target is a gentle 400 kcal below that, never under ' + Math.round(floor / 10) * 10 + '.' : mode === 'gain' ? ' The target adds a gentle 300 kcal.' : '')}</Text>
+        <Text style={{ color: dim, fontSize: 11.5, marginTop: 8, lineHeight: 17 }}>{'Based on ' + lvl.toLowerCase() + ' (about ' + Math.round(st).toLocaleString() + ' steps a day). Your body burns about ' + Math.round(tdee / 10) * 10 + ' kcal a day.' + (mode === 'lose' ? ' Eating a little less than this helps you lose weight slowly.' : mode === 'gain' ? ' Eating a little more than this helps you gain weight.' : '')}</Text>
+        <Text style={{ color: W, fontSize: 14, fontWeight: '800', marginTop: 16 }}>What to eat today</Text>
+        <Text style={{ color: dim, fontSize: 11.5, marginTop: 2, lineHeight: 16 }}>{'Ideas that fit your ' + Math.round(cal / 10) * 10 + ' kcal. Amounts are rough and change with portion size.'}</Text>
+        {meals.map(([n, c, f, pool]) => {
+          const bud = Math.round((cal * f) / 10) * 10; const picks = pickFoods(pool, bud);
+          return (
+            <View key={n} style={{ marginTop: 10, padding: 11, borderRadius: 16, backgroundColor: 'rgba(0,0,0,.2)', borderLeftWidth: 3, borderLeftColor: c }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '800' }}>{n}</Text><Text style={{ color: c, fontSize: 12, fontWeight: '800' }}>{'about ' + bud + ' kcal'}</Text></View>
+              {picks.map((x) => (
+                <View key={x[0]} style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+                  <Text style={{ flex: 1, color: 'rgba(255,255,255,.9)', fontSize: 12.5, lineHeight: 17 }}>{x[0]}</Text>
+                  <Text style={{ color: dim, fontSize: 11.5 }}>{'~' + x[1] + ' kcal, ' + x[2] + ' g protein'}</Text>
+                </View>
+              ))}
+            </View>
+          );
+        })}
+        <View style={{ marginTop: 12, padding: 11, borderRadius: 14, backgroundColor: 'rgba(124,156,255,.2)' }}><Text style={{ color: W, fontSize: 12.5, lineHeight: 18 }}>{tip}</Text></View>
       </>
     );
   } else {
-    body = <Text style={{ color: dim, fontSize: 12.5, lineHeight: 18, marginTop: 10 }}>{kg > 0 && cm > 0 ? 'Add your age and sex to see your estimate.' : 'Log your weight and height in the weight card, then add your age and sex here.'}</Text>;
+    body = (
+      <View style={{ marginTop: 12 }}>
+        <Text style={{ color: dim, fontSize: 12.5, lineHeight: 18 }}>{missing.length ? 'Still needed: ' + missing.join(' and ') + '. Add ' + (missing.length > 1 ? 'them' : 'it') + ' in the Weight & BMI card above.' : 'Add your age and sex to see your estimate.'}</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+          <Tick ok={kg > 0} t="Weight" /><Tick ok={cm > 0} t="Height" /><Tick ok={a > 0} t="Age" /><Tick ok={!!sx} t="Sex" />
+        </View>
+      </View>
+    );
   }
   return (
     <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>Daily needs</Text>
-        {ok ? <Pressable onPress={() => setEd(!ed)} style={{ paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12, fontWeight: '700' }}>{(sx === 'm' ? 'Male' : 'Female') + ', ' + a + ' ✎'}</Text></Pressable> : null}
+        {a > 0 && sx ? <Pressable onPress={() => setEd(!ed)} style={{ paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12, fontWeight: '700' }}>{(sx === 'm' ? 'Male' : 'Female') + ', ' + a + ' yrs ✎'}</Text></Pressable> : null}
       </View>
       <Text style={{ color: dim, fontSize: 12, lineHeight: 17, marginTop: 4 }}>How much food energy and protein your body needs each day, so you can eat in line with your weight goal. Water is your daily drinking target.</Text>
-      {ed ? (
+      {showEd ? (
         <View style={{ marginTop: 10, gap: 8 }}>
           <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)' }}>
             {([['m', 'Male'], ['f', 'Female']] as ['m' | 'f', string][]).map(([k, n]) => <Pressable key={k} onPress={() => saveAge(k, age)} style={{ flex: 1, paddingVertical: 7, borderRadius: 999, alignItems: 'center', backgroundColor: sx === k ? '#b794ff' : 'transparent' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '800' }}>{n}</Text></Pressable>)}
@@ -144,7 +191,7 @@ export function DailyNeeds({ h, setH }: { h: HData; setH: (v: HData) => void }) 
         </View>
       ) : null}
       {body}
-      <Text style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, marginTop: 8, lineHeight: 15 }}>A rough estimate from a standard formula, not medical advice. Your age and sex stay on this device.</Text>
+      <Text style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, marginTop: 10, lineHeight: 15 }}>A rough estimate from a standard formula, not medical advice. Your age and sex stay on this device.</Text>
     </Glass>
   );
 }

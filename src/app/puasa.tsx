@@ -214,8 +214,8 @@ export default function Puasa() {
 
             <Card>
               <Pressable onPress={() => setAdj(!adj)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <H t="Match the official date" s="The calendar can differ by a day or two" />
-                <Text style={{ color: dim, fontSize: 20 }}>{adj ? '⌃' : '⌄'}</Text>
+                <View style={{ flex: 1, marginRight: 10 }}><H t="Match the official date" s="Tap Adjust if the date is a day or two off" /></View>
+                <View style={{ paddingVertical: 7, paddingHorizontal: 14, borderRadius: 999, backgroundColor: adj ? 'rgba(255,255,255,.14)' : 'rgba(94,231,223,.2)', borderWidth: 1, borderColor: adj ? 'rgba(255,255,255,.25)' : 'rgba(94,231,223,.6)' }}><Text style={{ color: adj ? W : '#8fe9e2', fontSize: 12.5, fontWeight: '800' }}>{adj ? 'Close' : 'Adjust'}</Text></View>
               </Pressable>
               {adj ? (
                 <View style={{ marginTop: 12, gap: 12 }}>
@@ -270,8 +270,11 @@ export default function Puasa() {
                   const d = addDays(today, i - 34); const v = at(d); const ram = ramadanState(p, d).phase === 'during'; const bad = isHaram(d, off);
                   const mt = d.getDay() === 1 || d.getDay() === 4; const isT = i === 34;
                   return (
-                    <Pressable key={i} disabled={bad || ram} onPress={() => toggleLog(d)} style={{ width: '12.4%', aspectRatio: 1, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: v === 's' ? G : v === 'q' ? '#ffc46b' : v === 'r' ? 'rgba(52,211,153,.5)' : mt ? 'rgba(52,211,153,.22)' : 'rgba(255,255,255,.1)', opacity: bad || ram ? 0.3 : 1, borderWidth: isT ? 1.5 : 0, borderColor: '#fff' }}>
-                      <Text style={{ color: v ? '#06281c' : W, fontSize: 12, lineHeight: 16, fontWeight: '800', textAlign: 'center', includeFontPadding: false }}>{d.getDate()}</Text>
+                    <Pressable key={i} disabled={bad || ram} onPress={() => toggleLog(d)} style={{ width: '12.4%', aspectRatio: 1, borderRadius: 10, backgroundColor: v === 's' ? G : v === 'q' ? '#ffc46b' : v === 'r' ? 'rgba(52,211,153,.5)' : mt ? 'rgba(52,211,153,.22)' : 'rgba(255,255,255,.1)', opacity: bad || ram ? 0.3 : 1 }}>
+                      <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ color: v ? '#06281c' : W, fontSize: 12, lineHeight: 14, height: 14, fontWeight: '800', textAlign: 'center', includeFontPadding: false, textAlignVertical: 'center' }}>{d.getDate()}</Text>
+                      </View>
+                      {isT ? <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderRadius: 10, borderWidth: 1.5, borderColor: '#fff' }} /> : null}
                     </Pressable>
                   );
                 })}

@@ -73,7 +73,9 @@ const Arrow = ({ t, onPress, op, label }: { t: string; onPress: () => void; op: 
 const Del = ({ onPress }: { onPress: () => void }) => <Pressable accessibilityLabel="Delete" onPress={onPress} style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ff9aa9', fontSize: 14 }}>✕</Text></Pressable>;
 const AddB = ({ t, onPress, w = 16 }: { t: string; onPress: () => void; w?: number }) => <Pressable onPress={onPress}><LinearGradient colors={PG} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 42, paddingHorizontal: w, borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 12, fontWeight: '800' }}>{t}</Text></LinearGradient></Pressable>;
 type Bar = { label: string; sub?: string; top: string; h: number; hot: boolean; delta: string; dc: string; warm?: boolean };
-const Bars = ({ bars, height = 158 }: { bars: Bar[]; height?: number }) => (
+const Bars = ({ bars, height = 158 }: { bars: Bar[]; height?: number }) => {
+  const filled = bars.filter((x) => !!x.top); const mxH = Math.max(...bars.map((x) => (x.top ? x.h : 0)), 0); const showTop = filled.length >= 2 && mxH > 0;
+  return (
   <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, height, marginTop: 22 }}>
     {bars.map((b, i) => {
       const r = { width: '100%' as const, height: b.h, borderTopLeftRadius: 6, borderTopRightRadius: 6, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 };
@@ -83,12 +85,13 @@ const Bars = ({ bars, height = 158 }: { bars: Bar[]; height?: number }) => (
           {b.hot ? <LinearGradient colors={b.warm ? ['#ffc46b', '#ff8fab'] : PG} style={r} /> : <View style={[r, { backgroundColor: b.warm ? (b.top ? 'rgba(255,255,255,.4)' : 'rgba(255,255,255,.18)') : 'rgba(255,255,255,.25)' }]} />}
           <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11 }}>{b.label}</Text>
           {b.sub !== undefined ? <Text style={{ color: 'rgba(255,255,255,.45)', fontSize: 9, marginTop: -3 }}>{b.sub}</Text> : null}
-          <Text style={{ height: 13, fontSize: 9.5, fontWeight: '700', color: b.dc }}>{b.delta}</Text>
+          <Text style={{ height: 13, fontSize: 9.5, fontWeight: '800', color: '#ffc46b' }}>{showTop && b.top && b.h === mxH ? 'Highest' : ''}</Text>
         </View>
       );
     })}
   </View>
-);
+  );
+};
 
 export default function Record() {
   const router = useRouter();
@@ -310,10 +313,10 @@ export default function Record() {
           {/* Maintenance spending */}
           <Glass radius={24} style={{ marginTop: 12, padding: 14 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Maintenance Spending</Text><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>RM {money(expTotal)}</Text></View>
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}><Stat l="This month" v={'RM ' + num(sCurV)} /><Stat l="Last month" v={'RM ' + num(sPrevV)} /><Stat l="Change" v={diffS} vc={sd > 0 ? '#ffb3a0' : sd < 0 ? '#7df0c6' : W} bg={sd > 0 ? 'rgba(255,143,107,.16)' : sd < 0 ? 'rgba(94,231,181,.16)' : undefined} /></View>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}><Stat l="This month" v={'RM ' + num(sCurV)} /><Stat l="Last month" v={'RM ' + num(sPrevV)} /><Stat l="vs last month" v={diffS} vc={sd > 0 ? '#ffb3a0' : sd < 0 ? '#7df0c6' : W} bg={sd > 0 ? 'rgba(255,143,107,.16)' : sd < 0 ? 'rgba(94,231,181,.16)' : undefined} /></View>
             <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 6 }}>{sNote}</Text>
             <Bars bars={sBars} />
-            <Text style={{ color: dim, fontSize: 12, marginTop: 8 }}>Same months as Monthly Mileage. Use the arrows there to see earlier months. Amounts are in RM.</Text>
+            <Text style={{ color: dim, fontSize: 12, marginTop: 8 }}>Shows the same months as Monthly Mileage above. Use the arrows there to see other months. Amounts are in RM.</Text>
             <DateField value={eDate} onChange={setEDate} style={{ marginTop: 12 }} />
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, alignItems: 'center' }}>
               <Inp style={{ flex: 1.3 }} value={eName} onChangeText={setEName} placeholder="e.g. Engine oil" />

@@ -25,7 +25,7 @@ export function DateField({ value, onChange, style }: { value: string; onChange:
 }
 export const Pill = ({ t, onPress, on, style, warm }: { t: string; onPress: () => void; on?: boolean; style?: any; warm?: boolean }) => (
   <Pressable onPress={onPress} style={style}>
-    {warm ? <LinearGradient colors={['#ffc46b', '#ff8f5a']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: 999, alignItems: 'center' }}><Text style={{ color: W, fontSize: 13, fontWeight: '800' }}>{t}</Text></LinearGradient>
+    {warm ? <View style={{ borderRadius: 999, shadowColor: '#ff4d2e', shadowOpacity: 0.85, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, elevation: 8 }}><LinearGradient colors={['#ff9500', '#ff4d1f', '#ff1f5a']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: 999, alignItems: 'center', borderWidth: 1.2, borderColor: 'rgba(255,214,170,.9)' }}><Text style={{ color: W, fontSize: 13, fontWeight: '800', textShadowColor: 'rgba(255,60,30,.9)', textShadowRadius: 6, textShadowOffset: { width: 0, height: 0 } }}>{t}</Text></LinearGradient></View>
       : on ? <LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: 999, alignItems: 'center' }}><Text style={{ color: W, fontSize: 13, fontWeight: '800' }}>{t}</Text></LinearGradient>
       : <View style={{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center' }}><Text style={{ color: W, fontSize: 13, fontWeight: '600' }}>{t}</Text></View>}
   </Pressable>

@@ -265,21 +265,26 @@ export default function Puasa() {
                 <Btn t="Sunat" on={logAs === 's'} onPress={() => setLogAs('s')} style={{ flex: 1 }} />
                 <Btn t="Qadha" on={logAs === 'q'} c="#ffc46b" onPress={() => setLogAs('q')} style={{ flex: 1 }} />
               </View>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-                {Array.from({ length: 35 }).map((_, i) => {
-                  const d = addDays(today, i - 34); const v = at(d); const ram = ramadanState(p, d).phase === 'during'; const bad = isHaram(d, off);
-                  const mt = d.getDay() === 1 || d.getDay() === 4; const isT = i === 34;
+              <View style={{ marginTop: 10 }}>
+                {Array.from({ length: 14 }).map((_, k) => {
+                  const d = addDays(today, -k); const v = at(d); const ram = ramadanState(p, d).phase === 'during'; const bad = isHaram(d, off);
+                  const mt = d.getDay() === 1 || d.getDay() === 4; const blocked = bad || ram;
+                  const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                  const st = v === 's' ? 'Sunat fast' : v === 'q' ? 'Qadha fast' : v === 'r' ? 'Ramadan' : bad ? 'Eid, no fasting' : ram ? 'Ramadan' : mt ? 'Recommended day' : '';
+                  const col = v === 's' ? G : v === 'q' ? '#ffc46b' : v === 'r' ? '#34d399' : 'transparent';
                   return (
-                    <Pressable key={i} disabled={bad || ram} onPress={() => toggleLog(d)} style={{ width: '12.4%', aspectRatio: 1, borderRadius: 10, backgroundColor: v === 's' ? G : v === 'q' ? '#ffc46b' : v === 'r' ? 'rgba(52,211,153,.5)' : mt ? 'rgba(52,211,153,.22)' : 'rgba(255,255,255,.1)', opacity: bad || ram ? 0.3 : 1 }}>
-                      <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ color: v ? '#06281c' : W, fontSize: 12, lineHeight: 14, height: 14, fontWeight: '800', textAlign: 'center', includeFontPadding: false, textAlignVertical: 'center' }}>{d.getDate()}</Text>
+                    <Pressable key={k} disabled={blocked} onPress={() => toggleLog(d)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 9, borderTopWidth: k ? 1 : 0, borderTopColor: 'rgba(255,255,255,.1)', opacity: blocked ? 0.45 : 1 }}>
+                      <View style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 2, borderColor: v ? col : 'rgba(255,255,255,.4)', backgroundColor: col, alignItems: 'center', justifyContent: 'center' }}>{v ? <Text style={{ color: '#06281c', fontSize: 14, fontWeight: '900' }}>✓</Text> : null}</View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>{k === 0 ? 'Today' : k === 1 ? 'Yesterday' : WD[d.getDay()] + ', ' + d.getDate() + ' ' + MN[d.getMonth()]}</Text>
+                        {k > 1 ? null : <Text style={{ color: dim, fontSize: 11.5 }}>{WD[d.getDay()] + ', ' + d.getDate() + ' ' + MN[d.getMonth()]}</Text>}
                       </View>
-                      {isT ? <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderRadius: 10, borderWidth: 1.5, borderColor: '#fff' }} /> : null}
+                      {st ? <Text style={{ color: v ? col : mt ? '#8fe9e2' : dim, fontSize: 12, fontWeight: '700' }}>{st}</Text> : null}
                     </Pressable>
                   );
                 })}
               </View>
-              <Text style={{ color: dim, fontSize: 11, marginTop: 8 }}>Light green days are Monday or Thursday. Faded days are Eid or Ramadan.</Text>
+              <Text style={{ color: dim, fontSize: 11, marginTop: 6 }}>Shows the last 14 days. Tap a day to mark or clear it.</Text>
             </Card></Rise>
 
             <Rise i={2}><Card>

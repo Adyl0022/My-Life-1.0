@@ -39,7 +39,7 @@ export function Commitments({ income }: { income: number }) {
   const toPay = commit - paid;
   const totalLeft = debtsOnly.reduce((a, x) => a + remaining(x), 0);
   const worst = debtsOnly.filter((x) => remaining(x) > 0).reduce((a, x) => Math.max(a, monthsLeft(x)), 0);
-  const allPaidNow = act.length > 0 && act.every((x) => (x.paid || {})[ym] > 0 || remaining(x) <= 0);
+  const allPaidNow = act.length > 0 && act.every((x) => (x.paid || {})[ym] > 0 || (!x.fixed && remaining(x) <= 0));
   const after = income - commit - food;
   const free = income - commit - food;
   const save = (nd: DebtData) => setD(nd);
@@ -60,7 +60,7 @@ export function Commitments({ income }: { income: number }) {
   const tickLast = (x: Debt) => save({ ...d, debts: list.map((y) => (y.id === x.id ? { ...y, paid: { ...(y.paid || {}), [lastYm]: y.fixed ? y.monthly : Math.min(y.monthly, remaining(y)) } } : y)) });
   const tick = (x: Debt) => {
     const paidNow = (x.paid || {})[ym] > 0; const p = { ...(x.paid || {}) };
-    if (paidNow) delete p[ym]; else p[ym] = Math.min(x.monthly, remaining(x));
+    if (paidNow) delete p[ym]; else p[ym] = x.fixed ? x.monthly : Math.min(x.monthly, remaining(x));
     save({ ...d, debts: list.map((y) => (y.id === x.id ? { ...y, paid: p } : y)) });
   };
   const setNotify = async (v: boolean) => { const nd = { ...d, notify: v }; save(nd); if (v) { const ok = await syncDebtAlerts(nd); setMsg(ok ? '' : 'Notifications are blocked. Allow them in your phone settings to get reminders.'); } };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, ScrollView, Pressable, Platform } from 'react-native';
+import { View, ScrollView, Pressable, Platform, Keyboard, TextInput } from 'react-native';
 import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -48,6 +48,18 @@ export default function Habit() {
   const router = useRouter();
   const [h, setH] = useStored<HData>('ml_habit', HEMPTY);
   const [tab, setTab] = useState<'today' | 'progress' | 'body'>('today');
+  const svRef = useRef<any>(null); const scrollY = useRef(0); const [kb, setKb] = useState(0);
+  useEffect(() => {
+    const sh = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKb(e.endCoordinates.height);
+      setTimeout(() => {
+        const f: any = (TextInput as any).State && (TextInput as any).State.currentlyFocusedInput ? (TextInput as any).State.currentlyFocusedInput() : null;
+        if (f && f.measure) f.measure((_x: number, _y: number, _w: number, hh: number, _px: number, py: number) => { const delta = py + hh - e.endCoordinates.screenY + 28; if (delta > 0 && svRef.current) svRef.current.scrollTo({ y: scrollY.current + delta, animated: true }); });
+      }, 160);
+    });
+    const hd = Keyboard.addListener('keyboardDidHide', () => setKb(0));
+    return () => { sh.remove(); hd.remove(); };
+  }, []);
   const [edit, setEdit] = useState(false); const [gv, setGv] = useState('');
   const hRef = useRef(h); hRef.current = h;
   const [autoMsg, setAutoMsg] = useState('');
@@ -153,7 +165,7 @@ export default function Habit() {
       <Blob size={340} color="rgba(94,231,223,.3)" style={{ left: -120, bottom: 0 }} />
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}><Art /></View>
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 60 }}>
+        <ScrollView ref={svRef} onScroll={(e) => { scrollY.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={16} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 60 + kb }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Pressable onPress={() => router.back()} accessibilityLabel="Back"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 24, marginTop: -3 }}>‹</Text></Glass></Pressable>
             <Text style={{ flex: 1, color: W, fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Habit & Health</Text>

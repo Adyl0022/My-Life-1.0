@@ -85,7 +85,7 @@ export default function Stats() {
     { t: 'Water', k: 'water', c: '#5ee7df', v: last7.map((o) => getDay(hd, o).cups), fmt: (n: number) => String(Math.round(n * 10) / 10), unit: 'of ' + cg + ' glasses' },
     { t: 'Sleep', k: 'sleep', c: '#b794ff', v: last7.map((o) => getDay(hd, o).sleep), fmt: (n: number) => String(Math.round(n * 10) / 10), unit: 'hours a night' },
     { t: 'Mood', k: 'mood', c: '#ff8fab', v: last7.map((o) => { const m = getDay(hd, o).mood; return m >= 0 ? m + 1 : 0; }), fmt: (n: number) => { const lg = last7.map((o) => getDay(hd, o).mood).filter((m) => m >= 0); if (!lg.length) return 'None'; return MOODS[Math.max(0, Math.min(4, Math.round(lg.reduce((a, b) => a + b, 0) / lg.length)))][0]; }, unit: 'on average' },
-    { t: 'Spending', k: '', c: '#ffc46b', v: last7.map((o) => spendOn(o)), fmt: (n: number) => 'RM ' + Math.round(n).toLocaleString(), unit: 'a day' },
+    { t: 'Spending', k: '', c: '#ffc46b', v: last7.map((o) => spendOn(o)), fmt: (n: number) => 'RM ' + (Math.round(n * 100) / 100).toLocaleString('en-MY', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 }), unit: 'in 7 days', sum: true },
   ];
   const tot: Record<string, number> = {};
   Object.values(mc || {}).forEach((day) => Object.keys(day).forEach((m) => { tot[m] = (tot[m] || 0) + day[m]; }));
@@ -333,7 +333,7 @@ export default function Stats() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                       {tr.k ? <HeadIcon k={tr.k} size={24} /> : <MI k="finance" s={24} />}
                       <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700', flex: 1 }}>{tr.t}</Text>
-                      <Text style={{ color: tr.c, fontSize: 13, fontWeight: '800' }}>{tr.fmt(avg)}</Text>
+                      <Text style={{ color: tr.c, fontSize: 13, fontWeight: '800' }}>{tr.fmt((tr as any).sum ? avg * 7 : avg)}</Text>
                       <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11 }}>{tr.unit}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 44 }}>
@@ -367,7 +367,7 @@ export default function Stats() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                       {tr.k ? <HeadIcon k={tr.k} size={24} /> : <MI k="finance" s={24} />}
                       <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700', flex: 1 }}>{tr.t}</Text>
-                      <Text style={{ color: tr.c, fontSize: 13, fontWeight: '800' }}>{tr.fmt(avg)}</Text>
+                      <Text style={{ color: tr.c, fontSize: 13, fontWeight: '800' }}>{tr.fmt((tr as any).sum ? avg * 7 : avg)}</Text>
                       <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11 }}>{tr.unit}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 44 }}>
@@ -382,6 +382,7 @@ export default function Stats() {
                     <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
                       {wd.map((d, i) => <Text key={i} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.55)', fontSize: 9.5 }}>{d}</Text>)}
                     </View>
+                    {(tr as any).sum ? <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginTop: 8 }}>{'About ' + tr.fmt(avg) + ' a day on average. The tall bar is the day you spent the most.'}</Text> : null}
                   </View>
                 );
               })}

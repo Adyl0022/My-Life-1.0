@@ -7,6 +7,8 @@ import { Platform } from 'react-native';
 import { usePrayer } from '../lib/prayer';
 import { useStored } from '../lib/store';
 import { DEBT_EMPTY, DebtData, syncDebtAlerts } from '../lib/debts';
+import { syncEventAlerts, syncZikirAlerts, PEvent } from '../lib/alerts';
+import { TG_DEFAULT, Toggles } from '../lib/adhan';
 
 // Keeps prayer alerts scheduled after the user has opened Prayer Times once (never asks for location on first launch).
 function Runner() { usePrayer(); return null; }
@@ -20,7 +22,16 @@ function DebtSync() {
   useEffect(() => { if (ok && Platform.OS !== 'web') syncDebtAlerts(d); }, [ok, JSON.stringify(d)]);
   return null;
 }
+// Re-plans Planner event and daily zikir reminders when the app opens, or when events or the switches in Settings change.
+function AlertSync() {
+  const [pl, , ok] = useStored<{ events: PEvent[] }>('ml_planner', { events: [] });
+  const [tg, , ok2] = useStored<Partial<Toggles>>('ml_toggles', {});
+  const t = { ...TG_DEFAULT, ...tg };
+  useEffect(() => { if (ok && ok2 && Platform.OS !== 'web') syncEventAlerts(pl.events || [], t); }, [ok, ok2, JSON.stringify(pl.events || []), t.ev, t.qh]);
+  useEffect(() => { if (ok2 && Platform.OS !== 'web') syncZikirAlerts(t); }, [ok2, t.zk, t.qh]);
+  return null;
+}
 function Tracker() { const p = usePathname(); useEffect(() => { trackModule(p); }, [p]); return null; }
 export default function Root() {
-  return (<><Tracker /><StatusBar style="light" />{Platform.OS === 'android' ? <NavigationBar hidden style="light" /> : null}<PrayerSync /><DebtSync /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0f2c' }, animation: 'slide_from_right' }} /></>);
+  return (<><Tracker /><StatusBar style="light" />{Platform.OS === 'android' ? <NavigationBar hidden style="light" /> : null}<PrayerSync /><DebtSync /><AlertSync /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0f2c' }, animation: 'slide_from_right' }} /></>);
 }

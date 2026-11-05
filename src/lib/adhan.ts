@@ -1,6 +1,14 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { withNavBar } from './permNav';
+import { getItem } from './store';
+
+export type Toggles = { ev: boolean; pr: boolean; zk: boolean; qh: boolean };
+export const TG_DEFAULT: Toggles = { ev: true, pr: true, zk: true, qh: true };
+export const readToggles = async (): Promise<Toggles> => ({ ...TG_DEFAULT, ...(await getItem<Partial<Toggles>>('ml_toggles', {})) });
+// Quiet hours: nothing rings between 12 am and 5 am.
+export const inQuiet = (at: Date, tg: Toggles) => !!tg.qh && at.getHours() < 5;
+const OWN = ['debt-', 'event-', 'zikir-'];
 
 export type Alert = { key: string; name: string; at: Date };
 let ready = false;
@@ -21,18 +29,24 @@ export async function setup(): Promise<boolean> {
 export async function syncPrayerAlerts(list: Alert[], zoneName: string): Promise<void> {
   try {
     if (!(await setup())) return;
-    await cancelExceptDebts();
+    await cancelPrayer();
+    const tg = await readToggles(); if (!tg.pr) return;
     const now = Date.now();
-    for (const a of list.filter((x) => x.at.getTime() > now + 5000).slice(0, 60)) {
+    for (const a of list.filter((x) => x.at.getTime() > now + 5000 && !inQuiet(x.at, tg)).slice(0, 60)) {
       await Notifications.scheduleNotificationAsync({
+        identifier: 'prayer-' + a.key + '-' + a.at.getTime(),
         content: { title: 'Waktu ' + a.name, body: 'Masuk waktu ' + a.name + (zoneName ? ' · ' + zoneName : ''), sound: true },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: a.at, channelId: 'prayer' } as any,
       });
     }
   } catch (e) {}
 }
-async function cancelExceptDebts() {
+async function cancelPrayer() {
   const all = await Notifications.getAllScheduledNotificationsAsync();
-  for (const n of all) if (!String(n.identifier).startsWith('debt-')) await Notifications.cancelScheduledNotificationAsync(n.identifier);
+  for (const n of all) if (!OWN.some((p) => String(n.identifier).startsWith(p))) await Notifications.cancelScheduledNotificationAsync(n.identifier);
 }
-export async function clearPrayerAlerts() { try { if (Platform.OS !== 'web') await cancelExceptDebts(); } catch (e) {} }
+export async function cancelPrefix(prefix: string) {
+  const all = await Notifications.getAllScheduledNotificationsAsync();
+  for (const n of all) if (String(n.identifier).startsWith(prefix)) await Notifications.cancelScheduledNotificationAsync(n.identifier);
+}
+export async function clearPrayerAlerts() { try { if (Platform.OS !== 'web') await cancelPrayer(); } catch (e) {} }

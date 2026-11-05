@@ -16,8 +16,6 @@ import { TOP } from '../../lib/layout';
 const W = '#fff', DIM = 'rgba(255,255,255,.7)';
 const G = ['#34d399', '#5ee7df'] as [string, string];
 const GP = ['#7c9cff', '#b794ff'] as [string, string];
-const SIZES = ['Small', 'Default', 'Large', 'Extra large'];
-const AR = [24, 28, 33, 38];
 
 const Ttl = ({ t }: { t: string }) => <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>{t}</Text>;
 const Lbl = ({ t, style }: { t: string; style?: any }) => <Text style={[{ color: DIM, fontSize: 11.5, marginTop: 2, lineHeight: 16 }, style]}>{t}</Text>;
@@ -109,7 +107,6 @@ function Doc({ title, secs, onClose }: { title: string; secs: Sec[]; onClose: ()
 }
 
 type Dev = { id: string; name: string; note: string; cur: boolean };
-const DEVS: Dev[] = [{ id: 'a', name: 'This device', note: 'Active now', cur: true }, { id: 'i', name: 'iPhone', note: 'Last active 2 days ago', cur: false }, { id: 'w', name: 'Web browser', note: 'Last active 5 days ago', cur: false }];
 
 export default function Settings() {
   const router = useRouter();
@@ -117,11 +114,7 @@ export default function Settings() {
   const [name, setName] = useStored<string>('ml_name', DEFAULT_NAME);
   const [draft, setDraft] = useState<string | null>(null);
   const [nameMsg, setNameMsg] = useState('');
-  const [theme, setTheme] = useStored<string>('ml_theme', 'Dark');
-  const [size, setSize] = useStored<number>('ml_textsize', 1);
-  const [tg, setTg] = useStored<Record<string, boolean>>('ml_toggles', { ev: true, pr: true, zk: true, wt: false, qh: true });
-  const [alertNew, setAlertNew] = useStored<boolean>('ml_alert_new', true);
-  const [devs, setDevs] = useState<Dev[]>(DEVS);
+  const [tg, setTg] = useStored<Record<string, boolean>>('ml_toggles', { ev: true, pr: true, zk: true, qh: true });
   const [checked, setChecked] = useState(false);
   const [dlg, setDlg] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log'>('');
   const [typed, setTyped] = useState(''); const [pwv, setPwv] = useState('');
@@ -130,8 +123,7 @@ export default function Settings() {
   const say = (t: string) => { setToast(t); setTimeout(() => setToast(''), 2200); };
   const close = () => { setDlg(''); setTyped(''); setPwv(''); setP1(''); setP2(''); setP3(''); setPwErr(''); };
 
-  const TOG: [string, string, string][] = [['ev', 'Event reminders', 'Before each Planner event'], ['pr', 'Prayer times', 'Alert at each solat time'], ['zk', 'Daily zikir', "Morning and evening Al-Ma'thurat"], ['wt', 'Drink water', 'Every 2 hours, 8 am to 8 pm'], ['qh', 'Quiet hours', 'Mute alerts from 10 pm to 6 am']];
-  const light = theme === 'Light';
+  const TOG: [string, string, string][] = [['ev', 'Event reminders', 'Before each Planner event'], ['pr', 'Prayer times', 'Alert at each solat time'], ['zk', 'Daily zikir', "Morning and evening Al-Ma'thurat"], ['qh', 'Quiet hours', 'Mute alerts from 12 am to 5 am']];
   const isDel = dlg === 'delete';
   const canGo = isDel ? typed.trim().toUpperCase() === 'DELETE' && pwv.length > 0 : typed.trim().toUpperCase() === 'RESET';
 
@@ -161,29 +153,6 @@ export default function Settings() {
 
           {tab === 0 && (
             <View style={{ gap: 12, marginTop: 14 }}>
-              <Glass style={{ padding: 16 }}>
-                <Ttl t="Appearance" />
-                <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)', marginTop: 10 }}>
-                  {['Dark', 'Light', 'Auto'].map((n) => (
-                    <Pressable key={n} onPress={() => setTheme(n)} style={{ flex: 1 }}>
-                      {theme === n ? <LinearGradient colors={GP} style={{ paddingVertical: 7, borderRadius: 999, alignItems: 'center' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{n}</Text></LinearGradient>
-                        : <View style={{ paddingVertical: 7, alignItems: 'center' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{n}</Text></View>}
-                    </Pressable>
-                  ))}
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 14 }}>
-                  <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 14, fontWeight: '600' }}>Text size</Text><Lbl t={SIZES[size] + ' (Quran and reading text)'} /></View>
-                  <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <Pressable onPress={() => setSize(Math.max(0, size - 1))} style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 13, fontWeight: '700' }}>A</Text></Pressable>
-                    <Pressable onPress={() => setSize(Math.min(3, size + 1))} style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 20, fontWeight: '700' }}>A</Text></Pressable>
-                  </View>
-                </View>
-                <View style={{ marginTop: 12, borderRadius: 16, padding: 14, alignItems: 'center', backgroundColor: light ? '#f6f4ff' : 'rgba(0,0,0,.3)' }}>
-                  <Text style={{ color: light ? '#1a1048' : W, fontSize: AR[size], textAlign: 'center', lineHeight: AR[size] * 1.6 }}>بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</Text>
-                  <Text style={{ color: light ? '#1a1048' : W, fontSize: [12, 13.5, 15, 17][size], marginTop: 4, textAlign: 'center' }}>Dengan nama Allah, Yang Maha Pemurah, lagi Maha Mengasihani.</Text>
-                </View>
-              </Glass>
-
               <Glass style={{ paddingVertical: 8, paddingHorizontal: 16 }}>
                 <View style={{ paddingTop: 8 }}><Ttl t="Reminders and notifications" /></View>
                 {TOG.map(([k, t, s], i) => <Row key={k} k={k} ic="x" t={t} sub={s} last={i === TOG.length - 1} onPress={() => setTg({ ...tg, [k]: !tg[k] })} right={<Sw on={!!tg[k]} />} />)}
@@ -206,23 +175,17 @@ export default function Settings() {
             <View style={{ gap: 12, marginTop: 14 }}>
               <Glass style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <Dot c="rgba(94,231,181,.4)" />
-                <View style={{ flex: 1 }}><Ttl t="Your data is protected" /><Lbl t="Encrypted sync is on · Last synced just now" /></View>
+                <View style={{ flex: 1 }}><Ttl t="Your data stays on your phone" /><Lbl t="Stored on this phone only. Account sync is coming soon." /></View>
               </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
-                <Row k="pw" t="Change password" onPress={() => setDlg('pw')} right={<Chev />} />
-                <Row k="nd" t="Alert on new device sign-in" last onPress={() => setAlertNew(!alertNew)} right={<Sw on={alertNew} />} />
+                <Row k="pw" t="Change password" last onPress={() => setDlg('pw')} right={<Chev />} />
               </Glass>
               <Glass style={{ padding: 16 }}>
-                <Ttl t="Logged-in Devices" /><Lbl t={devs.length + ' signed in'} />
-                <View style={{ marginTop: 6 }}>
-                  {devs.map((d, i) => <Row key={d.id} k="dev" t={d.name} sub={d.note} last={i === devs.length - 1}
-                    right={!d.cur ? <Pressable onPress={() => setDevs(devs.filter((x) => x.id !== d.id))}><Text style={{ color: '#ffb3bf', fontSize: 12.5, fontWeight: '700' }}>Log out</Text></Pressable> : undefined} />)}
-                </View>
-                <View style={{ flexDirection: 'row', marginTop: 10 }}><Btn t="Log out all other devices" onPress={() => setDevs(devs.filter((x) => x.cur))} /></View>
+                <Ttl t="Devices and sign-in alerts" />
+                <Lbl t="Coming soon, together with accounts and sync." />
               </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
-                <Row k="bk" t="Encrypted backup & restore" onPress={() => setDlg('backup')} right={<Chev />} />
-                <Row k="log" t="Security activity log" last onPress={() => setDlg('log')} right={<Text style={{ color: DIM, fontSize: 12.5 }}>30 days</Text>} />
+                <Row k="bk" last t="Encrypted backup & restore" onPress={() => setDlg('backup')} right={<Chev />} />
               </Glass>
               <Glass style={{ padding: 16 }}>
                 <Ttl t="Account and data" />

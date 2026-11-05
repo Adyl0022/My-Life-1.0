@@ -11,7 +11,7 @@ import { TOP } from '../lib/layout';
 
 const W = '#fff';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
-import { MODS, buildReport, collect, toCsv, toHtml, toXlsxBase64, deliver, deliverPdf, Report } from '../lib/exporter';
+import { MODS, buildReport, collect, toCsv, toHtml, toXlsxBase64, deliver, deliverPdf, stamp, fileStamp, Report } from '../lib/exporter';
 const IC: Record<string, React.ReactNode> = {
   planner: <><Rect x="4" y="5" width="16" height="15" rx="3" /><Path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4" /></>,
   islamic: <Path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />,
@@ -53,9 +53,7 @@ export default function Export() {
   const [rep, setRep] = useState<Report | null>(null);
   React.useEffect(() => { let on = true; if (any) buildReport(sel, isBk ? 2 : per).then((r) => on && setRep(r)).catch(() => {}); else setRep(null); return () => { on = false; }; }, [sel.join(','), per, isBk]);
   const totals = rep ? rep.totals : [];
-  const d = new Date(); const pad = (n: number) => String(n).padStart(2, '0');
-  const ds = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
-  const file = 'my-life-' + (isBk ? 'backup-' : 'export-') + ds + '.' + FMT[fmt].k;
+  const file = 'my-life-' + (isBk ? 'backup-' : 'export-') + fileStamp() + '.' + FMT[fmt].k;
   const reset = () => { setPhase(0); setMsg(''); };
 
   const run = async () => {
@@ -66,12 +64,12 @@ export default function Export() {
       let ok = true;
       if (k === 'json') {
         const data = await collect(sel);
-        ok = await deliver(file, 'application/json', JSON.stringify({ app: 'My Life', version: '1.0', exported: new Date().toISOString(), period: 'All time', data }, null, 2));
+        ok = await deliver(file, 'application/json', JSON.stringify({ app: 'My Life 1.0', version: '1.0', created: stamp(), createdAt: new Date().toISOString(), period: 'All time', data }, null, 2));
         setBkLast(Date.now());
       } else {
         const r = await buildReport(sel, per);
         if (k === 'xlsx') ok = await deliver(file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', await toXlsxBase64(r), true);
-        else if (k === 'pdf') ok = await deliverPdf(toHtml(r, PER[per]));
+        else if (k === 'pdf') ok = await deliverPdf(toHtml(r));
         else ok = await deliver(file, 'text/csv', toCsv(r));
       }
       setMsg(ok ? (k === 'pdf' ? 'Your PDF is ready.' : 'Saved as ' + file) : 'The file was created, but this phone has no way to share it.'); setPhase(ok ? 2 : 3);

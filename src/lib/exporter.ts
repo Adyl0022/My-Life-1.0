@@ -2,7 +2,13 @@ import { Platform } from 'react-native';
 import { getText } from './store';
 
 export type Sheet = { name: string; head: string[]; rows: (string | number)[][] };
-export type Report = { sheets: Sheet[]; totals: [string, string][] };
+export type Chart = { title: string; kind: 'bars' | 'hbars' | 'line' | 'donut'; labels: string[]; values: number[]; unit?: string; color?: string };
+export type Report = { sheets: Sheet[]; totals: [string, string][]; charts: Chart[]; name: string; period: string; created: string };
+const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const stamp = (d = new Date()) => { const h = d.getHours(); return d.getDate() + ' ' + MN[d.getMonth()] + ' ' + d.getFullYear() + ', ' + (h % 12 || 12) + ':' + String(d.getMinutes()).padStart(2, '0') + ' ' + (h < 12 ? 'am' : 'pm'); };
+export const fileStamp = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + '-' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
+const PERN = ['This month', 'Last 3 months', 'All time'];
+const dm = (k: string) => { const p = String(k).split('-'); return p.length === 3 ? Number(p[2]) + ' ' + MN[Number(p[1]) - 1] : k; };
 
 export const MODS = [
   { k: 'planner', name: 'Planner and Notes', sub: 'Events, tasks and notes', keys: ['ml_planner', 'ml_notes'] },
@@ -43,7 +49,8 @@ export async function buildReport(sel: string[], per: number): Promise<Report> {
   const ym = now.getFullYear() + '-' + pad(now.getMonth() + 1);
   const from = per === 0 ? ym : per === 1 ? (() => { const d = new Date(now.getFullYear(), now.getMonth() - 2, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); })() : '';
   const inP = (date?: string) => !from || !date || String(date).slice(0, 7) >= from;
-  const sheets: Sheet[] = []; const totals: [string, string][] = [];
+  const sheets: Sheet[] = []; const totals: [string, string][] = []; const charts: Chart[] = [];
+  let name = ''; try { const n = await getText('ml_name'); if (n) name = JSON.parse(n); } catch (e) {}
   const g = (m: string, k: string) => (raw[m] && raw[m][k]) || null;
 
   if (sel.includes('planner')) {
@@ -55,6 +62,7 @@ export async function buildReport(sel: string[], per: number): Promise<Report> {
     if (events.length) sheets.push({ name: 'Events', head: ['Event', 'Date', 'Reminder', 'Done'], rows: events.map((e: any) => [e.name || '', e.date || '', e.remind || '', e.done ? 'Yes' : 'No']) });
     if (notes.length) sheets.push({ name: 'Notes', head: ['Title', 'Text', 'Pinned'], rows: notes.map((n: any) => [n.t || '', typeof n.s === 'string' ? n.s : JSON.stringify(n.s ?? ''), n.pin ? 'Yes' : 'No']) });
     totals.push(['Notes', String(notes.length)], ['Tasks', String(tasks.length)], ['Events', String(events.length)]);
+    if (tasks.length) { const dn = tasks.filter((t: any) => t.status === 'done').length; charts.push({ title: 'Tasks', kind: 'donut', labels: ['Done', 'To do'], values: [dn, tasks.length - dn] }); }
   }
   if (sel.includes('finance')) {
     const f = g('finance', 'ml_finance'); const d = g('finance', 'ml_debts');
@@ -67,6 +75,13 @@ export async function buildReport(sel: string[], per: number): Promise<Report> {
     const debts = (d && d.debts) || [];
     if (debts.length) sheets.push({ name: 'Commitments', head: ['Name', 'Balance (RM)', 'Monthly (RM)', 'Due day', 'Since'], rows: debts.map((x: any) => [x.name || '', num(x.bal), num(x.monthly), num(x.due), x.since || '']) });
     totals.push(['Total income', rm(tin)], ['Total spending', rm(tsp)], ['Net balance', rm(tin - tsp)]);
+    const bc: Record<string, number> = {}; const bd: Record<string, number> = {};
+    sp.forEach((x: any) => { const c = x.cat || 'Other'; bc[c] = (bc[c] || 0) + num(x.amt); if (x.date) bd[x.date] = (bd[x.date] || 0) + num(x.amt); });
+    const cs = Object.keys(bc).sort((a, b) => bc[b] - bc[a]).slice(0, 7);
+    if (tin || tsp) charts.push({ title: 'Income and spending', kind: 'bars', labels: ['Income', 'Spending', 'Net'], values: [tin, tsp, Math.max(0, tin - tsp)], unit: 'RM' });
+    if (cs.length) charts.push({ title: 'Spending by category', kind: 'hbars', labels: cs, values: cs.map((c) => Math.round(bc[c] * 100) / 100), unit: 'RM' });
+    const dk = Object.keys(bd).sort().slice(-14);
+    if (dk.length > 1) charts.push({ title: 'Daily spending', kind: 'bars', labels: dk.map(dm), values: dk.map((k) => Math.round(bd[k] * 100) / 100), unit: 'RM', color: '#ff8f5a' });
   }
   if (sel.includes('record')) {
     const r = g('record', 'ml_record'); const rows: (string | number)[][] = []; let km = 0;
@@ -77,56 +92,118 @@ export async function buildReport(sel: string[], per: number): Promise<Report> {
       (v.fuel || []).filter((x: any) => inP(x.date)).forEach((x: any) => rows.push([veh, 'Fuel', x.date || '', num(x.liters) + ' L', num(x.amt), num(x.odo) || '']));
       const odos = (v.readings || []).map((x: any) => num(x.odo)).filter((n: number) => n > 0); if (odos.length) km += Math.max(...odos) - Math.min(...odos);
     });
+    const first = Object.keys((r && r.data) || {})[0]; const rd = first ? ((r.data[first].readings || []).filter((x: any) => inP(x.date)).slice().sort((a: any, b: any) => (a.date < b.date ? -1 : 1)).slice(-14)) : [];
+    if (rd.length > 1) charts.push({ title: 'Odometer (km)', kind: 'line', labels: rd.map((x: any) => dm(x.date)), values: rd.map((x: any) => num(x.odo)), color: '#e0518a' });
     if (rows.length) sheets.push({ name: 'Record', head: ['Vehicle', 'Type', 'Date', 'Detail', 'Amount (RM)', 'Odometer (km)'], rows });
     totals.push(['Record entries', String(rows.length)]);
   }
   if (sel.includes('habit')) {
     const h = g('habit', 'ml_habit'); const days = (h && h.days) || {};
-    const rows = Object.keys(days).sort().filter((k) => inP(k)).map((k) => { const x = days[k] || {}; return [k, num(x.steps), num(x.sleep), x.mood >= 0 ? ['Awful', 'Low', 'Okay', 'Good', 'Great'][x.mood] || '' : '', num(x.cups)]; });
+    const keys = Object.keys(days).sort().filter((k) => inP(k) && (num(days[k].steps) > 0 || num(days[k].sleep) > 0 || num(days[k].cups) > 0 || num(days[k].mood) >= 0));
+    const rows = keys.map((k) => { const x = days[k] || {}; return [k, num(x.steps), num(x.sleep), x.mood >= 0 ? ['Awful', 'Low', 'Okay', 'Good', 'Great'][x.mood] || '' : '', num(x.cups)]; });
     if (rows.length) sheets.push({ name: 'Habit and Health', head: ['Date', 'Steps', 'Sleep (hours)', 'Mood', 'Water (cups)'], rows });
     const kg = ((h && h.kg) || []).filter((x: any) => inP(x.d));
     if (kg.length) sheets.push({ name: 'Weight', head: ['Date', 'Weight (kg)'], rows: kg.map((x: any) => [x.d, num(x.v)]) });
     totals.push(['Habit days', String(rows.length)]);
+    const hk = keys.slice(-14);
+    if (hk.some((k) => num(days[k].steps) > 0)) charts.push({ title: 'Steps per day', kind: 'bars', labels: hk.map(dm), values: hk.map((k) => num(days[k].steps)), color: '#7c9cff' });
+    if (hk.some((k) => num(days[k].sleep) > 0)) charts.push({ title: 'Sleep (hours)', kind: 'line', labels: hk.map(dm), values: hk.map((k) => num(days[k].sleep)), color: '#b794ff' });
   }
   if (sel.includes('islamic')) {
     const p = g('islamic', 'ml_puasa'); const t = g('islamic', 'ml_tasbih'); const i = g('islamic', 'ml_islamic');
-    const fd = Object.keys((p && p.days) || {}).sort().filter((k) => inP(k)).map((k) => [k, String(p.days[k])]);
+    const KN: Record<string, string> = { r: 'Ramadan', s: 'Sunnah', q: 'Make-up', x: 'Excused' };
+    const fd = Object.keys((p && p.days) || {}).sort().filter((k) => inP(k)).map((k) => [k, KN[p.days[k]] || String(p.days[k])]);
     if (fd.length) sheets.push({ name: 'Fasting', head: ['Date', 'Kind'], rows: fd });
     if (t) sheets.push({ name: 'Tasbih', head: ['Day', 'Total'], rows: [[t.day || '', num(t.total)]] });
     const fl = i ? flat(i) : []; if (fl.length) sheets.push({ name: 'Islamic Hub', head: ['Item', 'Value'], rows: fl });
     totals.push(['Fasting days', String(fd.length)]);
+    if (fd.length) { const cn: Record<string, number> = {}; fd.forEach((x) => { cn[x[1]] = (cn[x[1]] || 0) + 1; }); const ks = Object.keys(cn); charts.push({ title: 'Fasting days', kind: 'donut', labels: ks, values: ks.map((k) => cn[k]) }); }
   }
   if (sel.includes('usage')) {
-    const u = g('usage', 'ml_usage_v1'); const fl = u ? flat(u) : [];
-    if (fl.length) sheets.push({ name: 'App usage', head: ['Item', 'Value'], rows: fl });
+    const u = g('usage', 'ml_usage_v1') || {};
+    const uk = Object.keys(u).sort().filter((k) => inP(k));
+    if (uk.length) {
+      sheets.push({ name: 'App usage', head: ['Date', 'Opens', 'Time spent (min)'], rows: uk.map((k) => [k, num(u[k].opens), Math.round(num(u[k].sec) / 60)]) });
+      const ul = uk.slice(-14);
+      charts.push({ title: 'Minutes in the app', kind: 'bars', labels: ul.map(dm), values: ul.map((k) => Math.round(num(u[k].sec) / 60)), color: '#5ee7df' });
+    }
   }
-  return { sheets, totals };
+  return { sheets, totals, charts, name, period: PERN[per], created: stamp() };
 }
 
 export const toCsv = (r: Report) => {
   const q = (v: any) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const out: string[] = ['Totals'];
+  const out: string[] = [q('My Life 1.0'), [q('Report for'), q(r.name || '')].join(','), [q('Period'), q(r.period)].join(','), [q('Created'), q(r.created)].join(','), '', q('Summary')];
   r.totals.forEach(([a, b]) => out.push([a, b].map(q).join(',')));
-  r.sheets.forEach((s) => { out.push('', s.name, s.head.map(q).join(',')); s.rows.forEach((x) => out.push(x.map(q).join(','))); });
+  r.sheets.forEach((s) => { out.push('', q(s.name), s.head.map(q).join(',')); s.rows.forEach((x) => out.push(x.map(q).join(','))); });
   return '﻿' + out.join('\r\n');
 };
 
 const esc = (v: any) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-export function toHtml(r: Report, per: string) {
-  const tiles = r.totals.map(([a, b]) => '<div class="t"><b>' + esc(b) + '</b><span>' + esc(a) + '</span></div>').join('');
-  const tabs = r.sheets.map((s) => '<h2>' + esc(s.name) + '</h2><table><tr>' + s.head.map((h) => '<th>' + esc(h) + '</th>').join('') + '</tr>' +
-    s.rows.slice(0, 600).map((x) => '<tr>' + x.map((c) => '<td>' + esc(c) + '</td>').join('') + '</tr>').join('') + '</table>' + (s.rows.length > 600 ? '<p class="m">Showing the first 600 of ' + s.rows.length + ' rows. Use Excel for everything.</p>' : '')).join('');
-  return '<html><head><meta charset="utf-8"><style>body{font-family:Helvetica,Arial,sans-serif;color:#1b2140;padding:24px}h1{margin:0}h2{margin:22px 0 6px;color:#3b4ea8;font-size:15px}.m{color:#667;font-size:11px}.g{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.t{background:#eef1ff;border-radius:10px;padding:8px 12px;min-width:110px}.t b{display:block;font-size:16px}.t span{font-size:11px;color:#556}table{border-collapse:collapse;width:100%;font-size:11px}th{background:#3b4ea8;color:#fff;text-align:left;padding:5px}td{border-bottom:1px solid #dde;padding:4px 5px}</style></head><body><h1>My Life 1.0</h1><div class="m">Report: ' + esc(per) + ' · created ' + new Date().toLocaleDateString('en-GB') + '</div><div class="g">' + tiles + '</div>' + (tabs || '<p>No data saved yet for this period.</p>') + '</body></html>';
+const PAL = ['#7c9cff', '#34d399', '#ffb454', '#ff8fab', '#b794ff', '#5ee7df', '#94a3b8'];
+const fmtN = (n: number) => (Math.abs(n) >= 100 ? Math.round(n) : Math.round(n * 10) / 10).toLocaleString('en-US');
+
+function svgBars(c: Chart) {
+  const W = 300, H = 140, L = 6, B = 24, T = 14; const n = c.values.length; const mx = Math.max(...c.values, 1);
+  const bw = Math.min(26, (W - L * 2) / n - 6);
+  const bars = c.values.map((v, i) => { const h = ((H - B - T) * v) / mx; const x = L + (i + 0.5) * ((W - L * 2) / n) - bw / 2; const y = H - B - h;
+    return '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + Math.max(h, 1) + '" rx="4" fill="' + (c.color || PAL[i % PAL.length]) + '"/>' + (n <= 8 ? '<text x="' + (x + bw / 2) + '" y="' + (y - 3) + '" font-size="8" text-anchor="middle" fill="#445">' + fmtN(v) + '</text>' : '')
+      + (n <= 8 || i % Math.ceil(n / 7) === 0 ? '<text x="' + (x + bw / 2) + '" y="' + (H - 9) + '" font-size="8" text-anchor="middle" fill="#667">' + esc(c.labels[i]) + '</text>' : ''); }).join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%"><line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - L) + '" y2="' + (H - B) + '" stroke="#dde"/>' + bars + '</svg>';
+}
+function svgHBars(c: Chart) {
+  const mx = Math.max(...c.values, 1); const rh = 22; const H = c.values.length * rh + 4;
+  const rows = c.values.map((v, i) => '<text x="0" y="' + (i * rh + 13) + '" font-size="9" fill="#334">' + esc(c.labels[i]) + '</text><rect x="86" y="' + (i * rh + 3) + '" width="' + Math.max(3, (150 * v) / mx) + '" height="12" rx="6" fill="' + PAL[i % PAL.length] + '"/><text x="' + (90 + (150 * v) / mx) + '" y="' + (i * rh + 13) + '" font-size="9" fill="#445">' + fmtN(v) + '</text>').join('');
+  return '<svg viewBox="0 0 300 ' + H + '" width="100%">' + rows + '</svg>';
+}
+function svgLine(c: Chart) {
+  const W = 300, H = 140, L = 10, B = 24, T = 14; const n = c.values.length; const mn = Math.min(...c.values), mx = Math.max(...c.values); const rg = mx - mn || 1; const col = c.color || PAL[0];
+  const pts = c.values.map((v, i) => [L + (i * (W - L * 2)) / Math.max(n - 1, 1), T + (H - B - T) * (1 - (v - mn) / rg)]);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const area = d + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + (H - B) + ' L' + pts[0][0].toFixed(1) + ' ' + (H - B) + ' Z';
+  const dots = pts.map((p) => '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3" fill="#fff" stroke="' + col + '" stroke-width="2"/>').join('');
+  const lb = c.labels.map((l, i) => (i % Math.ceil(n / 6) === 0 ? '<text x="' + pts[i][0].toFixed(1) + '" y="' + (H - 9) + '" font-size="8" text-anchor="' + (i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle') + '" fill="#667">' + esc(l) + '</text>' : '')).join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%"><line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - L) + '" y2="' + (H - B) + '" stroke="#dde"/><path d="' + area + '" fill="' + col + '" opacity=".14"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2.5" stroke-linejoin="round"/>' + dots + lb
+    + '<text x="' + L + '" y="9" font-size="8" fill="#667">' + fmtN(mx) + '</text></svg>';
+}
+function svgDonut(c: Chart) {
+  const tot = c.values.reduce((a, b) => a + b, 0) || 1; const R = 42, C = 2 * Math.PI * R; let off = 0;
+  const arcs = c.values.map((v, i) => { const len = (v / tot) * C; const e = '<circle cx="60" cy="60" r="' + R + '" fill="none" stroke="' + PAL[i % PAL.length] + '" stroke-width="16" stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 60 60)"/>'; off += len; return e; }).join('');
+  const leg = c.labels.map((l, i) => '<tspan x="140" dy="' + (i ? 18 : 0) + '" fill="#334"><tspan fill="' + PAL[i % PAL.length] + '">●</tspan> ' + esc(l) + ': ' + fmtN(c.values[i]) + '</tspan>').join('');
+  return '<svg viewBox="0 0 300 120" width="100%">' + arcs + '<text x="60" y="64" font-size="15" font-weight="700" text-anchor="middle" fill="#1b2140">' + fmtN(tot) + '</text><text x="140" y="' + (60 - (c.labels.length - 1) * 9) + '" font-size="10">' + leg + '</text></svg>';
+}
+const chartSvg = (c: Chart) => (c.kind === 'bars' ? svgBars(c) : c.kind === 'hbars' ? svgHBars(c) : c.kind === 'line' ? svgLine(c) : svgDonut(c));
+
+export function toHtml(r: Report) {
+  const tcol = ['#eef1ff', '#e9fbf4', '#fff4e3', '#ffeef3', '#f3edff', '#e8fbfa'];
+  const tiles = r.totals.map(([a, b], i) => '<div class="t" style="background:' + tcol[i % tcol.length] + '"><b>' + esc(b) + '</b><span>' + esc(a) + '</span></div>').join('');
+  const cards = r.charts.map((c) => '<div class="c"><h3>' + esc(c.title) + (c.unit ? ' <small>(' + esc(c.unit) + ')</small>' : '') + '</h3>' + chartSvg(c) + '</div>').join('');
+  const tabs = r.sheets.map((s) => '<div class="blk"><h2>' + esc(s.name) + '</h2><table><tr>' + s.head.map((h) => '<th>' + esc(h) + '</th>').join('') + '</tr>' +
+    s.rows.slice(0, 600).map((x) => '<tr>' + x.map((c, ci) => '<td>' + esc(typeof c === 'number' ? (/\(RM\)/.test(s.head[ci]) ? c.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : fmtN(c)) : c) + '</td>').join('') + '</tr>').join('') + '</table>' + (s.rows.length > 600 ? '<p class="m">Showing the first 600 of ' + s.rows.length + ' rows. Use Excel for everything.</p>' : '') + '</div>').join('');
+  const css = '*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:14mm}body{font-family:Helvetica,Arial,sans-serif;color:#1b2140;margin:0}'
+    + '.ban{background:linear-gradient(120deg,#3b4ea8,#7a50e6 60%,#2fa8c9);color:#fff;border-radius:18px;padding:22px 24px}.ban h1{margin:0 0 12px;font-size:30px;letter-spacing:-.5px}.ban .s{font-size:13px;opacity:.9;margin-bottom:14px}'
+    + '.pill{display:inline-block;background:rgba(255,255,255,.2);border-radius:999px;padding:5px 12px;font-size:11.5px;margin:0 6px 4px 0}'
+    + 'h2{margin:0 0 8px;color:#3b4ea8;font-size:15px}h3{margin:0 0 6px;font-size:12px;color:#1b2140}h3 small{color:#889;font-weight:400}.sec{margin:26px 0 10px;font-size:17px;font-weight:700}.m{color:#667;font-size:11px}'
+    + '.g{display:flex;flex-wrap:wrap;gap:10px}.t{border-radius:14px;padding:10px 14px;min-width:120px;flex:1 1 28%}.t b{display:block;font-size:19px}.t span{font-size:11px;color:#556}'
+    + '.cs{display:flex;flex-wrap:wrap;gap:12px}.c{box-sizing:border-box;width:calc(50% - 6px);border:1px solid #e3e6f5;border-radius:14px;padding:12px 14px;page-break-inside:avoid}'
+    + '.blk{margin-top:22px;page-break-inside:avoid}table{border-collapse:collapse;width:100%;font-size:11px}th{background:#3b4ea8;color:#fff;text-align:left;padding:6px 7px}th:first-child{border-radius:8px 0 0 0}th:last-child{border-radius:0 8px 0 0}td{padding:5px 7px;border-bottom:1px solid #e6e9f5}tr:nth-child(even) td{background:#f6f7fd}'
+    + '.f{margin-top:30px;border-top:1px solid #e3e6f5;padding-top:10px;color:#889;font-size:10.5px;text-align:center}';
+  return '<html><head><meta charset="utf-8"><style>' + css + '</style></head><body><div class="ban"><h1>My Life 1.0</h1><div class="s">' + (r.name ? 'Personal report for ' + esc(r.name) : 'Personal report') + '</div><span class="pill">Period: ' + esc(r.period) + '</span><span class="pill">Created: ' + esc(r.created) + '</span></div>'
+    + '<div class="sec">Summary</div><div class="g">' + tiles + '</div>' + (cards ? '<div class="sec">Charts</div><div class="cs">' + cards + '</div>' : '') + (tabs ? '<div class="sec">Details</div>' + tabs : '<p>No data saved yet for this period.</p>')
+    + '<div class="f">Created on your phone by My Life 1.0. Your data stays with you.</div></body></html>';
 }
 
 export async function toXlsxBase64(r: Report): Promise<string> {
   const X: any = await import('xlsx');
   const wb = X.utils.book_new();
-  const t = X.utils.aoa_to_sheet([['Totals', ''], ...r.totals]); t['!cols'] = [{ wch: 22 }, { wch: 18 }];
-  X.utils.book_append_sheet(wb, t, 'Totals');
+  const t = X.utils.aoa_to_sheet([['My Life 1.0', ''], ['Report for', r.name || ''], ['Period', r.period], ['Created', r.created], ['', ''], ['Summary', ''], ...r.totals]);
+  t['!cols'] = [{ wch: 24 }, { wch: 26 }];
+  X.utils.book_append_sheet(wb, t, 'Summary');
   r.sheets.forEach((s) => {
     const ws = X.utils.aoa_to_sheet([s.head, ...s.rows]);
-    ws['!cols'] = s.head.map((h, i) => ({ wch: Math.min(40, Math.max(h.length + 2, ...s.rows.slice(0, 80).map((x) => String(x[i] ?? '').length + 2))) }));
+    ws['!cols'] = s.head.map((h, i) => ({ wch: Math.min(42, Math.max(h.length + 3, ...s.rows.slice(0, 80).map((x) => String(x[i] ?? '').length + 2))) }));
+    ws['!autofilter'] = { ref: X.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(s.rows.length, 1), c: s.head.length - 1 } }) };
+    s.head.forEach((h, c) => { if (/\(RM\)/.test(h)) s.rows.forEach((_, i) => { const cell = ws[X.utils.encode_cell({ r: i + 1, c })]; if (cell && typeof cell.v === 'number') cell.z = '#,##0.00'; }); });
     X.utils.book_append_sheet(wb, ws, s.name.slice(0, 31));
   });
   return X.write(wb, { bookType: 'xlsx', type: 'base64' });

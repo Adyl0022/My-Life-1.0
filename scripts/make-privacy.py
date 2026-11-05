@@ -45,7 +45,7 @@ main{{max-width:780px;margin:0 auto;padding:0 20px 60px}}
 .hero{{text-align:center;padding:54px 0 30px}}
 .logo{{display:block;width:84px;height:84px;margin:0 auto 18px;border-radius:22%;box-shadow:0 14px 40px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.14)}}
 h1{{margin:0;font-size:clamp(30px,6vw,44px);letter-spacing:-1px;line-height:1.15}}
-.sub{{margin:12px auto 0;max-width:520px;color:var(--dim)}}.chip{{display:inline-block;margin-top:18px;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid var(--line);font-size:12.5px;color:#d9f3ee}}
+.sub{{margin:12px auto 0;max-width:520px;color:var(--dim)}}.meta{{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:18px}}.chip{{display:inline-block;text-align:center;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid var(--line);font-size:12.5px;color:#d9f3ee}}
 .hl{{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:26px 0 8px}}
 .hl div{{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:20px;padding:18px 16px;backdrop-filter:blur(10px)}}
 .hl i{{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;margin-bottom:10px}}.hl .c1 i{{background:linear-gradient(135deg,#4f8cff,#2f6bff)}}.hl .c2 i{{background:linear-gradient(135deg,#ff9a5c,#ef5b5b)}}.hl .c3 i{{background:linear-gradient(135deg,#34d399,#12a58a)}}.hl svg{{width:22px;height:22px}}
@@ -62,7 +62,7 @@ footer{{text-align:center;color:#7f9aa6;font-size:12.5px;margin-top:34px}}
 </style></head><body><div class="blob b1"></div><div class="blob b2"></div>
 <nav><div><b>My Life 1.0</b><a href="#privacy">Privacy</a><a href="#terms">Terms</a><a href="#contact" class="h">Contact</a></div></nav>
 <main>
-<header class="hero"><img class="logo" src="icon.png" alt="My Life 1.0 app icon" width="84" height="84"><h1>Your data stays on your phone</h1><p class="sub">This page explains what My Life 1.0 stores, where it lives, and the control you have over it. No account is needed, and nothing is sent to a server.</p><span class="chip">Developer: Adli Syahmi · Last updated {today}</span></header>
+<header class="hero"><img class="logo" src="icon.png" alt="My Life 1.0 app icon" width="84" height="84"><h1>Your data stays on your phone</h1><p class="sub">This page explains what My Life 1.0 stores, where it lives, and the control you have over it. No account is needed, and nothing is sent to a server.</p><div class="meta"><span class="chip">Developer: Adli Syahmi</span><span class="chip">Last updated {today}</span></div></header>
 <section class="hl"><div class="c1"><i>{ic('phone')}</i><b>On your phone</b><span>Stored and encrypted on your device only.</span></div><div class="c2"><i>{ic('shield')}</i><b>No ads, no tracking</b><span>Never sold and never shared.</span></div><div class="c3"><i>{ic('hand')}</i><b>You are in control</b><span>Export or erase everything at any time.</span></div></section>
 <section id="privacy"><h2>Privacy Policy</h2><p>What we store and why.</p><div class="toc">{toc('p', P)}</div>{sec('p', P)}</section>
 <section id="terms"><h2>Terms of Use</h2><p>The simple rules for using the app.</p><div class="toc">{toc('t', T)}</div>{sec('t', T)}</section>

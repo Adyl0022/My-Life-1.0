@@ -89,14 +89,19 @@ export default function Puasa() {
   const todayVal = at(today);
   const yr = sunatYear(p, today);
 
-  // upcoming special sunnah days in the next 90 days
+  // upcoming sunnah fasts: the next two Monday/Thursday fasts plus the next special days
   const upcoming: { d: Date; n: string; w: number }[] = [];
-  for (let i = 1; i <= 120 && upcoming.length < 4; i++) {
-    const d = addDays(today, i); const h = hijriOf(d, off);
-    let n = '';
-    if (h.m === 12 && h.d === 9) n = 'Arafah'; else if (h.m === 1 && h.d === 10) n = 'Asyura'; else if (h.m === 10 && h.d === 2) n = 'Six days of Syawal begin'; else if (h.m !== 9 && h.d === 13 && !isHaram(d, off)) n = 'White Days fast';
-    if (n) upcoming.push({ d, n, w: i });
-  }
+  { let reg = 0, spc = 0;
+    for (let i = 1; i <= 150 && (reg < 2 || spc < 3); i++) {
+      const d = addDays(today, i); if (isHaram(d, off)) continue;
+      if (ramadanState(p, d).phase === 'during') continue;
+      const lab = sunatToday(d, off); if (!lab) continue;
+      const prev = sunatToday(addDays(d, -1), off);
+      const regular = lab === 'Monday sunnah fast' || lab === 'Thursday sunnah fast';
+      if (regular) { if (reg < 2) { upcoming.push({ d, n: lab, w: i }); reg++; } }
+      else if (lab !== prev && spc < 3) { upcoming.push({ d, n: lab, w: i }); spc++; }
+    }
+    upcoming.sort((x, y) => x.w - y.w); }
   const advice = () => {
     if (st.phase === 'during') {
       const left = st.left, done = st.fasted;
@@ -305,12 +310,12 @@ export default function Puasa() {
 
             {upcoming.length ? (
               <Card>
-                <H t="Coming up" s="Special days to fast" />
+                <H t="Coming up" s="The next sunnah fasts" />
                 <View style={{ gap: 10, marginTop: 10 }}>
                   {upcoming.map((u) => (
                     <View key={u.n + u.w} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                       <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(52,211,153,.3)', alignItems: 'center', justifyContent: 'center' }}><Ic n="moon" size={20} /></View>
-                      <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>{u.n}</Text><Text style={{ color: dim, fontSize: 11.5 }}>{fdate(u.d)} · {hijriText(u.d, off)}</Text></View>
+                      <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>{u.n.replace(' (13th to 15th of the Hijri month)', '')}</Text><Text style={{ color: dim, fontSize: 11.5 }}>{fdate(u.d)} · {hijriText(u.d, off)}</Text></View>
                       <Text style={{ color: '#8fe9e2', fontSize: 12, fontWeight: '800' }}>{u.w === 1 ? 'Tomorrow' : 'In ' + u.w + ' days'}</Text>
                     </View>
                   ))}

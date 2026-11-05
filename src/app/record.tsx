@@ -96,7 +96,7 @@ const Bars = ({ bars, height = 158, noteH = 13 }: { bars: Bar[]; height?: number
 export default function Record() {
   const router = useRouter();
   const [st, setSt] = useStored<Data>('ml_record', EMPTY);
-  const [mPage, setMPage] = useState<number | null>(null); const [sPage, setSPage] = useState<number | null>(null); const [selYear, setSelYear] = useState<string | null>(null); const [yPage, setYPage] = useState<number | null>(null);
+  const [mPage, setMPage] = useState<number | null>(null); const [sPage, setSPage] = useState<number | null>(null); const [selYear, setSelYear] = useState<string | null>(null); const [allExp, setAllExp] = useState(false); const [yPage, setYPage] = useState<number | null>(null);
   const [addingCat, setAddingCat] = useState(false); const [catIn, setCatIn] = useState(''); const [delAsk, setDelAsk] = useState(false);
   const t0 = todayStr();
   const [rDate, setRDate] = useState(t0); const [rOdo, setROdo] = useState(''); const [yDate, setYDate] = useState(t0); const [yOdo, setYOdo] = useState('');
@@ -374,9 +374,19 @@ export default function Record() {
               <AddB t="+ Add" onPress={addExp} w={14} />
             </View>
             {d.exps.length === 0 ? <Text style={{ marginTop: 10, color: dim, fontSize: 12 }}>No spending recorded yet.</Text> : null}
-            <View style={{ marginTop: 6 }}>
-              {d.exps.map((e, i) => <Row key={e.id} last={i === d.exps.length - 1}><Text style={{ flex: 1, color: W, fontSize: 14 }} numberOfLines={1}>{e.name}<Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12 }}>{'  · ' + fmtDate(e.date)}</Text></Text><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>RM {money(e.amt)}</Text><Del onPress={() => upd((x) => ({ ...x, exps: x.exps.filter((y) => y.id !== e.id) }))} /></Row>)}
-            </View>
+            {(() => {
+              const sorted = d.exps.slice().sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id));
+              const shown = allExp ? sorted : sorted.slice(0, 5);
+              return (
+                <>
+                  {d.exps.length > 0 ? <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12, fontWeight: '700', marginTop: 12 }}>{allExp || sorted.length <= 5 ? 'All records, newest first' : 'Latest 5 records'}</Text> : null}
+                  <View style={{ marginTop: 2 }}>
+                    {shown.map((e, i) => <Row key={e.id} last={i === shown.length - 1}><Text style={{ flex: 1, color: W, fontSize: 14 }} numberOfLines={1}>{e.name}<Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12 }}>{'  · ' + fmtDate(e.date)}</Text></Text><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>RM {money(e.amt)}</Text><Del onPress={() => upd((x) => ({ ...x, exps: x.exps.filter((y) => y.id !== e.id) }))} /></Row>)}
+                  </View>
+                  {sorted.length > 5 ? <Pressable onPress={() => setAllExp(!allExp)} style={{ alignSelf: 'center', marginTop: 8, paddingVertical: 8, paddingHorizontal: 18, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '800' }}>{allExp ? 'Show fewer' : 'Show all ' + sorted.length + ' records'}</Text></Pressable> : null}
+                </>
+              );
+            })()}
           </Glass>
           <PartsCard d={d} upd={(fn) => upd(fn)} latest={allOdo} addNow={(o) => upd((x) => ({ ...x, readings: [...x.readings, { id: Date.now(), date: t0, odo: o }] }))} />
           <DocsCard d={d} upd={(fn) => upd(fn)} />

@@ -96,7 +96,7 @@ const Bars = ({ bars, height = 158, noteH = 13 }: { bars: Bar[]; height?: number
 export default function Record() {
   const router = useRouter();
   const [st, setSt] = useStored<Data>('ml_record', EMPTY);
-  const [mPage, setMPage] = useState<number | null>(null); const [sPage, setSPage] = useState<number | null>(null); const [yPage, setYPage] = useState<number | null>(null);
+  const [mPage, setMPage] = useState<number | null>(null); const [sPage, setSPage] = useState<number | null>(null); const [selYear, setSelYear] = useState<string | null>(null); const [yPage, setYPage] = useState<number | null>(null);
   const [addingCat, setAddingCat] = useState(false); const [catIn, setCatIn] = useState(''); const [delAsk, setDelAsk] = useState(false);
   const t0 = todayStr();
   const [rDate, setRDate] = useState(t0); const [rOdo, setROdo] = useState(''); const [yDate, setYDate] = useState(t0); const [yOdo, setYOdo] = useState('');
@@ -327,14 +327,46 @@ export default function Record() {
             </View>
             <Bars bars={sBars} noteH={26} />
             <Text style={{ color: dim, fontSize: 12, marginTop: 8 }}>Under each month is what you spent most on. Use the arrows to see earlier months. Amounts are in RM.</Text>
-            {Object.keys(byYear).length ? (
-              <View style={{ marginTop: 10 }}>
-                <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12, fontWeight: '700', marginBottom: 6 }}>Total for each year</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  {Object.keys(byYear).sort().reverse().map((y) => <View key={y} style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.1)' }}><Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 11 }}>{y}</Text><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>{'RM ' + num(byYear[y])}</Text></View>)}
+            {Object.keys(byYear).length ? (() => {
+              const cy = String(now.getFullYear()); const ys = Object.keys(byYear);
+              const order = [...ys.filter((y) => y >= cy).sort(), ...ys.filter((y) => y < cy).sort().reverse()];
+              const FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+              const inYear = selYear ? d.exps.filter((e) => (e.date || '').slice(0, 4) === selYear) : [];
+              const monthsOf = Array.from(new Set(inYear.map((e) => e.date.slice(5, 7)))).sort();
+              return (
+                <View style={{ marginTop: 10 }}>
+                  <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12, fontWeight: '700' }}>Total for each year</Text>
+                  <Text style={{ color: dim, fontSize: 11.5, marginTop: 2, marginBottom: 8 }}>Tap a year to see what you spent on each month.</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {order.map((y) => { const on = selYear === y; return (
+                      <Pressable key={y} onPress={() => setSelYear(on ? null : y)} style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 12, backgroundColor: on ? '#b06ad8' : 'rgba(255,255,255,.1)', borderWidth: 1, borderColor: on ? 'rgba(255,255,255,.5)' : 'transparent' }}>
+                        <Text style={{ color: on ? W : 'rgba(255,255,255,.65)', fontSize: 11 }}>{y + (y === cy ? ' · this year' : '') + (on ? ' ▴' : ' ▾')}</Text><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>{'RM ' + num(byYear[y])}</Text>
+                      </Pressable>
+                    ); })}
+                  </View>
+                  {selYear ? (
+                    <View style={{ marginTop: 12, padding: 12, borderRadius: 16, backgroundColor: 'rgba(0,0,0,.22)' }}>
+                      <Text style={{ color: W, fontSize: 13.5, fontWeight: '800' }}>{selYear + ' · RM ' + num(byYear[selYear] || 0)}</Text>
+                      {monthsOf.map((mo) => {
+                        const items = inYear.filter((e) => e.date.slice(5, 7) === mo).slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id));
+                        const tot = items.reduce((a, e) => a + e.amt, 0);
+                        return (
+                          <View key={mo} style={{ marginTop: 12 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Text style={{ color: '#ffc46b', fontSize: 12.5, fontWeight: '800' }}>{FULL[parseInt(mo, 10) - 1]}</Text><Text style={{ color: '#ffc46b', fontSize: 12.5, fontWeight: '800' }}>{'RM ' + num(tot)}</Text></View>
+                            {items.map((e) => (
+                              <View key={e.id} style={{ flexDirection: 'row', gap: 8, paddingVertical: 5, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,.08)', marginTop: 4 }}>
+                                <Text style={{ flex: 1, color: W, fontSize: 13 }} numberOfLines={1}>{e.name}<Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5 }}>{'  · ' + fmtDate(e.date)}</Text></Text>
+                                <Text style={{ color: W, fontSize: 13, fontWeight: '700' }}>{'RM ' + num(e.amt)}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ) : null}
                 </View>
-              </View>
-            ) : null}
+              );
+            })() : null}
             <DateField value={eDate} onChange={setEDate} style={{ marginTop: 12 }} />
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, alignItems: 'center' }}>
               <Inp style={{ flex: 1.3 }} value={eName} onChangeText={setEName} placeholder="e.g. Engine oil" />

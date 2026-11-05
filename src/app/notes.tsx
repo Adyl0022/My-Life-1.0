@@ -14,7 +14,7 @@ import { TOP } from '../lib/layout';
 type Note = { id: number; t: string; s: string; c: number; pin: boolean; u: number; r: string };
 type Data = { notes: Note[]; seq: number };
 const COL = ['#7c9cff', '#5ee7df', '#ffc46b', '#ff8fb1', '#a78bfa', '#9be37a'];
-const PAPER = [['#4f6bff', '#8a6cff', '#3fb0ff'], ['#0fae9f', '#2f84d8', '#3fd1a8'], ['#f08a3c', '#e0568b', '#f5b94a'], ['#e0518a', '#a24fe0', '#ff8f6b'], ['#7a50e6', '#c05fd8', '#5b7cff'], ['#2fae64', '#2f93c4', '#8bd45a']];
+const PAPER = [['#4f6bff', '#8a6cff', '#3fb0ff'], ['#0fae9f', '#2f84d8', '#3fd1a8'], ['#f5a623', '#ef6a3a', '#e8436b'], ['#e0518a', '#a24fe0', '#ff8f6b'], ['#7a50e6', '#c05fd8', '#5b7cff'], ['#2fae64', '#2f93c4', '#8bd45a']];
 const FILTERS = ['All', 'Pinned', 'Checklist', 'Recent'];
 const SORTS = ['Newest', 'Oldest', 'A–Z'];
 const days = (u: number) => Math.floor((Date.now() - u) / 86400000);
@@ -39,7 +39,7 @@ export default function Notes() {
   const sorted = [...list.filter((n) => n.pin).sort(key), ...list.filter((n) => !n.pin).sort(key)];
   const menuNote = notes.find((n) => n.id === menuId);
 
-  const openNew = () => { const id = data.seq; setDraft({ id, t: '', s: '', c: 0, pin: false, u: Date.now(), r: '' }); setIsNew(true); setEditId(id); setFilter(0); setQ(''); };
+  const openNew = () => { const id = data.seq; setDraft({ id, t: '', s: '', c: 2, pin: false, u: Date.now(), r: '' }); setIsNew(true); setEditId(id); setFilter(0); setQ(''); };
   const openEdit = (n: Note) => { setDraft({ ...n }); setIsNew(false); setEditId(n.id); };
   const closeEd = () => { setEditId(0); setDraft(null); setConfirmDel(false); };
   const upd = (p: Partial<Note>) => setDraft((d) => (d ? { ...d, ...p } : d));

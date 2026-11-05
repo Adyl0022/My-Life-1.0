@@ -42,7 +42,7 @@ const Empty = ({ t, c = '#8ea8ff' }: { t: string; c?: string }) => (
 );
 const Raise = ({ c, dim, children }: { c: string; dim?: boolean; children: React.ReactNode }) => (
   <View style={{ borderRadius: 22, shadowColor: c, shadowOpacity: dim ? 0.12 : 0.38, shadowRadius: 16, shadowOffset: { width: 0, height: 9 }, elevation: dim ? 2 : 8, opacity: dim ? 0.78 : 1 }}>
-    <LinearGradient colors={[c + '40', c + '14', 'rgba(255,255,255,.07)']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,.2)', borderTopColor: 'rgba(255,255,255,.42)', paddingVertical: 12, paddingLeft: 16, paddingRight: 12, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden' }}>
+    <LinearGradient colors={[c + '40', c + '14', 'rgba(255,255,255,.07)']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,.2)', borderTopColor: 'rgba(255,255,255,.42)', paddingVertical: 20, paddingLeft: 18, paddingRight: 14, minHeight: 84, flexDirection: 'row', alignItems: 'center', gap: 14, overflow: 'hidden' }}>
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 10, bottom: 10, width: 4, borderTopRightRadius: 4, borderBottomRightRadius: 4, backgroundColor: c }} />
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 22, backgroundColor: 'rgba(255,255,255,.07)' }} />
       {children}
@@ -104,7 +104,7 @@ export default function Planner() {
           <LinearGradient colors={x.done ? ['#2fae7a', '#5ee7b5'] : GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 48, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 10, fontWeight: '700' }}>{okd ? MON[+p[1] - 1] : 'NEW'}</Text><Text style={{ color: W, fontSize: 18, fontWeight: '800' }}>{okd ? p[2] : '--'}</Text>
           </LinearGradient>
-          <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 14, fontWeight: '700', textDecorationLine: x.done ? 'line-through' : 'none' }}>{x.name}</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>{x.remind === 'None' ? 'No reminder' : 'Reminder: ' + x.remind}</Text></View>
+          <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 15.5, fontWeight: '700', textDecorationLine: x.done ? 'line-through' : 'none' }}>{x.name}</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>{x.remind === 'None' ? 'No reminder' : 'Reminder: ' + x.remind}</Text></View>
           <Ic t="✎" label="Edit" onPress={() => setEdit({ id: x.id, kind: 'event', name: x.name, note: '', prio: 'Medium', date: x.date, remind: x.remind })} />
           <Ic t="✕" label="Delete" onPress={() => { setD({ ...d, events: d.events.filter((y) => y.id !== x.id) }); setEdit(null); }} />
         </Raise>
@@ -123,7 +123,7 @@ export default function Planner() {
               {done ? <Text style={{ color: '#06241d', fontSize: 13, fontWeight: '800' }}>✓</Text> : null}
             </LinearGradient>
           </Pressable>
-          <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 14, fontWeight: '700', textDecorationLine: done ? 'line-through' : 'none' }}>{x.name}</Text><Text style={{ color: overdue ? '#ffb3c0' : 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>{parts.join(' · ')}</Text></View>
+          <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 15.5, fontWeight: '700', textDecorationLine: done ? 'line-through' : 'none' }}>{x.name}</Text><Text style={{ color: overdue ? '#ffb3c0' : 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>{parts.join(' · ')}</Text></View>
           <View style={{ paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999, backgroundColor: PB[x.prio] }}><Text style={{ color: PC[x.prio], fontSize: 11, fontWeight: '700' }}>{x.prio}</Text></View>
           <Ic t="✎" label="Edit" onPress={() => setEdit({ id: x.id, kind: 'task', name: x.name, note: x.note, prio: x.prio, date: x.due, remind: 'None' })} />
         </Raise>

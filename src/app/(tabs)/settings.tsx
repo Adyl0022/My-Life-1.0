@@ -224,12 +224,9 @@ export default function Settings() {
                   </View>
                 ) : null}
               </Glass>
-              <Glass style={{ paddingHorizontal: 16 }}>
-                <Row k="pw" t="Change password" last onPress={() => setDlg('pw')} right={<Chev />} />
-              </Glass>
               <Glass style={{ padding: 16 }}>
-                <Ttl t="Devices and sign-in alerts" />
-                <Lbl t="Coming soon, together with accounts and sync." />
+                <Ttl t="Password, devices and sign-in alerts" />
+                <Lbl t="Coming soon, together with accounts and sync. Until then, your App lock protects your data." />
               </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
                 <Row k="bk" t="Backup reminder" sub={(bkLast ? 'Last backup ' + new Date(bkLast).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'You have not saved a backup yet') + (bkRem ? '. Reminds every 30 days' : '')} last onPress={() => setBkRem(!bkRem)} right={<Sw on={!!bkRem} />} />

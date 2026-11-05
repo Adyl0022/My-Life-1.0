@@ -10,51 +10,36 @@ import { Blob } from '../components/Bg';
 import { TOP } from '../lib/layout';
 
 const W = '#fff';
-const MODS = [
-  { k: 'planner', name: 'Planner and Notes', sub: 'Events, tasks and notes', c: 'rgba(124,156,255,.4)', keys: ['ml_planner', 'ml_notes'] },
-  { k: 'islamic', name: 'Islamic Hub', sub: 'Prayers, zikir, bookmarks, reading progress and Tasbih counts', c: 'rgba(94,231,181,.35)', keys: ['ml_islamic', 'ml_tasbih', 'ml_puasa'] },
-  { k: 'finance', name: 'My Finance', sub: 'Income, spending and categories', c: 'rgba(255,196,107,.4)', keys: ['ml_finance'] },
-  { k: 'record', name: 'My Record', sub: 'Motorcycle mileage and services', c: 'rgba(255,143,171,.4)', keys: ['ml_record'] },
-  { k: 'habit', name: 'Habit and Health', sub: 'Mood, sleep, water and steps', c: 'rgba(183,148,255,.4)', keys: ['ml_habit'] },
-  { k: 'usage', name: 'App usage history', sub: 'Time spent and opens from Stats', c: 'rgba(94,231,223,.4)', keys: ['ml_usage_v1'] },
-];
-const BASE: Record<string, [string, number][]> = {
-  planner: [['Notes', 5], ['Tasks', 24], ['Events', 6]], islamic: [['Prayers logged', 118]], finance: [['Income', 3500], ['Spending', 1240]], record: [['Records', 12]], habit: [['Habit days', 30]], usage: [],
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { MODS, buildReport, collect, toCsv, toHtml, toXlsxBase64, deliver, deliverPdf, Report } from '../lib/exporter';
+const IC: Record<string, React.ReactNode> = {
+  planner: <><Rect x="4" y="5" width="16" height="15" rx="3" /><Path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4" /></>,
+  islamic: <Path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />,
+  finance: <><Rect x="3" y="6" width="18" height="14" rx="3" /><Path d="M3 10h18M16 15h2" /></>,
+  record: <><Circle cx="6" cy="16" r="3" /><Circle cx="18" cy="16" r="3" /><Path d="M6 16l4-7h4l4 7M10 9L9 6H6" /></>,
+  habit: <Path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />,
+  usage: <><Circle cx="12" cy="12" r="8.5" /><Path d="M12 7v5l3 2" /></>,
+  xlsx: <><Rect x="4" y="4" width="16" height="16" rx="3" /><Path d="M4 10h16M4 15h16M10 4v16" /></>,
+  pdf: <><Path d="M7 3h7l4 4v14H7z" /><Path d="M14 3v4h4M10 12h5M10 16h5" /></>,
+  csv: <Path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" />,
+  json: <><Path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /><Path d="M9 12l2 2 4-4" /></>,
 };
+const GR: Record<string, [string, string]> = {
+  planner: ['#7c9cff', '#5b7bff'], islamic: ['#34d399', '#12a58a'], finance: ['#ffc46b', '#ff8f5a'], record: ['#ff8fab', '#e0518a'], habit: ['#b794ff', '#7059e8'], usage: ['#5ee7df', '#4a8dff'],
+  xlsx: ['#34d399', '#12a58a'], pdf: ['#ff8fab', '#e0518a'], csv: ['#7c9cff', '#5b7bff'], json: ['#ffc46b', '#ff8f5a'],
+};
+const Ico = ({ k, size = 36 }: { k: string; size?: number }) => (
+  <LinearGradient colors={GR[k]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: size, height: size, borderRadius: size * 0.33, alignItems: 'center', justifyContent: 'center' }}>
+    <Svg width={size * 0.56} height={size * 0.56} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">{IC[k]}</Svg>
+  </LinearGradient>
+);
 const FMT = [
   { k: 'xlsx', name: 'Excel', sub: '.xlsx, one sheet per module plus a Totals sheet' },
-  { k: 'pdf', name: 'PDF', sub: '.pdf report with a summary and totals' },
+  { k: 'pdf', name: 'PDF', sub: '.pdf report with a summary and tables' },
   { k: 'csv', name: 'CSV', sub: '.csv, opens in any spreadsheet app' },
-  { k: 'json', name: 'Backup (JSON)', sub: 'One file with everything, to restore later or move phones' },
+  { k: 'json', name: 'Backup (JSON)', sub: 'Everything in one file, to keep safe or move phones' },
 ];
 const PER = ['This month', '3 months', 'All time'];
-const rm = (n: number) => 'RM ' + n.toLocaleString('en-US');
-
-async function collect(sel: string[]) {
-  const out: Record<string, any> = {};
-  for (const m of MODS.filter((x) => sel.includes(x.k))) {
-    out[m.k] = {};
-    for (const k of m.keys) { try { const r = await getText(k); if (r != null) out[m.k][k] = JSON.parse(r); } catch (e) {} }
-  }
-  return out;
-}
-function toCsv(data: Record<string, any>) {
-  const q = (v: any) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const rows = ['module,key,field,value'];
-  const walk = (m: string, k: string, p: string, v: any) => {
-    if (v && typeof v === 'object') Object.keys(v).forEach((x) => walk(m, k, p ? p + '.' + x : x, v[x]));
-    else rows.push([m, k, p, v].map(q).join(','));
-  };
-  Object.keys(data).forEach((m) => Object.keys(data[m]).forEach((k) => walk(m, k, '', data[m][k])));
-  return rows.join('\n');
-}
-async function deliver(name: string, mime: string, text: string) {
-  if (Platform.OS === 'web') {
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new (globalThis as any).Blob([text], { type: mime })); a.download = name;
-    document.body.appendChild(a); a.click(); a.remove(); return;
-  }
-  await Share.share({ title: name, message: text });
-}
 
 export default function Export() {
   const router = useRouter();
@@ -64,31 +49,32 @@ export default function Export() {
   const [phase, setPhase] = useState(0); const [msg, setMsg] = useState('');
   const sel = MODS.filter((m) => inc[m.k]).map((m) => m.k);
   const any = sel.length > 0;
-  const mult = [1, 3, 8][per]; const cm = [1, 2, 4][per];
-  let inco = 0, sp = 0;
-  const totals: [string, string][] = [];
-  sel.forEach((k) => BASE[k].forEach(([l, v]) => {
-    if (l === 'Income') { inco = v * mult; totals.push(['Total income', rm(inco)]); }
-    else if (l === 'Spending') { sp = v * mult; totals.push(['Total spending', rm(sp)]); }
-    else totals.push([l, String(Math.round(v * (['Notes', 'Tasks', 'Events', 'Records'].includes(l) ? cm : mult)))]);
-  }));
-  if (inc.finance) totals.push(['Net balance', rm(inco - sp)]);
-  const d = new Date();
-  const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  const file = 'my-life-export-' + ds + '.' + FMT[fmt].k;
+  const isBk = FMT[fmt].k === 'json';
+  const [rep, setRep] = useState<Report | null>(null);
+  React.useEffect(() => { let on = true; if (any) buildReport(sel, isBk ? 2 : per).then((r) => on && setRep(r)).catch(() => {}); else setRep(null); return () => { on = false; }; }, [sel.join(','), per, isBk]);
+  const totals = rep ? rep.totals : [];
+  const d = new Date(); const pad = (n: number) => String(n).padStart(2, '0');
+  const ds = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const file = 'my-life-' + (isBk ? 'backup-' : 'export-') + ds + '.' + FMT[fmt].k;
   const reset = () => { setPhase(0); setMsg(''); };
 
   const run = async () => {
     if (!any || phase === 1) return;
-    setPhase(1);
+    setPhase(1); setMsg('');
     const k = FMT[fmt].k;
     try {
-      if (k === 'xlsx' || k === 'pdf') { await new Promise((r) => setTimeout(r, 700)); setMsg('Excel and PDF files will be built once the modules hold your real data. Use CSV or Backup (JSON) for now.'); setPhase(3); return; }
-      const data = await collect(sel);
-      const body = k === 'json' ? JSON.stringify({ app: 'My Life', version: '1.0', exported: new Date().toISOString(), period: PER[per], data }, null, 2) : toCsv(data);
-      await deliver(file, k === 'json' ? 'application/json' : 'text/csv', body);
-      if (k === 'json') setBkLast(Date.now());
-      setMsg('Saved as ' + file); setPhase(2);
+      let ok = true;
+      if (k === 'json') {
+        const data = await collect(sel);
+        ok = await deliver(file, 'application/json', JSON.stringify({ app: 'My Life', version: '1.0', exported: new Date().toISOString(), period: 'All time', data }, null, 2));
+        setBkLast(Date.now());
+      } else {
+        const r = await buildReport(sel, per);
+        if (k === 'xlsx') ok = await deliver(file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', await toXlsxBase64(r), true);
+        else if (k === 'pdf') ok = await deliverPdf(toHtml(r, PER[per]));
+        else ok = await deliver(file, 'text/csv', toCsv(r));
+      }
+      setMsg(ok ? (k === 'pdf' ? 'Your PDF is ready.' : 'Saved as ' + file) : 'The file was created, but this phone has no way to share it.'); setPhase(ok ? 2 : 3);
     } catch (e) { setMsg('Could not create the file. Please try again.'); setPhase(3); }
   };
 
@@ -106,7 +92,7 @@ export default function Export() {
 
           <Glass style={{ marginTop: 16, padding: 16 }}>
             <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Totals in this export</Text>
-            <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginTop: 1 }}>Sample figures</Text>
+            <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginTop: 1 }}>{isBk ? 'A backup always holds everything, whatever the period' : 'From your saved data, for the period you choose'}</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
               {totals.length === 0 ? <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12.5 }}>Nothing selected.</Text> : totals.map(([l, v]) => (
                 <View key={l} style={{ width: '31.5%', flexGrow: 1, borderRadius: 14, paddingVertical: 8, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,.08)' }}>
@@ -121,7 +107,7 @@ export default function Export() {
             {MODS.map((m) => (
               <Pressable key={m.k} onPress={() => { setInc({ ...inc, [m.k]: !inc[m.k] }); reset(); }}>
                 <Glass radius={18} style={{ paddingVertical: 10, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: m.c }} />
+                  <Ico k={m.k} />
                   <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>{m.name}</Text><Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11.5, marginTop: 1 }}>{m.sub}</Text></View>
                   <View style={{ width: 22, height: 22, borderRadius: 7, borderWidth: 1.5, borderColor: inc[m.k] ? '#5ee7df' : 'rgba(255,255,255,.45)', backgroundColor: inc[m.k] ? '#5ee7df' : 'transparent', alignItems: 'center', justifyContent: 'center' }}>{inc[m.k] ? <Text style={{ color: '#0a0f2c', fontSize: 13, fontWeight: '800' }}>✓</Text> : null}</View>
                 </Glass>
@@ -138,14 +124,14 @@ export default function Export() {
               </Pressable>
             ))}
           </View>
-          <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11, margin: 4, marginTop: 6 }}>Custom date range (from and to) arrives with the real data modules.</Text>
+          
 
           <Text style={{ color: W, fontSize: 14, fontWeight: '700', margin: 4, marginTop: 12 }}>Format</Text>
           <View style={{ gap: 8 }}>
             {FMT.map((f, i) => (
               <Pressable key={f.k} onPress={() => { setFmt(i); reset(); }}>
                 <View style={{ borderRadius: 18, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: fmt === i ? 'rgba(94,231,181,.22)' : 'rgba(255,255,255,.08)', borderWidth: fmt === i ? 1.5 : 1, borderColor: fmt === i ? '#5ee7df' : 'rgba(255,255,255,.2)' }}>
-                  <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>{f.name}</Text><Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, marginTop: 1 }}>{f.sub}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><Ico k={f.k} size={34} /><View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>{f.name}</Text><Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, marginTop: 1 }}>{f.sub}</Text></View></View>
                 </View>
               </Pressable>
             ))}
@@ -157,7 +143,7 @@ export default function Export() {
             </LinearGradient>
           </Pressable>
           {msg ? <View style={{ marginTop: 10 }}><Text style={{ color: phase === 2 ? '#8fe9e2' : '#ffd593', fontSize: 12.5, lineHeight: 18 }}>{msg}</Text></View> : <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginTop: 8 }}>{file}</Text>}
-          <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, lineHeight: 17, marginTop: 14 }}>The file is built on your device from your own data, and only you decide where it goes. Totals above are sample figures until the modules are connected.</Text>
+          <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, lineHeight: 17, marginTop: 14 }}>The file is built on your device from your own data, and only you decide where it goes.</Text>
         </ScrollView>
       </SafeAreaView>
     </View>

@@ -21,7 +21,7 @@ export const TERMS: Sec[] = [
   { h: 'Changes', p: 'These terms may change as the app grows. The latest version is always in Settings, under About.' },
 ];
 export const LICENCES: Sec[] = [
-  { h: 'Open-source software', p: 'My Life is built with React Native, Expo (including expo-router, expo-notifications, expo-location, expo-secure-store, expo-local-authentication and expo-crypto), react-native-svg, react-native-reanimated, AsyncStorage, aes-js and noble-hashes. They are released under the MIT licence.' },
+  { h: 'Open-source software', p: 'My Life is built with React Native, Expo (including expo-router, expo-notifications, expo-location, SheetJS (xlsx), expo-secure-store, expo-local-authentication and expo-crypto), react-native-svg, react-native-reanimated, AsyncStorage, aes-js and noble-hashes. They are released under the MIT licence.' },
 ];
 
 export const SUPPORT_EMAIL = 'adlisyahmi324@gmail.com';

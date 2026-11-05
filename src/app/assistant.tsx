@@ -71,7 +71,8 @@ class Chat extends AssistantBase {
           </View>
         </View>
 
-        <ScrollView ref={(r) => { (this as any).scrollRef = r; }} style={{ flex: 1, marginTop: 12, marginHorizontal: -8 }} contentContainerStyle={{ gap: 14, paddingBottom: 16, paddingTop: 4 }} keyboardShouldPersistTaps="handled">
+        <View style={{ flex: 1, marginTop: 8 }}>
+        <ScrollView ref={(r) => { (this as any).scrollRef = r; }} style={{ flex: 1, marginHorizontal: -8 }} contentContainerStyle={{ gap: 14, paddingBottom: 16, paddingTop: 10 }} keyboardShouldPersistTaps="handled">
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
             <OrbSvg size={32} uid="wl" />
             <Glass radius={20} style={{ maxWidth: '84%', paddingVertical: 13, paddingHorizontal: 16, borderBottomLeftRadius: 6 }}><Text style={{ color: '#fff', fontSize: 14.5, lineHeight: 22 }}>{v.welcome}</Text></Glass>
@@ -133,6 +134,8 @@ class Chat extends AssistantBase {
             </View>
           )}
         </ScrollView>
+        <LinearGradient pointerEvents="none" colors={['rgba(10,15,44,1)', 'rgba(10,15,44,.85)', 'rgba(10,15,44,0)']} style={{ position: 'absolute', left: -20, right: -20, top: 0, height: 30 }} />
+        </View>
 
         <View ref={(r: any) => { this.panelRef = r; }} collapsable={false} style={{ marginHorizontal: -20, paddingBottom: 16, paddingTop: 12, marginBottom: (this.state as any).kbLift || 0, backgroundColor: 'rgba(10,15,44,.94)' }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }} style={{ flexGrow: 0 }}>

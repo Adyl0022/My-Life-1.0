@@ -25,12 +25,30 @@ const PB: any = { High: 'rgba(255,143,171,.18)', Medium: 'rgba(255,196,107,.18)'
 const dueText = (d: string) => { const p = (d || '').split('-'); return p.length === 3 ? parseInt(p[2], 10) + ' ' + Mn[parseInt(p[1], 10) - 1] : ''; };
 const cyc = (a: string[], v: string) => a[(a.indexOf(v) + 1) % a.length];
 
-const Sec = ({ t, hint, right }: { t: string; hint: string; right?: React.ReactNode }) => (
-  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 6, marginHorizontal: 4 }}>
-    <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>{t}</Text><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginLeft: 6, flex: 1 }}>· {hint}</Text>{right}
+const Sec = ({ t, hint, right, c = '#8ea8ff', n }: { t: string; hint: string; right?: React.ReactNode; c?: string; n?: number }) => (
+  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, marginBottom: 8, marginHorizontal: 2 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingLeft: 10, paddingRight: 12, borderRadius: 999, backgroundColor: c + '30', borderWidth: 1, borderColor: c + '66' }}>
+      <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: c, shadowColor: c, shadowOpacity: 0.9, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, elevation: 3 }} />
+      <Text style={{ color: W, fontSize: 13.5, fontWeight: '800' }}>{t}</Text>
+      {n != null ? <View style={{ minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 5, backgroundColor: c, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#0b1030', fontSize: 11, fontWeight: '800' }}>{n}</Text></View> : null}
+    </View>
+    <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 11.5, marginLeft: 10, flex: 1 }}>{hint}</Text>{right}
   </View>
 );
-const Empty = ({ t }: { t: string }) => <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12.5, marginHorizontal: 6, marginVertical: 4 }}>{t}</Text>;
+const Empty = ({ t, c = '#8ea8ff' }: { t: string; c?: string }) => (
+  <View style={{ borderRadius: 18, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: 'rgba(255,255,255,.05)', borderWidth: 1.5, borderStyle: 'dashed', borderColor: c + '55' }}>
+    <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 12.5 }}>{t}</Text>
+  </View>
+);
+const Raise = ({ c, dim, children }: { c: string; dim?: boolean; children: React.ReactNode }) => (
+  <View style={{ borderRadius: 22, shadowColor: c, shadowOpacity: dim ? 0.12 : 0.38, shadowRadius: 16, shadowOffset: { width: 0, height: 9 }, elevation: dim ? 2 : 8, opacity: dim ? 0.78 : 1 }}>
+    <LinearGradient colors={[c + '40', c + '14', 'rgba(255,255,255,.07)']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,.2)', borderTopColor: 'rgba(255,255,255,.42)', paddingVertical: 12, paddingLeft: 16, paddingRight: 12, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden' }}>
+      <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 10, bottom: 10, width: 4, borderTopRightRadius: 4, borderBottomRightRadius: 4, backgroundColor: c }} />
+      <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 22, backgroundColor: 'rgba(255,255,255,.07)' }} />
+      {children}
+    </LinearGradient>
+  </View>
+);
 const Ic = ({ t, onPress, label }: { t: string; onPress: () => void; label: string }) => <Pressable accessibilityLabel={label} onPress={onPress} hitSlop={6} style={{ width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.1)' }}><Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 14 }}>{t}</Text></Pressable>;
 
 export default function Planner() {
@@ -82,14 +100,14 @@ export default function Planner() {
     const p = x.date.split('-'); const okd = p.length === 3;
     return (
       <Pressable onPress={() => setD({ ...d, events: d.events.map((y) => (y.id === x.id ? { ...y, done: !y.done } : y)) })}>
-        <View style={{ borderRadius: 20, backgroundColor: '#262d6b', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: x.done ? 0.6 : 1 }}>
-          <LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 48, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
+        <Raise c={x.done ? '#7df0a0' : '#8ea8ff'} dim={x.done}>
+          <LinearGradient colors={x.done ? ['#2fae7a', '#5ee7b5'] : GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 48, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 10, fontWeight: '700' }}>{okd ? MON[+p[1] - 1] : 'NEW'}</Text><Text style={{ color: W, fontSize: 18, fontWeight: '800' }}>{okd ? p[2] : '--'}</Text>
           </LinearGradient>
           <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 14, fontWeight: '700', textDecorationLine: x.done ? 'line-through' : 'none' }}>{x.name}</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>{x.remind === 'None' ? 'No reminder' : 'Reminder: ' + x.remind}</Text></View>
           <Ic t="✎" label="Edit" onPress={() => setEdit({ id: x.id, kind: 'event', name: x.name, note: '', prio: 'Medium', date: x.date, remind: x.remind })} />
           <Ic t="✕" label="Delete" onPress={() => { setD({ ...d, events: d.events.filter((y) => y.id !== x.id) }); setEdit(null); }} />
-        </View>
+        </Raise>
       </Pressable>
     );
   };
@@ -99,7 +117,7 @@ export default function Planner() {
     if (!parts.length) parts.push(x.status === 'doing' ? 'In progress' : done ? 'Completed' : 'No due date');
     return (
       <Pressable onPress={() => setStatus(x.id, x.status === 'todo' ? 'doing' : 'todo')}>
-        <View style={{ borderRadius: 20, backgroundColor: '#262d6b', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: done ? 0.6 : 1 }}>
+        <Raise c={done ? '#7df0a0' : x.status === 'doing' ? '#5ee7df' : '#b794ff'} dim={done}>
           <Pressable accessibilityLabel="Mark done" onPress={() => setStatus(x.id, done ? 'todo' : 'done')} hitSlop={8}>
             <LinearGradient colors={done ? ['#34d399', '#5ee7df'] : x.status === 'doing' ? ['rgba(94,231,181,.22)', 'rgba(94,231,181,.22)'] : ['transparent', 'transparent']} style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: done ? 'transparent' : x.status === 'doing' ? '#5ee7b5' : 'rgba(255,255,255,.5)', alignItems: 'center', justifyContent: 'center' }}>
               {done ? <Text style={{ color: '#06241d', fontSize: 13, fontWeight: '800' }}>✓</Text> : null}
@@ -108,7 +126,7 @@ export default function Planner() {
           <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 14, fontWeight: '700', textDecorationLine: done ? 'line-through' : 'none' }}>{x.name}</Text><Text style={{ color: overdue ? '#ffb3c0' : 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>{parts.join(' · ')}</Text></View>
           <View style={{ paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999, backgroundColor: PB[x.prio] }}><Text style={{ color: PC[x.prio], fontSize: 11, fontWeight: '700' }}>{x.prio}</Text></View>
           <Ic t="✎" label="Edit" onPress={() => setEdit({ id: x.id, kind: 'task', name: x.name, note: x.note, prio: x.prio, date: x.due, remind: 'None' })} />
-        </View>
+        </Raise>
       </Pressable>
     );
   };
@@ -159,12 +177,12 @@ export default function Planner() {
 
           {tab === 'events' ? (
             <View style={{ gap: 8 }}>
-              <Sec t="Upcoming" hint="tap an event to mark done" />
+              <Sec t="Upcoming" hint="tap an event to mark done" c="#8ea8ff" n={upcoming.length} />
               {upcoming.map((x) => <EventRow key={x.id} x={x} />)}
-              {ok && upcoming.length === 0 && <Empty t="No upcoming events." />}
-              <Sec t="Completed" hint="tap to bring back" />
+              {ok && upcoming.length === 0 && <Empty t="No upcoming events." c="#8ea8ff" />}
+              <Sec t="Completed" hint="tap to bring back" c="#7df0a0" n={completed.length} />
               {completed.map((x) => <EventRow key={x.id} x={x} />)}
-              {ok && completed.length === 0 && <Empty t="Nothing completed yet." />}
+              {ok && completed.length === 0 && <Empty t="Nothing completed yet." c="#7df0a0" />}
               <Pressable onPress={openAdd} style={{ marginTop: 10 }}><View style={{ paddingVertical: 13, borderRadius: 18, alignItems: 'center', borderWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,.35)' }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>+ Add event</Text></View></Pressable>
             </View>
           ) : (
@@ -180,15 +198,15 @@ export default function Planner() {
                   <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 12, marginTop: 2 }}>{total === 0 ? 'Tap + to add your first task.' : done.length === total ? 'All done. Nice work!' : doing.length + ' in progress, ' + todo.length + ' not done yet'}</Text>
                 </View>
               </Glass>
-              <Sec t="In Progress" hint="tap the circle to finish" />
+              <Sec t="In Progress" hint="tap the circle to finish" c="#5ee7df" n={doing.length} />
               {doing.map((x) => <TaskRow key={x.id} x={x} />)}
-              {ok && doing.length === 0 && <Empty t="Nothing in progress. Tap a task below to start it." />}
-              <Sec t="Not Done Yet" hint="tap a task to start it" />
+              {ok && doing.length === 0 && <Empty t="Nothing in progress. Tap a task below to start it." c="#5ee7df" />}
+              <Sec t="Not Done Yet" hint="tap a task to start it" c="#b794ff" n={todo.length} />
               {todo.map((x) => <TaskRow key={x.id} x={x} />)}
-              {ok && todo.length === 0 && <Empty t="All caught up. Nothing waiting." />}
-              <Sec t="Done" hint="tap to bring back" right={done.length ? <Pressable onPress={() => setD({ ...d, tasks: d.tasks.filter((x) => !((x.cat || 'Tasks') === curCat && x.status === 'done')) })}><Text style={{ color: '#8fe9e2', fontSize: 12, fontWeight: '700' }}>Clear</Text></Pressable> : null} />
+              {ok && todo.length === 0 && <Empty t="All caught up. Nothing waiting." c="#b794ff" />}
+              <Sec t="Done" hint="tap to bring back" c="#7df0a0" n={done.length} right={done.length ? <Pressable onPress={() => setD({ ...d, tasks: d.tasks.filter((x) => !((x.cat || 'Tasks') === curCat && x.status === 'done')) })}><Text style={{ color: '#8fe9e2', fontSize: 12, fontWeight: '700' }}>Clear</Text></Pressable> : null} />
               {done.map((x) => <TaskRow key={x.id} x={x} />)}
-              {ok && done.length === 0 && <Empty t="Nothing done yet." />}
+              {ok && done.length === 0 && <Empty t="Nothing done yet." c="#7df0a0" />}
               <Pressable onPress={openAdd} style={{ marginTop: 10 }}><View style={{ paddingVertical: 13, borderRadius: 18, alignItems: 'center', borderWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,.35)' }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>+ Add task</Text></View></Pressable>
               {cat > 0 && <Pressable onPress={() => { const n = curCat; setD({ ...d, cats: d.cats.filter((c) => c !== n), tasks: d.tasks.filter((x) => (x.cat || 'Tasks') !== n) }); setCat(0); say('Category deleted'); }} style={{ alignSelf: 'center', marginTop: 8 }}><Text style={{ color: '#ffb3bf', fontSize: 12.5, fontWeight: '700' }}>Delete this category</Text></Pressable>}
             </View>

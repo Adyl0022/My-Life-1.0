@@ -10,6 +10,8 @@ import { W } from '../components/Ui';
 import { useIslamic, SURAH, SURAH_LIST, FEATURED } from '../lib/islamic';
 import { usePrayer } from '../lib/prayer';
 import { TOP } from '../lib/layout';
+import { useStored } from '../lib/store';
+import { PUASA_EMPTY, PuasaData, ramadanState, qadhaOwed, sunatToday, isHaram, keyD } from '../lib/fasting';
 
 const Item = ({ t, s, c, ic = 'book', onPress }: { t: string; s: string; c: string; ic?: string; onPress: () => void }) => (
   <Pressable onPress={onPress}><Glass radius={22} style={{ padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -32,6 +34,16 @@ export default function IslamicHub() {
   const lk = isl.lastKey && SURAH[isl.lastKey] ? isl.lastKey : 'kahfi';
   const lv = isl.last[lk];
   const go = (p: string) => router.push(p as any);
+  const [pz] = useStored<PuasaData>('ml_puasa', PUASA_EMPTY);
+  const pst = (() => {
+    const d = new Date(), rs = ramadanState(pz, d), ow = qadhaOwed(pz, d), po = pz.off || 0, marked = !!(pz.days || {})[keyD(d)];
+    if (rs.phase === 'during') return { h: 'Ramadan day ' + rs.day + ' of ' + rs.r.len, b: marked ? 'Today is marked. ' + rs.fasted + ' days fasted so far.' : 'Mark today\'s fast. ' + rs.fasted + ' days fasted so far.' };
+    const sn = sunatToday(d, po);
+    if (isHaram(d, po)) return { h: 'Puasa', b: 'No fasting today. It is a day of Eid.' };
+    if (sn && !marked) return { h: 'Today: ' + sn, b: ow > 0 ? 'You also have ' + ow + ' qadha ' + (ow === 1 ? 'day' : 'days') + ' to make up.' : 'A good day to fast.' };
+    if (ow > 0) return { h: ow + ' qadha ' + (ow === 1 ? 'day' : 'days') + ' to make up', b: rs.phase === 'before' ? 'Ramadan is ' + rs.daysTo + ' days away.' : 'Try to finish before next Ramadan.' };
+    return { h: 'Puasa', b: rs.phase === 'before' ? 'Ramadan in ' + rs.daysTo + ' days. Track qadha and sunnah fasts.' : 'Track Ramadan, qadha and sunnah fasts.' };
+  })();
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
       <IslamicBg deco />
@@ -68,6 +80,11 @@ export default function IslamicHub() {
               <View style={{ flex: 1 }}><Text style={{ color: '#8fe9e2', fontSize: 10.5, fontWeight: '800', letterSpacing: 1.2 }}>CONTINUE READING</Text><Text style={{ color: W, fontSize: 14.5, fontWeight: '700', marginTop: 2 }}>{SURAH[lk].title}</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 12, marginTop: 1 }}>{lv ? 'Last read: verse ' + lv : 'Start reading'}</Text></View>
               <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 20 }}>›</Text>
             </Glass></Pressable>
+            <Pressable onPress={() => go('/puasa')}><Glass radius={22} style={{ padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: 'rgba(52,211,153,.4)', alignItems: 'center', justifyContent: 'center' }}><Ic n="moon" size={24} /></View>
+              <View style={{ flex: 1 }}><Text style={{ color: '#8fe9e2', fontSize: 10.5, fontWeight: '800', letterSpacing: 1.2 }}>PUASA</Text><Text style={{ color: W, fontSize: 14.5, fontWeight: '700', marginTop: 2 }}>{pst.h}</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 12, marginTop: 2 }}>{pst.b}</Text></View>
+              <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 20 }}>›</Text>
+            </Glass></Pressable>
           </>)}
           {tab === 1 && (<>
             <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '800', letterSpacing: 1.4 }}>FEATURED READINGS</Text>
@@ -88,7 +105,6 @@ export default function IslamicHub() {
             ))}
           </>)}
           {tab === 2 && (<>
-            <Item ic="moon" t="Puasa" s="Ramadan, qadha and sunnah fasts" c="rgba(52,211,153,.4)" onPress={() => go('/puasa')} />
             <Item ic="beads" t="Tasbih Counter" s="Count your zikir" c="rgba(255,196,107,.4)" onPress={() => go('/tasbih')} />
             <Item ic="scroll" t="Tahlil Arwah" s="Standard reading · 26 parts" c="rgba(124,156,255,.4)" onPress={() => go('/tahlil')} />
             <Item ic="sun" t="Al-Ma'thurat" s="Sughra · 31 parts" c="rgba(255,143,171,.4)" onPress={() => go('/mathurat')} />

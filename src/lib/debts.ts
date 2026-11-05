@@ -50,7 +50,7 @@ export async function syncDebtAlerts(data: DebtData): Promise<boolean> {
 
 export const remainingAt = (d: Debt, ym: string) => d.fixed ? 0 : Math.max(0, Math.round((d.bal - Object.keys(d.paid || {}).filter((k) => k <= ym).reduce((a, k) => a + d.paid[k], 0)) * 100) / 100);
 export function debtSummary(data: DebtData) {
-  const ym = ymOf(new Date()); const list = (data && data.debts) || []; const food = (data && data.food) || 0;
+  const ym = ymOf(new Date()); const list = (data && data.debts) || []; const food = 0;
   const act = list.filter((x) => isActive(x, ym));
   const commit = act.reduce((a, x) => a + amountDue(x, ym), 0);
   const paid = act.reduce((a, x) => a + ((x.paid || {})[ym] || 0), 0);

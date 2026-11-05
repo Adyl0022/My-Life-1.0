@@ -302,7 +302,7 @@ export default function Stats() {
           <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Your last 7 days</Text>
             <View style={{ gap: 16, marginTop: 14 }}>
-              {trends.map((tr, ti) => {
+              {trends.filter((x) => x.k).map((tr, ti) => {
                 const mx = Math.max(...tr.v, 1); const avg = tr.v.reduce((a, b) => a + b, 0) / 7;
                 return (
                   <View key={tr.t}>
@@ -332,6 +332,38 @@ export default function Stats() {
           </Rise>
           </>)}
           {tab === 'money' && (<>
+          <Rise i={4}>
+          <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Spending, last 7 days</Text>
+            <View style={{ gap: 16, marginTop: 14 }}>
+              {trends.filter((x) => !x.k).map((tr, ti) => {
+                const mx = Math.max(...tr.v, 1); const avg = tr.v.reduce((a, b) => a + b, 0) / 7;
+                return (
+                  <View key={tr.t}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      {tr.k ? <HeadIcon k={tr.k} size={24} /> : <MI k="finance" s={24} />}
+                      <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700', flex: 1 }}>{tr.t}</Text>
+                      <Text style={{ color: tr.c, fontSize: 13, fontWeight: '800' }}>{tr.fmt(avg)}</Text>
+                      <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11 }}>{tr.unit}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 44 }}>
+                      {tr.v.map((v, i) => (
+                        <View key={i} style={{ flex: 1, height: 44, justifyContent: 'flex-end' }}>
+                          <GrowBar h={Math.max(4, Math.round((v / mx) * 44))} delay={ti * 60 + i * 40} dep={tr.v.join()} style={{ width: '100%' }}>
+                            <View style={{ flex: 1, borderRadius: 4, backgroundColor: tr.c, opacity: i === 6 ? 1 : 0.5 }} />
+                          </GrowBar>
+                        </View>
+                      ))}
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+                      {wd.map((d, i) => <Text key={i} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.55)', fontSize: 9.5 }}>{d}</Text>)}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </Glass>
+          </Rise>
           {ds.commit + ds.food > 0 ? (
             <Rise i={4}>
             <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>

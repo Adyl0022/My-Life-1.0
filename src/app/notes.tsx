@@ -14,6 +14,7 @@ import { TOP } from '../lib/layout';
 type Note = { id: number; t: string; s: string; c: number; pin: boolean; u: number; r: string };
 type Data = { notes: Note[]; seq: number };
 const COL = ['#7c9cff', '#5ee7df', '#ffc46b', '#ff8fb1', '#a78bfa', '#9be37a'];
+const PAPER = [['#4f6bff', '#8a6cff', '#3fb0ff'], ['#0fae9f', '#2f84d8', '#3fd1a8'], ['#f08a3c', '#e0568b', '#f5b94a'], ['#e0518a', '#a24fe0', '#ff8f6b'], ['#7a50e6', '#c05fd8', '#5b7cff'], ['#2fae64', '#2f93c4', '#8bd45a']];
 const FILTERS = ['All', 'Pinned', 'Checklist', 'Recent'];
 const SORTS = ['Newest', 'Oldest', 'A–Z'];
 const days = (u: number) => Math.floor((Date.now() - u) / 86400000);
@@ -148,7 +149,9 @@ export default function Notes() {
 
         {draft && (
           <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
-            <LinearGradient colors={['#0a0f2c', '#1a1048', '#0c2b4d']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
+            <LinearGradient colors={PAPER[draft.c] as any} locations={[0, 0.55, 1]} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
+            <View pointerEvents="none" style={{ position: 'absolute', right: -90, top: -60, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(255,255,255,.18)' }} />
+            <View pointerEvents="none" style={{ position: 'absolute', left: -110, bottom: 140, width: 260, height: 260, borderRadius: 130, backgroundColor: 'rgba(255,255,255,.10)' }} />
             <SafeAreaView style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 12 }}>
                 <Pressable onPress={() => { closeEd(); }}><Glass radius={16} style={{ paddingHorizontal: 14, height: 44, justifyContent: 'center' }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>‹ Notes</Text></Glass></Pressable>
@@ -157,11 +160,12 @@ export default function Notes() {
                 {!isNew && <Pressable onPress={() => setConfirmDel(true)} accessibilityLabel="Delete"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ffb3bf', fontSize: 16 }}>✕</Text></Glass></Pressable>}
                 <Pressable onPress={save}><LinearGradient colors={['#34d399', '#5ee7df']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingHorizontal: 18, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#06241d', fontSize: 14, fontWeight: '800' }}>Save</Text></LinearGradient></Pressable>
               </View>
-              <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 16, paddingBottom: 20 }}>
-                <TextInput value={draft.t} onChangeText={(v) => upd({ t: v })} placeholder="Title" placeholderTextColor="rgba(255,255,255,.4)" style={{ color: W, fontSize: 26, fontWeight: '800', outlineStyle: 'none' } as any} />
+              <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 14, paddingBottom: 10 }}>
+               <View style={{ borderRadius: 30, paddingHorizontal: 18, paddingTop: 18, paddingBottom: 14, backgroundColor: 'rgba(255,255,255,.17)', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 6 }}>
+                <TextInput value={draft.t} onChangeText={(v) => upd({ t: v })} placeholder="Title" placeholderTextColor="rgba(255,255,255,.62)" style={{ color: W, fontSize: 26, fontWeight: '800', outlineStyle: 'none' } as any} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COL[draft.c] }} />
-                  <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 12 }}>{words} {words === 1 ? 'word' : 'words'}</Text>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} />
+                  <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 12 }}>{words} {words === 1 ? 'word' : 'words'}</Text>
                 </View>
                 <View style={{ marginTop: 14, minHeight: 280 }}>
                   {(draft.s ? draft.s.split('\n') : ['']).map((ln, i, all) => {
@@ -169,12 +173,13 @@ export default function Notes() {
                     return (
                       <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                         {ck ? <Pressable onPress={() => toggleLine(i)} hitSlop={8} accessibilityLabel="Toggle item" style={{ width: 30, height: 24, justifyContent: 'center' }}><Text style={{ color: on ? '#ffc46b' : W, fontSize: 20, lineHeight: 24 }}>{on ? '☑' : '☐'}</Text></Pressable> : null}
-                        <TextInput ref={(r) => { refs.current[i] = r; }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.4)" style={{ flex: 1, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
+                        <TextInput ref={(r) => { refs.current[i] = r; }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
                       </View>
                     );
                   })}
                   <Pressable onPress={() => { const n = (draft.s || '').split('\n').length - 1; setFo(n); }} style={{ minHeight: 160 }} />
                 </View>
+               </View>
               </ScrollView>
               <Glass radius={22} style={{ marginHorizontal: 16, marginBottom: 12, padding: 10, gap: 10 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

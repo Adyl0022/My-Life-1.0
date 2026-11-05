@@ -234,22 +234,6 @@ export default function Insights() {
             </Rise>
           )}
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
-            {metrics.map((m, i) => (
-              <Rise key={m.l} i={i + 1} style={{ width: '47.8%', flexGrow: 1 }}>
-                <Glass radius={22} style={{ paddingVertical: 13, paddingHorizontal: 14 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12, fontWeight: '600' }}>{m.l}</Text>
-                    {m.ic}
-                  </View>
-                  <Text style={{ color: '#fff', fontSize: 17, fontWeight: '800', marginTop: 4 }}>{m.v}</Text>
-                  <View style={{ marginTop: 8 }}><FillBar p={m.p} color={m.c} delay={i * 80} dep={String(week) + m.v} /></View>
-                </Glass>
-              </Rise>
-            ))}
-          </View>
-
-
           <Rise i={5}>
           <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>

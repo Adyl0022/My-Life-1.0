@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { Glass } from '../components/Glass';
 import { IslamicBg, Header, Ic } from '../components/IslamicUi';
 import { Inp, W } from '../components/Ui';
+import { PuasaSky, RamadanHero, Crescent, Lantern, TipIcon, Bob } from '../components/PuasaArt';
 import { Rise, FillBar, GrowBar } from '../components/Anim';
 import { useStored } from '../lib/store';
 import { HEMPTY, HData, cupsGoal } from '../lib/habit';
@@ -24,8 +25,9 @@ const Stat = ({ l, v, c }: { l: string; v: string; c?: string }) => (
 const Btn = ({ t, onPress, on, c = G, style }: { t: string; onPress: () => void; on?: boolean; c?: string; style?: any }) => (
   <Pressable onPress={onPress} style={[{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14, alignItems: 'center', backgroundColor: on ? c : 'rgba(255,255,255,.12)' }, style]}><Text style={{ color: on ? '#06281c' : W, fontSize: 13, fontWeight: '800' }}>{t}</Text></Pressable>
 );
-const Card = ({ children, tint, style }: { children: React.ReactNode; tint?: [string, string]; style?: any }) => (
+const Card = ({ children, tint, style, art }: { children: React.ReactNode; tint?: [string, string]; style?: any; art?: boolean }) => (
   <Glass radius={24} style={[{ paddingVertical: 14, paddingHorizontal: 16 }, style]}>
+    {art ? <RamadanHero height={150} /> : null}
     {tint ? <LinearGradient colors={tint} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: -1 }} /> : null}
     {children}
   </Glass>
@@ -45,15 +47,15 @@ const HADITH = [
   ['Whoever fasts Ramadan then follows it with six days of Syawal, it is as if he fasted the whole year.', 'Muslim'],
   ['Fasting the day of Arafah wipes out the sins of the year before and the year after. Fasting Asyura wipes out the sins of the year before.', 'Muslim'],
 ];
-const TIPS: [string, string][] = [
-  ['Do not skip sahur', 'Eat slowly and late, close to Subuh. Choose oats, eggs, rice or bread with some protein so you stay full.'],
-  ['Break your fast gently', 'Start with dates and water, pray Maghrib, then eat your meal. This is kinder to your stomach.'],
-  ['Spread your water', 'Sip through the night between iftar and sahur instead of drinking it all at once.'],
-  ['Go easy on fried and sugary food', 'Heavy, oily food makes you thirsty and sleepy the next day.'],
-  ['Sleep enough', 'Short nights make fasting harder. If you work night shifts, a short nap before your shift helps.'],
-  ['Keep moving a little', 'A light walk after iftar helps digestion. Save hard exercise for after you have eaten.'],
-  ['Make up your missed days early', 'Do not leave qadha until the last minute. Aishah said she could only make up her fasts in Syaaban (Bukhari and Muslim).'],
-  ['If you cannot fast for a long time', 'If you have a long-term illness, ask an ustaz about fidyah.'],
+const TIPS: [string, string, string][] = [
+  ['sahur', 'Do not skip sahur', 'Eat slowly and late, close to Subuh. Choose oats, eggs, rice or bread with some protein so you stay full.'],
+  ['dates', 'Break your fast gently', 'Start with dates and water, pray Maghrib, then eat your meal. This is kinder to your stomach.'],
+  ['water', 'Spread your water', 'Sip through the night between iftar and sahur instead of drinking it all at once.'],
+  ['fried', 'Go easy on fried and sugary food', 'Heavy, oily food makes you thirsty and sleepy the next day.'],
+  ['sleep', 'Sleep enough', 'Short nights make fasting harder. If you work night shifts, a short nap before your shift helps.'],
+  ['walk', 'Keep moving a little', 'A light walk after iftar helps digestion. Save hard exercise for after you have eaten.'],
+  ['calendar', 'Make up your missed days early', 'Do not leave qadha until the last minute. Aishah said she could only make up her fasts in Syaaban (Bukhari and Muslim).'],
+  ['heart', 'If you cannot fast for a long time', 'If you have a long-term illness, ask an ustaz about fidyah.'],
 ];
 
 export default function Puasa() {
@@ -111,6 +113,7 @@ export default function Puasa() {
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
       <IslamicBg />
+      <PuasaSky />
       <SafeAreaView style={{ flex: 1 }}>
         <Header title="Puasa" sub={hijriText(today, off)} />
         <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)', marginHorizontal: 20, marginTop: 14 }}>
@@ -124,7 +127,7 @@ export default function Puasa() {
         <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 50, gap: 12 }}>
           {tab === 0 && (<>
             {st.phase === 'during' ? (
-              <Rise i={0}><Card tint={['rgba(52,211,153,.32)', 'rgba(94,231,223,.14)']}>
+              <Rise i={0}><Card art tint={['rgba(52,211,153,.32)', 'rgba(94,231,223,.14)']}>
                 <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>RAMADAN {st.r.y}</Text>
                 <Text style={{ color: W, fontSize: 26, fontWeight: '800', marginTop: 4 }}>Day {st.day} of {st.r.len}</Text>
                 <View style={{ marginTop: 10 }}><FillBar p={(st.fasted / st.r.len) * 100} color={G} h={9} dep={st.fasted} /></View>
@@ -136,13 +139,13 @@ export default function Puasa() {
                 <Text style={{ color: dim, fontSize: 11.5, marginTop: 8 }}>Excused is for days you cannot fast, such as illness, travel or monthly cycle. These days are made up later.</Text>
               </Card></Rise>
             ) : st.phase === 'before' ? (
-              <Rise i={0}><Card tint={['rgba(52,211,153,.32)', 'rgba(94,231,223,.14)']}>
+              <Rise i={0}><Card art tint={['rgba(52,211,153,.32)', 'rgba(94,231,223,.14)']}>
                 <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>NEXT RAMADAN</Text>
                 <Text style={{ color: W, fontSize: 26, fontWeight: '800', marginTop: 4 }}>{st.daysTo} {st.daysTo === 1 ? 'day' : 'days'} to go</Text>
                 <Text style={{ color: dim, fontSize: 12.5, marginTop: 4 }}>Ramadan {st.r.y} begins around {fdate(st.r.start)}. The date is a calendar estimate, so confirm it with the official announcement.</Text>
               </Card></Rise>
             ) : (
-              <Rise i={0}><Card tint={['rgba(52,211,153,.32)', 'rgba(94,231,223,.14)']}>
+              <Rise i={0}><Card art tint={['rgba(52,211,153,.32)', 'rgba(94,231,223,.14)']}>
                 <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>LAST RAMADAN {st.r.y}</Text>
                 <Text style={{ color: W, fontSize: 26, fontWeight: '800', marginTop: 4 }}>{st.fasted} of {st.r.len} days</Text>
                 <View style={{ marginTop: 10 }}><FillBar p={(st.fasted / st.r.len) * 100} color={G} h={9} dep={st.fasted} /></View>
@@ -233,6 +236,7 @@ export default function Puasa() {
 
           {tab === 1 && (<>
             <Rise i={0}><Card tint={['rgba(52,211,153,.28)', 'rgba(124,156,255,.14)']}>
+              <View style={{ position: 'absolute', right: 6, top: -6 }} pointerEvents="none"><Bob><Lantern h={52} color="#ffc46b" /></Bob></View>
               <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>TODAY · {DAYN[today.getDay()].toUpperCase()}</Text>
               {isHaram(today, off) ? (
                 <><Text style={{ color: W, fontSize: 18, fontWeight: '800', marginTop: 4 }}>Do not fast today</Text><Text style={{ color: dim, fontSize: 12.5, marginTop: 4 }}>Fasting is not allowed on the days of Eid and the three days after Eid al-Adha.</Text></>
@@ -317,7 +321,7 @@ export default function Puasa() {
 
           {tab === 2 && (<>
             <Rise i={0}><Card tint={['rgba(52,211,153,.26)', 'rgba(124,156,255,.12)']}>
-              <H t="Why fasting is good" s="From the Quran" />
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><H t="Why fasting is good" s="From the Quran" /><Bob><Crescent size={54} /></Bob></View>
               {VERSES.map((v) => (
                 <View key={v.ref} style={{ marginTop: 14 }}>
                   <Text style={{ color: W, fontSize: 22, lineHeight: 38, textAlign: 'right', writingDirection: 'rtl' as any }}>{v.ar}</Text>
@@ -340,7 +344,7 @@ export default function Puasa() {
             <Rise i={2}><Card>
               <H t="Tips for a good fast" />
               <View style={{ gap: 12, marginTop: 12 }}>
-                {TIPS.map(([t, b]) => <View key={t}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>{t}</Text><Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12.5, lineHeight: 18, marginTop: 2 }}>{b}</Text></View>)}
+                {TIPS.map(([ic, t, b], i) => <Rise key={t} i={i}><View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}><View style={{ width: 52, height: 52, borderRadius: 16, backgroundColor: ['rgba(255,196,107,.3)', 'rgba(255,143,171,.28)', 'rgba(94,231,223,.3)', 'rgba(255,196,107,.3)', 'rgba(124,156,255,.32)', 'rgba(94,231,181,.3)', 'rgba(183,148,255,.3)', 'rgba(255,143,171,.28)'][i % 8], alignItems: 'center', justifyContent: 'center' }}><TipIcon n={ic} size={34} /></View><View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>{t}</Text><Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12.5, lineHeight: 18, marginTop: 2 }}>{b}</Text></View></View></Rise>)}
               </View>
               <Pressable onPress={() => router.push('/habit' as any)}><Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '700', marginTop: 14 }}>Your water goal is {cupsGoal(hd)} glasses. Track it in Habit & Health ›</Text></Pressable>
             </Card></Rise>

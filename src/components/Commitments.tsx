@@ -33,7 +33,7 @@ export function Commitments({ income }: { income: number }) {
   const act = list.filter((x) => isActive(x, ym));
   const done = list.filter((x) => !isActive(x, ym));
   const debtsOnly = list.filter((x) => !x.fixed);
-  const food = d.food || 0;
+  const food = 0;
   const commit = act.reduce((a, x) => a + amountDue(x, ym), 0);
   const paid = act.reduce((a, x) => a + ((x.paid || {})[ym] || 0), 0);
   const toPay = commit - paid;
@@ -72,7 +72,6 @@ export function Commitments({ income }: { income: number }) {
         <View style={{ flex: 1 }}>
           <Text style={{ color: '#ffd593', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>MONTHLY COMMITMENTS</Text>
           <Text style={{ color: W, fontSize: 24, fontWeight: '800', marginTop: 3 }}>RM {money(commit + food)}</Text>
-          {food > 0 ? <Text style={{ color: dim, fontSize: 11.5, marginTop: 1 }}>{'Includes RM ' + money(food) + ' set aside for food'}</Text> : null}
         </View>
         <Pressable onPress={() => { if (adding) reset(); else setAdding(true); }}><LinearGradient colors={WARM} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999 }}><Text style={{ color: '#2a1030', fontSize: 12, fontWeight: '800' }}>{adding ? 'Close' : '+ Add'}</Text></LinearGradient></Pressable>
       </View>
@@ -95,7 +94,7 @@ export function Commitments({ income }: { income: number }) {
           </View> : null}
         </>
       ) : !adding ? (
-        <Text style={{ color: dim, fontSize: 12, lineHeight: 18, marginTop: 8 }}>Add what you pay every month: a motor loan, Shopee PayLater, ASB, phone bill or money for your parents. Tick them off each month and see how long until your debts are cleared.</Text>
+        <Text style={{ color: dim, fontSize: 12, lineHeight: 18, marginTop: 8 }}>Add the bills and instalments you pay every month, such as a motor loan, a phone bill or an investment. Tick each one when paid, and see when your debts will be cleared.</Text>
       ) : null}
 
       {adding ? (
@@ -106,15 +105,15 @@ export function Commitments({ income }: { income: number }) {
               <Pressable key={String(v)} onPress={() => setFixed(v as boolean)} style={{ flex: 1, paddingVertical: 7, borderRadius: 999, alignItems: 'center', backgroundColor: fixed === v ? '#ffc46b' : 'transparent' }}><Text style={{ color: fixed === v ? '#2a1030' : W, fontSize: 12.5, fontWeight: '800' }}>{t}</Text></Pressable>
             ))}
           </View>
-          <Text style={{ color: dim, fontSize: 11.5 }}>{fixed ? 'For payments with no end date, like a phone bill, savings or money for your parents.' : 'For a loan or instalment that ends once the balance reaches zero.'}</Text>
+          <Text style={{ color: dim, fontSize: 11.5 }}>{fixed ? 'For payments with no end date, like a phone bill, an investment or a subscription.' : 'For a loan or instalment that ends once the balance reaches zero.'}</Text>
           {!edit ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-              {([['Motor loan', false], ['Shopee PayLater', false], ['ASB', true], ['Phone bill', true], ['Parents', true]] as [string, boolean][]).map(([t, f]) => (
+              {([['Motor loan', false], ['Instalment', false], ['Investment', true], ['Phone bill', true], ['Savings', true]] as [string, boolean][]).map(([t, f]) => (
                 <Pressable key={t} onPress={() => { setN(t); setFixed(f); }} style={{ paddingVertical: 5, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,.2)', backgroundColor: 'rgba(255,255,255,.08)' }}><Text style={{ color: W, fontSize: 11.5, fontWeight: '700' }}>{t}</Text></Pressable>
               ))}
             </View>
           ) : null}
-          <Inp value={n} onChangeText={setN} placeholder="Name, for example Shopee PayLater" />
+          <Inp value={n} onChangeText={setN} placeholder="Name, for example Motor loan" />
           {!fixed ? <Inp keyboardType="decimal-pad" value={bal} onChangeText={setBal} placeholder="Balance left to pay (RM)" /> : null}
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <Inp style={{ flex: 1 }} keyboardType="decimal-pad" value={mo} onChangeText={setMo} placeholder="Monthly (RM)" />
@@ -165,25 +164,10 @@ export function Commitments({ income }: { income: number }) {
         <Text style={{ color: dim, fontSize: 11.5, marginTop: 6 }}>{done.length + (done.length === 1 ? ' debt' : ' debts') + ' cleared: ' + done.map((x) => x.name).join(', ')}</Text>
       ) : null}
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 11, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,.1)' }}>
-        <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,196,107,.28)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 14 }}>🍚</Text></View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Food</Text>
-          <Text style={{ color: dim, fontSize: 11.5, marginTop: 1 }}>{food > 0 ? 'RM ' + money(food) + ' set aside every month' : 'Set aside a fixed amount for food each month'}</Text>
-        </View>
-        <Pressable onPress={() => { setFe(!fe); setFb(food > 0 ? String(food) : ''); }} style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.12)' }}><Text style={{ color: '#ffd593', fontSize: 12, fontWeight: '800' }}>{fe ? 'Close' : food > 0 ? 'Edit' : 'Set'}</Text></Pressable>
-      </View>
-      {fe ? (
-        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-          <Inp style={{ flex: 1 }} keyboardType="decimal-pad" value={fb} onChangeText={setFb} placeholder="Food each month (RM)" />
-          <Pressable onPress={() => { const v = parseFloat(fb.replace(',', '.')); save({ ...d, food: v > 0 ? v : 0 }); setFe(false); }}><LinearGradient colors={WARM} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 42, paddingHorizontal: 18, borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#2a1030', fontSize: 12, fontWeight: '800' }}>Save</Text></LinearGradient></Pressable>
-        </View>
-      ) : null}
-
       {income > 0 && (commit > 0 || food > 0) ? (
         <View style={{ marginTop: 12, borderRadius: 16, padding: 12, backgroundColor: 'rgba(0,0,0,.22)' }}>
           <Text style={{ color: '#ffd593', fontSize: 11, fontWeight: '700', letterSpacing: 1.2 }}>THIS MONTH'S PLAN</Text>
-          {[['Income', income, 1] as [string, number, number]].concat(act.map((x) => [x.name, amountDue(x, ym), -1] as [string, number, number])).concat([['Food', food, -1] as [string, number, number]]).map(([l, v, sg]) => (
+          {[['Income', income, 1] as [string, number, number]].concat(act.map((x) => [x.name, amountDue(x, ym), -1] as [string, number, number])).map(([l, v, sg]) => (
             (v as number) > 0 ? <View key={(l as string) + sg} style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}><Text style={{ color: dim, fontSize: 12.5 }}>{l as string}</Text><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{(sg as number) < 0 ? '- ' : ''}RM {money(v as number)}</Text></View> : null
           ))}
           <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,.12)', marginTop: 8 }} />

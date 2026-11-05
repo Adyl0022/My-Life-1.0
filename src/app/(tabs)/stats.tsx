@@ -18,6 +18,7 @@ import { HEMPTY, getDay, cupsGoal, dateOf, keyOfDate, MOODS } from '../../lib/ha
 import { useCore, weekly, records, hasData as hasHab, dayPct, incomeOf } from '../../lib/insights';
 import { debtSummary, remainingAt, amountDue, yearsMonths, payoffLabel } from '../../lib/debts';
 import { TOP } from '../../lib/layout';
+import { sunatYear, qadhaOwed, ramadanState } from '../../lib/fasting';
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MI = ({ k, s = 30 }: { k: string; s?: number }) => {
@@ -247,6 +248,28 @@ export default function Stats() {
                 <Text style={{ minWidth: 52, textAlign: 'right', color: r.d === null || r.d === 0 ? 'rgba(255,255,255,.6)' : r.good ? '#7df0c6' : '#ff8fab', fontSize: 12, fontWeight: '800' }}>{r.d === null ? 'new' : (r.d > 0 ? '+' : '') + r.d + '%'}</Text>
               </View>
             ))}
+          </Glass>
+          </Rise>
+
+          <Rise i={4}>
+          <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            {(() => {
+              const pz = core.puasa, now = new Date(), yr = sunatYear(pz, now), ow = qadhaOwed(pz, now), rs = ramadanState(pz, now);
+              const mx = Math.max(...yr.months, 1); const L = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+              return (<>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}><Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Fasting</Text><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11 }}>Last 12 months</Text></View>
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                  {[['Sunat fasts', String(yr.total), '#7df0c6'], ['Qadha done', String(yr.qadha), '#ffd593'], ['Qadha owed', String(ow), ow > 0 ? '#ff9db5' : '#7df0c6']].map(([a, b, c]) => (
+                    <View key={a} style={{ flex: 1, borderRadius: 14, paddingVertical: 8, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,.08)' }}><Text style={{ color: 'rgba(255,255,255,.68)', fontSize: 10.5 }}>{a}</Text><Text style={{ color: c, fontSize: 17, fontWeight: '800', marginTop: 2 }}>{b}</Text></View>
+                  ))}
+                </View>
+                {rs.phase === 'during' ? <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12.5, marginTop: 10 }}>Ramadan: {rs.fasted} of {rs.r.len} days fasted</Text> : rs.phase === 'before' ? <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12.5, marginTop: 10 }}>Next Ramadan in {rs.daysTo} days</Text> : null}
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 5, height: 60, marginTop: 12 }}>
+                  {yr.months.map((n, i) => (<View key={i} style={{ flex: 1, height: 60, justifyContent: 'flex-end' }}><View style={{ height: Math.max(4, Math.round((n / mx) * 56)), borderRadius: 4, backgroundColor: i === 11 ? '#34d399' : 'rgba(255,255,255,.35)' }} /></View>))}
+                </View>
+                <View style={{ flexDirection: 'row', gap: 5, marginTop: 4 }}>{yr.months.map((_, i) => <Text key={i} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.55)', fontSize: 9 }}>{L[(now.getMonth() - 11 + i + 12) % 12]}</Text>)}</View>
+              </>);
+            })()}
           </Glass>
           </Rise>
 

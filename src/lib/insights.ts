@@ -54,6 +54,10 @@ export function scoreParts(c: Core, week: boolean): Part[] {
     else { const t = spendOn(c, 0); const pct = t <= us ? 100 : Math.max(20, Math.round(100 - ((t - us) / us) * 60)); parts.push({ k: 'spend', label: 'Spending', pct, detail: rmf(t) + ' against ' + rmf(us) + ' usual', c: '#ffc46b' }); }
   }
   if (c.tas && c.tas.day && c.tas.day === tk(0) && c.tas.total > 0) parts.push({ k: 'faith', label: 'Zikir', pct: Math.min(100, Math.round((c.tas.total / 33) * 100)), detail: c.tas.total + ' tasbih today', c: '#8fe9e2' });
+  try {
+    const rs = ramadanState(c.puasa || PUASA_EMPTY, new Date());
+    if (rs.phase === 'during') { const past = Math.max(1, rs.day - 1 - rs.excused); parts.push({ k: 'faith', label: 'Ramadan', pct: Math.min(100, Math.round((rs.fasted / past) * 100)), detail: rs.fasted + ' days fasted of ' + rs.day, c: '#34d399' }); }
+  } catch (e) {}
   return parts;
 }
 export const lifeScore = (p: Part[]) => (p.length ? Math.round(p.reduce((a, b) => a + b.pct, 0) / p.length) : 0);
@@ -123,12 +127,19 @@ export function tips(c: Core, week: boolean): Tip[] {
   if (logged >= 3 && debt >= 5) add({ id: 'debt', title: 'Sleep debt: ' + (Math.round(debt * 10) / 10) + ' h this week', sub: 'Try an earlier bedtime or a short nap before your next shift.', why: 'Counted as hours below 7 h on the nights you logged. After night shifts, a 20 to 30 minute nap helps.', go: '/habit', k: 'sleep', pri: 75 });
   // Fasting sunnah
   const tomorrow = (dow + 1) % 7;
-  if ((dow === 1 || dow === 4) && !ht.fast && hr < 11) add({ id: 'fast', title: 'Today is a sunnah fasting day', sub: dow === 1 ? 'Monday is a recommended day to fast.' : 'Thursday is a recommended day to fast.', why: 'You can log your fast in Habit & Health.', go: '/habit', k: 'streak', pri: 45 });
+  const inRamNow = (() => { try { return ramadanState(c.puasa || PUASA_EMPTY, new Date()).phase === 'during'; } catch (e) { return false; } })();
+  if (inRamNow) { /* Ramadan has its own tips */ }
+  else if ((dow === 1 || dow === 4) && !ht.fast && !(c.puasa && c.puasa.days && c.puasa.days[tk(0)]) && hr < 11) add({ id: 'fast', title: 'Today is a sunnah fasting day', sub: dow === 1 ? 'Monday is a recommended day to fast.' : 'Thursday is a recommended day to fast.', why: 'You can log your fast in Habit & Health.', go: '/habit', k: 'streak', pri: 45 });
   else if ((tomorrow === 1 || tomorrow === 4) && hr >= 17) add({ id: 'fastnext', title: 'Tomorrow is a sunnah fasting day', sub: tomorrow === 1 ? 'Monday is a recommended day to fast.' : 'Thursday is a recommended day to fast.', why: 'A gentle reminder the evening before, so you can plan suhoor.', go: '/habit', k: 'streak', pri: 42 });
   // Puasa module
   try {
     const now = new Date(), pz = c.puasa || PUASA_EMPTY, rs = ramadanState(pz, now), ow = qadhaOwed(pz, now), po = pz.off || 0;
     if (rs.phase === 'during') {
+      const ht2 = getDay(c.hd, 0), cg2 = cupsGoal(c.hd);
+      if (hr >= 19 && ht2.cups < cg2 / 2) add({ id: 'ramwater', title: 'Drink between iftar and sahur', sub: 'You are at ' + ht2.cups + ' of ' + cg2 + ' glasses today.', why: 'You cannot drink while fasting, so spread your water through the night. Aim for about 2 glasses at iftar, 4 through the evening and 2 at sahur.', go: '/habit', k: 'water', pri: 66 });
+      const sl = getDay(c.hd, 0).sleep; const sl1 = getDay(c.hd, -1).sleep;
+      if ((sl > 0 && sl < 6) || (sl === 0 && sl1 > 0 && sl1 < 6)) add({ id: 'ramsleep', title: 'Short on sleep in Ramadan', sub: 'A short nap in the afternoon can help your energy.', why: 'Late nights and early sahur cut sleep. Even 20 to 30 minutes helps. Avoid hard exercise while fasting.', go: '/habit', k: 'sleep', pri: 64 });
+      if (rs.unmarked > 0) add({ id: 'ramgap', title: rs.unmarked + (rs.unmarked === 1 ? ' day' : ' days') + ' not marked in Ramadan', sub: 'Mark the days you fasted or were excused.', why: 'Unmarked days count as missed and are added to your qadha after Ramadan.', go: '/puasa', k: 'streak', pri: 74 });
       if (!(rs.todayDone as string | undefined)) add({ id: 'ramtoday', title: 'Mark today\'s Ramadan fast', sub: 'Day ' + rs.day + ' of ' + rs.r.len + '. Tap to record it.', why: 'Marking each day keeps your Ramadan count and qadha correct.', go: '/puasa', k: 'streak', pri: 80 });
     } else {
       if (ow > 0) add({ id: 'qadha', title: ow + (ow === 1 ? ' qadha day' : ' qadha days') + ' to make up', sub: rs.phase === 'before' ? 'Ramadan is ' + rs.daysTo + ' days away.' : 'Try to finish before next Ramadan.', why: 'Missed Ramadan days are owed. Mondays and Thursdays are a good time to make them up.', go: '/puasa', k: 'streak', pri: rs.phase === 'before' && rs.daysTo < ow * 7 ? 72 : 52 });
@@ -236,8 +247,8 @@ export function records(c: Core) {
 }
 
 export const tipCat = (id: string): string => {
-  if (/^(water|steps|sleeplog|sleeplow|mood|wlog|debt)$/.test(id)) return 'Health';
-  if (/^(fast|fastnext|kahfi|zikir|tasbih|ramtoday|qadha|ramsoon|sunat)$/.test(id)) return 'Faith';
+  if (/^(water|steps|sleeplog|sleeplow|mood|wlog|debt|ramwater|ramsleep)$/.test(id)) return 'Health';
+  if (/^(fast|fastnext|kahfi|zikir|tasbih|ramtoday|qadha|ramsoon|sunat|ramgap)$/.test(id)) return 'Faith';
   if (/^(overdue|duetoday|event)$/.test(id)) return 'Tasks';
   if (/^(part-|ren-|cpk-|odo)/.test(id)) return 'Vehicle';
   return 'Money';

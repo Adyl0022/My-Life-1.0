@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PageIn } from '../../components/PageIn';
 import { navScroll } from '../../lib/navbar';
-import { View, ScrollView, Pressable, TextInput, Modal, Animated, Easing, Linking, Platform } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, Modal, Animated, Easing, Linking, Platform, Keyboard } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { setup } from '../../lib/adhan';
 import { Text } from '../../components/Txt';
@@ -150,7 +150,8 @@ export default function Settings() {
       say('Sent. It will appear in 3 seconds');
     } catch (e) { say('Could not send a test notification'); }
   };
-  const [dlg, setDlg] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq'>('');
+  const [dlg, setDlg] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq' | 'done'>('');
+  const [doneMsg, setDoneMsg] = useState('');
   const [typed, setTyped] = useState(''); const [pwv, setPwv] = useState('');
   const [p1, setP1] = useState(''); const [p2, setP2] = useState(''); const [p3, setP3] = useState(''); const [pwErr, setPwErr] = useState('');
   const [toast, setToast] = useState('');
@@ -309,6 +310,14 @@ export default function Settings() {
         {dlg === 'privacy' && <Doc title="Privacy Policy" secs={PRIVACY} onClose={close} />}
         {dlg === 'terms' && <Doc title="Terms of Use" secs={TERMS} onClose={close} />}
         {dlg === 'new' && <Doc title="What's new in 1.0.0" secs={WHATS_NEW} onClose={close} />}
+        {dlg === 'done' && (
+          <Overlay onClose={() => { close(); router.replace('/' as any); }}><View style={{ padding: 22, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)', alignItems: 'center' }}>
+            <View style={{ width: 54, height: 54, borderRadius: 18, backgroundColor: 'rgba(94,231,181,.25)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#5ee7b5', fontSize: 28, fontWeight: '800' }}>✓</Text></View>
+            <Text style={{ color: W, fontSize: 18, fontWeight: '800', marginTop: 12 }}>Done</Text>
+            <Text style={{ color: DIM, fontSize: 13.5, lineHeight: 20, marginTop: 6, textAlign: 'center' }}>{doneMsg}</Text>
+            <View style={{ flexDirection: 'row', marginTop: 16, alignSelf: 'stretch' }}><Btn t="Back to Home" kind="primary" onPress={() => { close(); router.replace('/' as any); }} /></View>
+          </View></Overlay>
+        )}
         {dlg === 'howto' && <Doc title="How to use My Life" secs={HOWTO} onClose={close} />}
         {dlg === 'faq' && <Doc title="Help and FAQ" secs={FAQ} onClose={close} />}
         {dlg === 'lic' && <Doc title="Open-source licences" secs={LICENCES} onClose={close} />}
@@ -343,7 +352,7 @@ export default function Settings() {
             {isDel && (<><Text style={{ color: W, fontSize: 12.5, fontWeight: '700', marginTop: 10, marginBottom: 6 }}>Enter your password</Text><Inp secureTextEntry value={pwv} onChangeText={setPwv} /></>)}
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
               <Btn t="Cancel" onPress={close} />
-              {canGo ? <Btn t={isDel ? 'Delete forever' : 'Reset everything'} kind="danger" onPress={async () => { await clearMine(!isDel); close(); say(isDel ? 'Account data deleted' : 'All data has been reset'); }} />
+              {canGo ? <Btn t={isDel ? 'Delete forever' : 'Reset everything'} kind="danger" onPress={async () => { Keyboard.dismiss(); await clearMine(!isDel); close(); setDoneMsg(isDel ? 'Your account data has been deleted from this phone.' : 'All your data has been erased from this phone. The app is now like new.'); setDlg('done'); }} />
                 : <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: 'rgba(255,255,255,.45)', fontSize: 12.5 }}>{isDel ? 'Fill both fields' : 'Type RESET'}</Text></View>}
             </View>
           </View></Overlay>

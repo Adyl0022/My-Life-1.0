@@ -1,7 +1,6 @@
 export type Sec = { h: string; p: string };
 export const WHATS_NEW: Sec[] = [
-  { h: 'Version 1.1', p: 'App lock: protect My Life with a PIN or your fingerprint, and choose when it locks again. Your saved data is now encrypted on your phone. Reminders now really work: prayer times, Planner events and daily zikir, with quiet hours from 12 am to 5 am. A new look for the lock screen.' },
-  { h: 'Version 1.0', p: 'The first release. Daily Planner, Islamic Hub, My Finance, My Record, Habit and Health, My Life Assistant, Search, Stats, Insights and Settings, all in one app.' },
+  { h: 'Version 1.0.0', p: 'The first release. Daily Planner, Islamic Hub, My Finance, My Record, Habit and Health, My Life Assistant, Search, Stats, Insights and Settings, all in one app. Protect it with an optional PIN or fingerprint lock, with your saved data encrypted on your phone. Reminders for prayer times, Planner events and daily zikir, with quiet hours from 12 am to 5 am.' },
   { h: 'Made to be calm', p: 'A glass look that changes with the time of day, and no ads.' },
 ];
 export const PRIVACY: Sec[] = [

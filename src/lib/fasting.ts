@@ -66,10 +66,10 @@ export function qadhaOwed(p: PuasaData, today = new Date()) {
 export const isHaram = (date: Date, off = 0) => { const h = hijriOf(date, off); return (h.m === 10 && h.d === 1) || (h.m === 12 && h.d >= 10 && h.d <= 13); };
 export function sunatLabel(date: Date, off = 0): string {
   const h = hijriOf(date, off), w = date.getDay();
-  if (h.m === 12 && h.d === 9) return 'Arafah';
-  if (h.m === 1 && (h.d === 10 || h.d === 9)) return 'Asyura';
-  if (h.m !== 9 && h.d >= 13 && h.d <= 15) return 'Ayyamul Bidh';
-  if (h.m === 10 && h.d >= 2) return 'Syawal';
+  if (h.m === 12 && h.d === 9) return 'Arafah (9 Zulhijjah)';
+  if (h.m === 1 && (h.d === 10 || h.d === 9)) return 'Asyura (10 Muharram)';
+  if (h.m !== 9 && h.d >= 13 && h.d <= 15) return 'White Days (13th to 15th)';
+  if (h.m === 10 && h.d >= 2) return 'Six days of Syawal';
   if (w === 1 || w === 4) return 'Monday and Thursday';
   return 'Other sunnah';
 }
@@ -79,7 +79,7 @@ export function sunatToday(date: Date, off = 0): string {
   if (h.m === 12 && h.d === 9) return 'Arafah day';
   if (h.m === 1 && h.d === 10) return 'Asyura';
   if (h.m === 1 && h.d === 9) return 'Tasua';
-  if (h.d >= 13 && h.d <= 15) return 'Ayyamul Bidh (white day)';
+  if (h.d >= 13 && h.d <= 15) return 'White Days fast (13th to 15th of the Hijri month)';
   if (h.m === 10) return 'Six days of Syawal';
   if (w === 1) return 'Monday sunnah fast';
   if (w === 4) return 'Thursday sunnah fast';

@@ -284,6 +284,7 @@ export default function Habit() {
             </Pressable>
             <Pressable onPress={() => router.push('/puasa' as any)} style={{ marginTop: 10 }}><Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '700' }}>{(inRam ? rs.fasted + ' of ' + rs.r.len + ' days fasted' : owed > 0 ? owed + ' qadha days to make up' : 'Open Puasa') + ' ›'}</Text></Pressable>
           </Glass>
+          <View style={{ marginTop: 12 }}><HealthSpend /></View>
           </>)}
           {tab === 'progress' && (<>
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
@@ -371,7 +372,6 @@ export default function Habit() {
           </Glass>
           <WeightGoal h={h} setH={setH} />
           <DailyNeeds h={h} setH={setH} />
-          <View style={{ marginTop: 12 }}><HealthSpend /></View>
           </>)}
           <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, textAlign: 'center', marginTop: 14 }}>Your habits are saved on this device.</Text>
         </ScrollView>

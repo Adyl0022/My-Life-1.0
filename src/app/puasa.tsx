@@ -35,17 +35,17 @@ const Card = ({ children, tint, style, art }: { children: React.ReactNode; tint?
 const H = ({ t, s }: { t: string; s?: string }) => <View><Text style={{ color: W, fontSize: 14.5, fontWeight: '800' }}>{t}</Text>{s ? <Text style={{ color: dim, fontSize: 11.5, marginTop: 2 }}>{s}</Text> : null}</View>;
 
 const VERSES = [
-  { ar: 'يَا أَيُّهَا الَّذِينَ آمَنُوا كُتِبَ عَلَيْكُمُ الصِّيَامُ كَمَا كُتِبَ عَلَى الَّذِينَ مِنْ قَبْلِكُمْ لَعَلَّكُمْ تَتَّقُونَ', ms: 'Wahai orang-orang yang beriman! Diwajibkan ke atas kamu berpuasa sebagaimana diwajibkan ke atas orang-orang yang terdahulu daripada kamu, supaya kamu bertakwa.', ref: 'Al-Baqarah 2:183' },
-  { ar: 'شَهْرُ رَمَضَانَ الَّذِي أُنْزِلَ فِيهِ الْقُرْآنُ هُدًى لِلنَّاسِ', ms: 'Bulan Ramadan yang di dalamnya diturunkan Al-Quran sebagai petunjuk bagi manusia.', ref: 'Al-Baqarah 2:185' },
+  { ar: 'يَا أَيُّهَا الَّذِينَ آمَنُوا كُتِبَ عَلَيْكُمُ الصِّيَامُ كَمَا كُتِبَ عَلَى الَّذِينَ مِنْ قَبْلِكُمْ لَعَلَّكُمْ تَتَّقُونَ', ms: 'Wahai orang-orang yang beriman! Diwajibkan ke atas kamu berpuasa sebagaimana diwajibkan ke atas orang-orang yang terdahulu daripada kamu, supaya kamu bertakwa.', en: 'O you who believe! Fasting is prescribed for you as it was prescribed for those before you, so that you may become mindful of Allah.', ref: 'Al-Baqarah 2:183' },
+  { ar: 'شَهْرُ رَمَضَانَ الَّذِي أُنْزِلَ فِيهِ الْقُرْآنُ هُدًى لِلنَّاسِ', ms: 'Bulan Ramadan yang di dalamnya diturunkan Al-Quran sebagai petunjuk bagi manusia.', en: 'The month of Ramadan in which the Quran was revealed as guidance for mankind.', ref: 'Al-Baqarah 2:185' },
 ];
 const HADITH = [
-  ['Whoever fasts Ramadan with faith and hoping for reward, his past sins are forgiven.', 'Bukhari and Muslim'],
-  ['Fasting is a shield.', 'Bukhari and Muslim'],
-  ['The one who fasts has two joys: when he breaks his fast, and when he meets his Lord.', 'Bukhari and Muslim'],
-  ['Eat sahur, for in sahur there is blessing.', 'Bukhari and Muslim'],
-  ['Deeds are presented on Monday and Thursday, and I love that my deeds are presented while I am fasting.', 'Tirmizi'],
-  ['Whoever fasts Ramadan then follows it with six days of Syawal, it is as if he fasted the whole year.', 'Muslim'],
-  ['Fasting the day of Arafah wipes out the sins of the year before and the year after. Fasting Asyura wipes out the sins of the year before.', 'Muslim'],
+  ['Whoever fasts Ramadan with faith and hoping for reward, his past sins are forgiven.', 'Bukhari and Muslim', 'Sesiapa yang berpuasa Ramadan dengan penuh iman dan mengharapkan pahala, diampunkan dosanya yang lalu.'],
+  ['Fasting is a shield.', 'Bukhari and Muslim', 'Puasa itu perisai.'],
+  ['The one who fasts has two joys: when he breaks his fast, and when he meets his Lord.', 'Bukhari and Muslim', 'Orang yang berpuasa mendapat dua kegembiraan: ketika dia berbuka, dan ketika dia bertemu Tuhannya.'],
+  ['Eat sahur, for in sahur there is blessing.', 'Bukhari and Muslim', 'Bersahurlah kamu, kerana pada sahur itu ada keberkatan.'],
+  ['Deeds are presented on Monday and Thursday, and I love that my deeds are presented while I am fasting.', 'Tirmizi', 'Amalan-amalan dibentangkan pada hari Isnin dan Khamis, dan aku suka amalanku dibentangkan ketika aku sedang berpuasa.'],
+  ['Whoever fasts Ramadan then follows it with six days of Syawal, it is as if he fasted the whole year.', 'Muslim', 'Sesiapa yang berpuasa Ramadan kemudian mengikutinya dengan enam hari Syawal, seolah-olah dia berpuasa sepanjang tahun.'],
+  ['Fasting the day of Arafah wipes out the sins of the year before and the year after. Fasting Asyura wipes out the sins of the year before.', 'Muslim', 'Puasa hari Arafah menghapuskan dosa setahun yang lalu dan setahun yang akan datang. Puasa Asyura menghapuskan dosa setahun yang lalu.'],
 ];
 const TIPS: [string, string, string][] = [
   ['sahur', 'Do not skip sahur', 'Eat slowly and late, close to Subuh. Choose oats, eggs, rice or bread with some protein so you stay full.'],
@@ -94,7 +94,7 @@ export default function Puasa() {
   for (let i = 1; i <= 120 && upcoming.length < 4; i++) {
     const d = addDays(today, i); const h = hijriOf(d, off);
     let n = '';
-    if (h.m === 12 && h.d === 9) n = 'Arafah'; else if (h.m === 1 && h.d === 10) n = 'Asyura'; else if (h.m === 10 && h.d === 2) n = 'Six days of Syawal begin'; else if (h.m !== 9 && h.d === 13 && !isHaram(d, off)) n = 'Ayyamul Bidh';
+    if (h.m === 12 && h.d === 9) n = 'Arafah'; else if (h.m === 1 && h.d === 10) n = 'Asyura'; else if (h.m === 10 && h.d === 2) n = 'Six days of Syawal begin'; else if (h.m !== 9 && h.d === 13 && !isHaram(d, off)) n = 'White Days fast';
     if (n) upcoming.push({ d, n, w: i });
   }
   const advice = () => {
@@ -266,8 +266,8 @@ export default function Puasa() {
                   const mt = d.getDay() === 1 || d.getDay() === 4; const isT = i === 34;
                   return (
                     <Pressable key={i} disabled={bad || ram} onPress={() => toggleLog(d)} style={{ width: '12.4%', aspectRatio: 1, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: v === 's' ? G : v === 'q' ? '#ffc46b' : v === 'r' ? 'rgba(52,211,153,.5)' : 'rgba(255,255,255,.1)', opacity: bad || ram ? 0.3 : 1, borderWidth: isT ? 1.5 : 0, borderColor: '#fff' }}>
-                      <Text style={{ color: v ? '#06281c' : W, fontSize: 12, fontWeight: '800' }}>{d.getDate()}</Text>
-                      {mt && !v ? <View style={{ position: 'absolute', bottom: 3, width: 4, height: 4, borderRadius: 2, backgroundColor: G }} /> : null}
+                      <Text style={{ color: v ? '#06281c' : W, fontSize: 12, fontWeight: '800', marginTop: mt && !v ? -3 : 0 }}>{d.getDate()}</Text>
+                      {mt && !v ? <View style={{ position: 'absolute', bottom: 5, width: 4, height: 4, borderRadius: 2, backgroundColor: G }} /> : null}
                     </Pressable>
                   );
                 })}
@@ -290,7 +290,7 @@ export default function Puasa() {
                     </View>
                   ))}
                 </View>
-              ) : <Text style={{ color: dim, fontSize: 12.5, lineHeight: 18, marginTop: 10 }}>Log your sunnah fasts and they will be counted here by type: Monday and Thursday, Ayyamul Bidh, Arafah, Asyura and Syawal.</Text>}
+              ) : <Text style={{ color: dim, fontSize: 12.5, lineHeight: 18, marginTop: 10 }}>Log your sunnah fasts and they will be counted here by type: Monday and Thursday, White Days (13th to 15th of the Hijri month), Arafah, Asyura and Syawal.</Text>}
               <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 5, height: 70, marginTop: 16 }}>
                 {yr.months.map((n, i) => (
                   <View key={i} style={{ flex: 1, height: 70, justifyContent: 'flex-end' }}>
@@ -325,7 +325,8 @@ export default function Puasa() {
               {VERSES.map((v) => (
                 <View key={v.ref} style={{ marginTop: 14 }}>
                   <Text style={{ color: W, fontSize: 22, lineHeight: 38, textAlign: 'right', writingDirection: 'rtl' as any }}>{v.ar}</Text>
-                  <Text style={{ color: 'rgba(255,255,255,.88)', fontSize: 13, lineHeight: 19, marginTop: 6 }}>{v.ms}</Text>
+                  <Text style={{ color: 'rgba(255,255,255,.9)', fontSize: 13, lineHeight: 20, marginTop: 8 }}>{v.ms}</Text>
+                  <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12.5, lineHeight: 19, marginTop: 6, fontStyle: 'italic' }}>{v.en}</Text>
                   <Text style={{ color: '#8fe9e2', fontSize: 11.5, fontWeight: '700', marginTop: 4 }}>{v.ref}</Text>
                 </View>
               ))}
@@ -333,10 +334,10 @@ export default function Puasa() {
             <Rise i={1}><Card>
               <H t="From the hadith" s="Reminders about the reward of fasting" />
               <View style={{ gap: 12, marginTop: 12 }}>
-                {HADITH.map(([t, s]) => (
+                {HADITH.map(([t, s, m]) => (
                   <View key={t} style={{ flexDirection: 'row', gap: 10 }}>
                     <View style={{ width: 4, borderRadius: 2, backgroundColor: G }} />
-                    <View style={{ flex: 1 }}><Text style={{ color: 'rgba(255,255,255,.9)', fontSize: 13, lineHeight: 19 }}>{t}</Text><Text style={{ color: dim, fontSize: 11.5, marginTop: 3 }}>{s}</Text></View>
+                    <View style={{ flex: 1 }}><Text style={{ color: 'rgba(255,255,255,.92)', fontSize: 13, lineHeight: 20 }}>{t}</Text><Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12.5, lineHeight: 19, marginTop: 5, fontStyle: 'italic' }}>{m}</Text><Text style={{ color: '#8fe9e2', fontSize: 11.5, marginTop: 5, fontWeight: '700' }}>{s}</Text></View>
                   </View>
                 ))}
               </View>

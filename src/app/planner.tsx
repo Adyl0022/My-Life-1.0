@@ -41,10 +41,9 @@ const Empty = ({ t, c = '#8ea8ff' }: { t: string; c?: string }) => (
   </View>
 );
 const Raise = ({ c, dim, children }: { c: string; dim?: boolean; children: React.ReactNode }) => (
-  <View style={{ borderRadius: 22, shadowColor: c, shadowOpacity: dim ? 0.12 : 0.38, shadowRadius: 16, shadowOffset: { width: 0, height: 9 }, elevation: dim ? 2 : 8, opacity: dim ? 0.78 : 1 }}>
-    <LinearGradient colors={[c + '40', c + '14', 'rgba(255,255,255,.07)']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,.2)', borderTopColor: 'rgba(255,255,255,.42)', paddingVertical: 20, paddingLeft: 18, paddingRight: 14, minHeight: 84, flexDirection: 'row', alignItems: 'center', gap: 14, overflow: 'hidden' }}>
+  <View style={{ borderRadius: 22, backgroundColor: dim ? '#171c47' : '#1b2158', shadowColor: c, shadowOpacity: dim ? 0.12 : 0.38, shadowRadius: 16, shadowOffset: { width: 0, height: 9 }, elevation: dim ? 2 : 8 }}>
+    <LinearGradient colors={[c + (dim ? '38' : '55'), c + '1c', 'rgba(255,255,255,.08)']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 22, borderWidth: 1.2, borderColor: 'rgba(255,255,255,.28)', borderTopColor: 'rgba(255,255,255,.55)', paddingVertical: 20, paddingLeft: 18, paddingRight: 14, minHeight: 84, flexDirection: 'row', alignItems: 'center', gap: 14, overflow: 'hidden' }}>
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 10, bottom: 10, width: 4, borderTopRightRadius: 4, borderBottomRightRadius: 4, backgroundColor: c }} />
-      <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 22, backgroundColor: 'rgba(255,255,255,.07)' }} />
       {children}
     </LinearGradient>
   </View>

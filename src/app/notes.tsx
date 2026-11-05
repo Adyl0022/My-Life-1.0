@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, Keyboard, Platform } from 'react-native';
 import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -53,6 +53,15 @@ export default function Notes() {
   const del = (id: number) => { setData({ ...data, notes: notes.filter((x) => x.id !== id) }); };
   const addLine = (pre: string) => { if (!draft) return; const ns = (draft.s && !/\n$/.test(draft.s) ? draft.s + '\n' : draft.s) + pre; upd({ s: ns }); setFo(ns.split('\n').length - 1); };
   const refs = useRef<any[]>([]);
+  const edScroll = useRef<any>(null); const focI = useRef(0); const lastLen = useRef(0);
+  const [kb, setKb] = useState(0);
+  const [lh, setLh] = useState<Record<number, { t: string; h: number }>>({});
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const a = Keyboard.addListener('keyboardDidShow', (e: any) => { setKb(e.endCoordinates.height); setTimeout(() => edScroll.current?.scrollToEnd?.({ animated: true }), 120); });
+    const b = Keyboard.addListener('keyboardDidHide', () => setKb(0));
+    return () => { a.remove(); b.remove(); };
+  }, []);
   const [fo, setFo] = useState(-1);
   useEffect(() => { if (fo >= 0) { const i = fo; setTimeout(() => refs.current[i]?.focus?.(), 40); setFo(-1); } }, [fo]);
   const setLines = (L: string[]) => upd({ s: L.join('\n') });
@@ -152,7 +161,7 @@ export default function Notes() {
             <LinearGradient colors={PAPER[draft.c] as any} locations={[0, 0.55, 1]} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
             <View pointerEvents="none" style={{ position: 'absolute', right: -90, top: -60, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(255,255,255,.18)' }} />
             <View pointerEvents="none" style={{ position: 'absolute', left: -110, bottom: 140, width: 260, height: 260, borderRadius: 130, backgroundColor: 'rgba(255,255,255,.10)' }} />
-            <SafeAreaView style={{ flex: 1 }}>
+            <SafeAreaView style={{ flex: 1, paddingBottom: kb }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 12 }}>
                 <Pressable onPress={() => { closeEd(); }}><Glass radius={16} style={{ paddingHorizontal: 14, height: 44, justifyContent: 'center' }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>‹ Notes</Text></Glass></Pressable>
                 <View style={{ flex: 1 }} />
@@ -160,7 +169,7 @@ export default function Notes() {
                 {!isNew && <Pressable onPress={() => setConfirmDel(true)} accessibilityLabel="Delete"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ffb3bf', fontSize: 16 }}>✕</Text></Glass></Pressable>}
                 <Pressable onPress={save}><LinearGradient colors={['#34d399', '#5ee7df']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingHorizontal: 18, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#06241d', fontSize: 14, fontWeight: '800' }}>Save</Text></LinearGradient></Pressable>
               </View>
-              <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 14, paddingBottom: 10 }}>
+              <ScrollView ref={edScroll} keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 14, paddingBottom: 28 }} onContentSizeChange={(_w, h) => { if (kb > 0 && h > lastLen.current && focI.current >= (draft.s || '').split('\n').length - 1) edScroll.current?.scrollToEnd?.({ animated: false }); lastLen.current = h; }}>
                <View style={{ borderRadius: 30, paddingHorizontal: 18, paddingTop: 18, paddingBottom: 14, backgroundColor: 'rgba(255,255,255,.17)', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 6 }}>
                 <TextInput value={draft.t} onChangeText={(v) => upd({ t: v })} placeholder="Title" placeholderTextColor="rgba(255,255,255,.62)" style={{ color: W, fontSize: 26, fontWeight: '800', outlineStyle: 'none' } as any} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
@@ -173,7 +182,7 @@ export default function Notes() {
                     return (
                       <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                         {ck ? <Pressable onPress={() => toggleLine(i)} hitSlop={8} accessibilityLabel="Toggle item" style={{ width: 30, height: 24, justifyContent: 'center' }}><Text style={{ color: on ? '#ffc46b' : W, fontSize: 20, lineHeight: 24 }}>{on ? '☑' : '☐'}</Text></Pressable> : null}
-                        <TextInput ref={(r) => { refs.current[i] = r; }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
+                        <TextInput ref={(r) => { refs.current[i] = r; }} onFocus={() => { focI.current = i; }} onContentSizeChange={(e) => { const hh = Math.max(24, Math.ceil(e.nativeEvent.contentSize.height)); setLh((m) => (m[i] && m[i].t === rest && m[i].h === hh ? m : { ...m, [i]: { t: rest, h: hh } })); }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, height: lh[i] && lh[i].t === rest ? lh[i].h : undefined, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
                       </View>
                     );
                   })}

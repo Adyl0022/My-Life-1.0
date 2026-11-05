@@ -131,21 +131,22 @@ export function Commitments({ income }: { income: number }) {
             const status = pd ? 'Paid this month' : late ? 'Overdue by ' + (today - dday) + (today - dday === 1 ? ' day' : ' days') : diff === 0 ? 'Due today' : diff === 1 ? 'Due tomorrow' : 'Due on the ' + ord(dday);
             return (
               <View key={x.id} style={{ borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,.1)' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 11 }}>
+              <View style={{ paddingVertical: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
                 <Pressable accessibilityLabel={pd ? 'Mark as unpaid' : 'Mark as paid'} onPress={() => tick(x)} style={{ width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: pd ? '#34d399' : 'rgba(255,255,255,.4)', backgroundColor: pd ? '#34d399' : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                   {pd ? <Text style={{ color: '#062b1c', fontSize: 16, fontWeight: '900', marginTop: -1 }}>✓</Text> : null}
                 </Pressable>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: W, fontSize: 14, fontWeight: '700', textDecorationLine: pd ? 'line-through' : 'none', opacity: pd ? 0.7 : 1 }} numberOfLines={1}>{x.name}</Text>
-                  <Text style={{ color: late ? '#ffb3a0' : pd ? '#7df0c6' : dim, fontSize: 11.5, marginTop: 1, fontWeight: late ? '700' : '400' }}>{status + ' · RM ' + money(amountDue(x, ym))}</Text>
-                  <Text style={{ color: dim, fontSize: 11.5 }}>{x.fixed ? 'Fixed monthly' : 'Left RM ' + money(remaining(x)) + (remaining(x) > 0 ? ' · ' + yearsMonths(monthsLeft(x)) : ' · cleared')}</Text>
-                </View>
-                <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                <Text style={{ flex: 1, color: W, fontSize: 15, fontWeight: '800', textDecorationLine: pd ? 'line-through' : 'none', opacity: pd ? 0.7 : 1 }} numberOfLines={1}>{x.name}</Text>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
                     <Pressable accessibilityLabel="Reminder" onPress={() => save({ ...d, debts: list.map((y) => (y.id === x.id ? { ...y, remind: !y.remind } : y)) })} style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: x.remind ? 'rgba(255,196,107,.28)' : 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 14, opacity: x.remind ? 1 : 0.4 }}>🔔</Text></Pressable>
                     <Pressable accessibilityLabel="Edit" onPress={() => startEdit(x)} style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ffd593', fontSize: 14 }}>✎</Text></Pressable>
                     <Pressable accessibilityLabel="Delete" onPress={() => save({ ...d, debts: list.filter((y) => y.id !== x.id) })} style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ff9aa9', fontSize: 13 }}>✕</Text></Pressable>
-                  </View>
+                </View>
+                </View>
+                <View style={{ marginLeft: 41, marginTop: 6, gap: 2 }}>
+                  <Text style={{ color: late ? '#ffb3a0' : pd ? '#7df0c6' : '#ffd593', fontSize: 12.5, fontWeight: '700' }}>{status}</Text>
+                  <Text style={{ color: W, fontSize: 12.5 }}>{'RM ' + money(amountDue(x, ym)) + ' a month'}</Text>
+                  <Text style={{ color: dim, fontSize: 12 }}>{x.fixed ? 'Fixed monthly, no end date' : 'RM ' + money(remaining(x)) + ' left' + (remaining(x) > 0 ? ' · ' + yearsMonths(monthsLeft(x)) : ' · cleared')}</Text>
                 </View>
               </View>
               {missed(x) ? (

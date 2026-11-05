@@ -183,8 +183,8 @@ export function Commitments({ income }: { income: number }) {
       {income > 0 && (commit > 0 || food > 0) ? (
         <View style={{ marginTop: 12, borderRadius: 16, padding: 12, backgroundColor: 'rgba(0,0,0,.22)' }}>
           <Text style={{ color: '#ffd593', fontSize: 11, fontWeight: '700', letterSpacing: 1.2 }}>THIS MONTH'S PLAN</Text>
-          {[['Income', income, 1], ['Bills and debts', commit, -1], ['Food', food, -1]].map(([l, v, sg]) => (
-            (v as number) > 0 ? <View key={l as string} style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}><Text style={{ color: dim, fontSize: 12.5 }}>{l as string}</Text><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{(sg as number) < 0 ? '- ' : ''}RM {money(v as number)}</Text></View> : null
+          {[['Income', income, 1] as [string, number, number]].concat(act.map((x) => [x.name, amountDue(x, ym), -1] as [string, number, number])).concat([['Food', food, -1] as [string, number, number]]).map(([l, v, sg]) => (
+            (v as number) > 0 ? <View key={(l as string) + sg} style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}><Text style={{ color: dim, fontSize: 12.5 }}>{l as string}</Text><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{(sg as number) < 0 ? '- ' : ''}RM {money(v as number)}</Text></View> : null
           ))}
           <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,.12)', marginTop: 8 }} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}><Text style={{ color: W, fontSize: 13, fontWeight: '800' }}>{free >= 0 ? 'Free to spend or save' : 'Short by'}</Text><Text style={{ color: free >= 0 ? '#7df0c6' : '#ffb3a0', fontSize: 14, fontWeight: '800' }}>RM {money(Math.abs(free))}</Text></View>

@@ -135,7 +135,6 @@ class Chat extends AssistantBase {
         </ScrollView>
 
         <View ref={(r: any) => { this.panelRef = r; }} collapsable={false} style={{ marginHorizontal: -20, paddingBottom: 16, paddingTop: 12, marginBottom: (this.state as any).kbLift || 0, backgroundColor: 'rgba(10,15,44,.94)' }}>
-          {v.startDisp === 'grid' && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }} style={{ flexGrow: 0 }}>
             {v.cats.map((c: any) => (
               <Pressable key={c.name} onPress={c.go}>
@@ -145,7 +144,6 @@ class Chat extends AssistantBase {
               </Pressable>
             ))}
           </ScrollView>
-          )}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }} style={{ flexGrow: 0, marginTop: 10 }}>
             {v.chips.map((q: any) => (
               <Pressable key={q.label} onPress={q.go}><Glass radius={16} style={{ paddingVertical: 9, paddingHorizontal: 14 }}><Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '600' }}>{q.label}</Text></Glass></Pressable>

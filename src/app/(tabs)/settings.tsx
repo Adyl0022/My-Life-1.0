@@ -339,12 +339,12 @@ export default function Settings() {
             <Text style={{ color: DIM, fontSize: 13, lineHeight: 19, marginTop: 6 }}>Save a copy of your data as a file, or bring it back from a file you saved before. This is how you move to a new phone until accounts arrive.</Text>
             {bkErr ? <Text style={{ color: '#ffb3bf', fontSize: 12.5, marginTop: 10 }}>{bkErr}</Text> : null}
             <View style={{ gap: 8, marginTop: 14 }}>
-              <Btn t="Save a backup" kind="primary" onPress={() => { close(); router.push('/export' as any); }} />
-              <Btn t="Restore from a file" onPress={async () => {
+              <View style={{ flexDirection: 'row' }}><Btn t="Save a backup" kind="primary" onPress={() => { close(); router.push('/export' as any); }} /></View>
+              <View style={{ flexDirection: 'row' }}><Btn t="Restore from a file" onPress={async () => {
                 try { const t = await pickText(); if (t == null) return; const b = parseBackup(t); if (!b) return setBkErr('That file is not a My Life backup. Choose a Backup (JSON) file from Export.'); setBk(b); setDlg('confirm'); }
                 catch (e) { setBkErr('Could not open that file.'); }
-              }} />
-              <Btn t="Cancel" onPress={close} />
+              }} /></View>
+              <View style={{ flexDirection: 'row' }}><Btn t="Cancel" onPress={close} /></View>
             </View>
           </View></Overlay>
         )}

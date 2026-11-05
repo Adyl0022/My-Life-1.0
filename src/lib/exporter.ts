@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { getText } from './store';
+import { getText, DEFAULT_NAME } from './store';
 
 export type Sheet = { name: string; head: string[]; rows: (string | number)[][] };
 export type Chart = { title: string; kind: 'bars' | 'hbars' | 'line' | 'donut'; labels: string[]; values: number[]; unit?: string; color?: string };
@@ -50,7 +50,7 @@ export async function buildReport(sel: string[], per: number): Promise<Report> {
   const from = per === 0 ? ym : per === 1 ? (() => { const d = new Date(now.getFullYear(), now.getMonth() - 2, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); })() : '';
   const inP = (date?: string) => !from || !date || String(date).slice(0, 7) >= from;
   const sheets: Sheet[] = []; const totals: [string, string][] = []; const charts: Chart[] = [];
-  let name = ''; try { const n = await getText('ml_name'); if (n) name = JSON.parse(n); } catch (e) {}
+  let name = DEFAULT_NAME; try { const n = await getText('ml_name'); if (n) name = JSON.parse(n) || DEFAULT_NAME; } catch (e) {}
   const g = (m: string, k: string) => (raw[m] && raw[m][k]) || null;
 
   if (sel.includes('planner')) {

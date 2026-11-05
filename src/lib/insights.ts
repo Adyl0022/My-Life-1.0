@@ -1,4 +1,5 @@
 import { useStored } from './store';
+import { DEBT_EMPTY, DebtData, remaining, isActive, ymOf, dueDay, amountDue } from './debts';
 import { HEMPTY, HData, getDay, cupsGoal, goalPctOf, keyOfDate, dateOf, MOODS, WD, bestStreakAll } from './habit';
 
 export type Sp = { amt: number; date: string; cat?: string; name?: string };
@@ -7,7 +8,7 @@ export type Tk = { name: string; due: string; status: string };
 export type Ev = { name: string; date: string; done: boolean };
 export type Pl = { events: Ev[]; tasks: Tk[] };
 export type Veh = { readings?: { date: string; odo: number }[]; fuel?: { date: string; liters: number; amt: number; odo: number }[]; parts?: { name: string; odo: number; life: number }[]; renew?: { roadtax?: string; insurance?: string; licence?: string } };
-export type Core = { hd: HData; fin: Fin; pl: Pl; rec: { data: Record<string, Veh> }; tas: { day: string; total: number }; off: Record<string, string>; setOff: (v: Record<string, string>) => void };
+export type Core = { hd: HData; fin: Fin; pl: Pl; rec: { data: Record<string, Veh> }; tas: { day: string; total: number }; debts: DebtData; off: Record<string, string>; setOff: (v: Record<string, string>) => void };
 export type Part = { k: string; label: string; pct: number; detail: string; c: string };
 export type Tip = { id: string; title: string; sub: string; why: string; go: string; k: string; pri: number };
 
@@ -17,8 +18,9 @@ export const useCore = (): Core => {
   const [pl] = useStored<Pl>('ml_planner', { events: [], tasks: [] } as any);
   const [rec] = useStored<{ data: Record<string, Veh> }>('ml_record', { data: {} } as any);
   const [tas] = useStored<{ day: string; total: number }>('ml_tasbih', { day: '', total: 0 });
+  const [debts] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
   const [off, setOff] = useStored<Record<string, string>>('ml_tips_off', {});
-  return { hd, fin, pl, rec, tas, off, setOff };
+  return { hd, fin, pl, rec, tas, debts, off, setOff };
 };
 
 const tk = (o: number) => keyOfDate(dateOf(o));
@@ -148,6 +150,13 @@ export function tips(c: Core, week: boolean): Tip[] {
     if (left > 0) add({ id: 'allow', title: 'About ' + rmf(left / dl) + ' a day left to spend', sub: rmf(left) + ' of your ' + rmf(inc) + ' income remains for ' + dl + ' days.', why: 'Income entered for this month, minus spending so far, spread over the days left.', go: '/finance', k: 'goal', pri: 52 });
     else add({ id: 'over', title: 'Spending has passed your income', sub: 'You have spent ' + rmf(tm) + ' against ' + rmf(inc) + ' income this month.', why: 'Income entered for this month is lower than spending so far.', go: '/finance', k: 'goal', pri: 88 });
   }
+  // Debts
+  const dym = ymOf(now);
+  ((c.debts && c.debts.debts) || []).filter((x) => isActive(x, dym) && !((x.paid || {})[dym] > 0)).forEach((x) => {
+    const dd = dueDay(x, now.getFullYear(), now.getMonth()) - now.getDate();
+    if (dd < 0) add({ id: 'debt-' + x.id, title: x.name + ' is ' + -dd + (dd === -1 ? ' day' : ' days') + ' overdue', sub: 'RM ' + Math.round(amountDue(x, dym)).toLocaleString() + ' is still unpaid this month.', why: 'The due day has passed and this month is not ticked as paid in My Finance.', go: '/finance', k: 'goal', pri: 92 });
+    else if (dd <= 3) add({ id: 'debt-' + x.id, title: x.name + (dd === 0 ? ' is due today' : dd === 1 ? ' is due tomorrow' : ' is due in ' + dd + ' days'), sub: 'RM ' + Math.round(amountDue(x, dym)).toLocaleString() + '. Tick it off in My Finance once paid.', why: 'Based on the due day you saved for this debt.', go: '/finance', k: 'goal', pri: 89 });
+  });
   // Record
   const vs = Object.entries((c.rec && c.rec.data) || {});
   let hadOdo = false, anyReading = false;

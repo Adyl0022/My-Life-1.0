@@ -9,6 +9,7 @@ import { Glass } from '../components/Glass';
 import { Blob } from '../components/Bg';
 import { Inp, DateField, todayStr, W } from '../components/Ui';
 import { useStored } from '../lib/store';
+import { Commitments } from '../components/Commitments';
 import { TOP } from '../lib/layout';
 
 type Sp = { id: number; name: string; cat: string; amt: number; date: string };
@@ -107,6 +108,8 @@ export default function Finance() {
             <Coin />
             <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>Track every ringgit</Text><Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, marginTop: 1 }}>Income and spending at a glance</Text></View>
           </Glass>
+
+          <Commitments income={sumOf(d.inc[curKey])} />
 
           {/* Monthly income */}
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>

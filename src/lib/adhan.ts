@@ -3,7 +3,7 @@ import * as Notifications from 'expo-notifications';
 
 export type Alert = { key: string; name: string; at: Date };
 let ready = false;
-async function setup(): Promise<boolean> {
+export async function setup(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
   try {
     if (!ready) {
@@ -20,7 +20,7 @@ async function setup(): Promise<boolean> {
 export async function syncPrayerAlerts(list: Alert[], zoneName: string): Promise<void> {
   try {
     if (!(await setup())) return;
-    await Notifications.cancelAllScheduledNotificationsAsync();
+    await cancelExceptDebts();
     const now = Date.now();
     for (const a of list.filter((x) => x.at.getTime() > now + 5000).slice(0, 60)) {
       await Notifications.scheduleNotificationAsync({
@@ -30,4 +30,8 @@ export async function syncPrayerAlerts(list: Alert[], zoneName: string): Promise
     }
   } catch (e) {}
 }
-export async function clearPrayerAlerts() { try { if (Platform.OS !== 'web') await Notifications.cancelAllScheduledNotificationsAsync(); } catch (e) {} }
+async function cancelExceptDebts() {
+  const all = await Notifications.getAllScheduledNotificationsAsync();
+  for (const n of all) if (!String(n.identifier).startsWith('debt-')) await Notifications.cancelScheduledNotificationAsync(n.identifier);
+}
+export async function clearPrayerAlerts() { try { if (Platform.OS !== 'web') await cancelExceptDebts(); } catch (e) {} }

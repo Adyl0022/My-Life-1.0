@@ -72,8 +72,8 @@ const Arrow = ({ t, onPress, op, label }: { t: string; onPress: () => void; op: 
 );
 const Del = ({ onPress }: { onPress: () => void }) => <Pressable accessibilityLabel="Delete" onPress={onPress} style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ff9aa9', fontSize: 14 }}>✕</Text></Pressable>;
 const AddB = ({ t, onPress, w = 16 }: { t: string; onPress: () => void; w?: number }) => <Pressable onPress={onPress}><LinearGradient colors={PG} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 42, paddingHorizontal: w, borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 12, fontWeight: '800' }}>{t}</Text></LinearGradient></Pressable>;
-type Bar = { label: string; sub?: string; top: string; h: number; hot: boolean; delta: string; dc: string; warm?: boolean };
-const Bars = ({ bars, height = 158 }: { bars: Bar[]; height?: number }) => {
+type Bar = { label: string; sub?: string; top: string; h: number; hot: boolean; delta: string; dc: string; warm?: boolean; note?: string };
+const Bars = ({ bars, height = 158, noteH = 13 }: { bars: Bar[]; height?: number; noteH?: number }) => {
   const filled = bars.filter((x) => !!x.top); const mxH = Math.max(...bars.map((x) => (x.top ? x.h : 0)), 0); const showTop = filled.length >= 2 && mxH > 0;
   return (
   <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, height, marginTop: 22 }}>
@@ -85,7 +85,7 @@ const Bars = ({ bars, height = 158 }: { bars: Bar[]; height?: number }) => {
           {b.hot ? <LinearGradient colors={b.warm ? ['#ffc46b', '#ff8fab'] : PG} style={r} /> : <View style={[r, { backgroundColor: b.warm ? (b.top ? 'rgba(255,255,255,.4)' : 'rgba(255,255,255,.18)') : 'rgba(255,255,255,.25)' }]} />}
           <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11 }}>{b.label}</Text>
           {b.sub !== undefined ? <Text style={{ color: 'rgba(255,255,255,.45)', fontSize: 9, marginTop: -3 }}>{b.sub}</Text> : null}
-          <Text style={{ height: 13, fontSize: 9.5, fontWeight: '800', color: '#ffc46b' }}>{showTop && b.top && b.h === mxH ? 'Highest' : ''}</Text>
+          <Text numberOfLines={2} style={{ height: noteH, fontSize: 9.5, lineHeight: 12, textAlign: 'center', fontWeight: '800', color: '#ffc46b' }}>{b.note !== undefined ? b.note : (showTop && b.top && b.h === mxH ? 'Highest' : '')}</Text>
         </View>
       );
     })}
@@ -96,7 +96,7 @@ const Bars = ({ bars, height = 158 }: { bars: Bar[]; height?: number }) => {
 export default function Record() {
   const router = useRouter();
   const [st, setSt] = useStored<Data>('ml_record', EMPTY);
-  const [mPage, setMPage] = useState<number | null>(null); const [yPage, setYPage] = useState<number | null>(null);
+  const [mPage, setMPage] = useState<number | null>(null); const [sPage, setSPage] = useState<number | null>(null); const [yPage, setYPage] = useState<number | null>(null);
   const [addingCat, setAddingCat] = useState(false); const [catIn, setCatIn] = useState(''); const [delAsk, setDelAsk] = useState(false);
   const t0 = todayStr();
   const [rDate, setRDate] = useState(t0); const [rOdo, setROdo] = useState(''); const [yDate, setYDate] = useState(t0); const [yOdo, setYOdo] = useState('');
@@ -151,10 +151,15 @@ export default function Record() {
   // spending
   const keyOfM = (y: number, m: number) => { const x = new Date(y, m, 1); return x.getFullYear() + '-' + pad(x.getMonth() + 1); };
   const spendIn = (key: string) => d.exps.filter((e) => e.date.slice(0, 7) === key).reduce((a, e) => a + e.amt, 0);
-  const sv = monthsArr.map((mm) => spendIn(keyOfM(mm.y, mm.m))); const sMax = Math.max(...sv, 1);
+  const exIdx = (e: Ex) => { const pr = (e.date || '').split('-').map(Number); return pr.length >= 2 && pr[0] ? (pr[0] - 2026) * 12 + (pr[1] - 1 - 10) : 0; };
+  const sMinPg = Math.floor(Math.min(0, ...d.exps.map(exIdx)) / 6); const sPg = Math.max(sMinPg, Math.min(sPage == null ? mAuto : sPage, mAuto));
+  const sMonths = [0, 1, 2, 3, 4, 5].map((k) => { const idx = sPg * 6 + k; const x = new Date(2026, 10 + idx, 1); return { y: x.getFullYear(), m: x.getMonth(), idx }; });
+  const topItem = (key: string) => { const g: Record<string, { n: string; t: number; c: number }> = {}; d.exps.filter((e) => e.date.slice(0, 7) === key).forEach((e) => { const k = e.name.trim().toLowerCase(); if (!g[k]) g[k] = { n: e.name.trim(), t: 0, c: 0 }; g[k].t += e.amt; g[k].c++; }); const all = Object.values(g).sort((a, b) => b.t - a.t); if (!all.length) return ''; const a = all[0]; const nm = a.n.length > 9 ? a.n.slice(0, 8) + '…' : a.n; return nm + (a.c > 1 ? ' ×' + a.c : '') + (all.length > 1 ? '\n+' + (all.length - 1) + ' more' : ''); };
+  const byYear: Record<string, number> = {}; d.exps.forEach((e) => { const y = (e.date || '').slice(0, 4); if (y) byYear[y] = (byYear[y] || 0) + e.amt; });
+  const sv = sMonths.map((mm) => spendIn(keyOfM(mm.y, mm.m))); const sMax = Math.max(...sv, 1);
   const sCurV = spendIn(keyOfM(now.getFullYear(), now.getMonth())); const sPrevV = spendIn(keyOfM(now.getFullYear(), now.getMonth() - 1)); const sd = sCurV - sPrevV;
   const sPct = sPrevV > 0 ? Math.round(Math.abs(sd) / sPrevV * 100) : 0;
-  const sBars: Bar[] = monthsArr.map((mm, i) => { const prev = spendIn(keyOfM(mm.y, mm.m - 1)); const dd = sv[i] - prev; return { label: M[mm.m], sub: String(mm.y), top: sv[i] > 0 ? num(sv[i]) : '', h: sv[i] > 0 ? Math.max(8, Math.round((sv[i] / sMax) * 78)) : 6, hot: mm.idx === mCur && sv[i] > 0, warm: true, delta: sv[i] > 0 || prev > 0 ? (dd === 0 ? '=' : (dd > 0 ? '+' : '-') + num(Math.abs(dd))) : '', dc: dd > 0 ? '#ffb3a0' : dd < 0 ? '#7df0c6' : 'rgba(255,255,255,.6)' }; });
+  const sBars: Bar[] = sMonths.map((mm, i) => { const prev = spendIn(keyOfM(mm.y, mm.m - 1)); const dd = sv[i] - prev; return { label: M[mm.m], sub: String(mm.y), top: sv[i] > 0 ? num(sv[i]) : '', h: sv[i] > 0 ? Math.max(8, Math.round((sv[i] / sMax) * 78)) : 6, hot: mm.idx === mCur && sv[i] > 0, warm: true, note: topItem(keyOfM(mm.y, mm.m)), delta: sv[i] > 0 || prev > 0 ? (dd === 0 ? '=' : (dd > 0 ? '+' : '-') + num(Math.abs(dd))) : '', dc: dd > 0 ? '#ffb3a0' : dd < 0 ? '#7df0c6' : 'rgba(255,255,255,.6)' }; });
   const expTotal = d.exps.reduce((a, e) => a + e.amt, 0);
   // suggestions
   const word = catName.toLowerCase() === 'motorcycle' ? 'motorcycle' : 'vehicle';
@@ -313,10 +318,23 @@ export default function Record() {
           {/* Maintenance spending */}
           <Glass radius={24} style={{ marginTop: 12, padding: 14 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}><Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Maintenance Spending</Text><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>RM {money(expTotal)}</Text></View>
+            <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11, marginTop: 2 }}>All time total</Text>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}><Stat l="This month" v={'RM ' + num(sCurV)} /><Stat l="Last month" v={'RM ' + num(sPrevV)} /><Stat l="vs last month" v={diffS} vc={sd > 0 ? '#ffb3a0' : sd < 0 ? '#7df0c6' : W} bg={sd > 0 ? 'rgba(255,143,107,.16)' : sd < 0 ? 'rgba(94,231,181,.16)' : undefined} /></View>
             <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 6 }}>{sNote}</Text>
-            <Bars bars={sBars} />
-            <Text style={{ color: dim, fontSize: 12, marginTop: 8 }}>Shows the same months as Monthly Mileage above. Use the arrows there to see other months. Amounts are in RM.</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
+              <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12.5, fontWeight: '700' }}>{M[sMonths[0].m] + ' ' + sMonths[0].y + ' – ' + M[sMonths[5].m] + ' ' + sMonths[5].y}</Text>
+              <View style={{ flexDirection: 'row', gap: 6 }}><Arrow t="‹" label="Earlier months" op={sPg > sMinPg ? 1 : 0.35} onPress={() => setSPage(Math.max(sMinPg, sPg - 1))} /><Arrow t="›" label="Later months" op={sPg < mAuto ? 1 : 0.35} onPress={() => setSPage(Math.min(mAuto, sPg + 1))} /></View>
+            </View>
+            <Bars bars={sBars} noteH={26} />
+            <Text style={{ color: dim, fontSize: 12, marginTop: 8 }}>Under each month is what you spent most on. Use the arrows to see earlier months. Amounts are in RM.</Text>
+            {Object.keys(byYear).length ? (
+              <View style={{ marginTop: 10 }}>
+                <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12, fontWeight: '700', marginBottom: 6 }}>Total for each year</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {Object.keys(byYear).sort().reverse().map((y) => <View key={y} style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.1)' }}><Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 11 }}>{y}</Text><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>{'RM ' + num(byYear[y])}</Text></View>)}
+                </View>
+              </View>
+            ) : null}
             <DateField value={eDate} onChange={setEDate} style={{ marginTop: 12 }} />
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, alignItems: 'center' }}>
               <Inp style={{ flex: 1.3 }} value={eName} onChangeText={setEName} placeholder="e.g. Engine oil" />

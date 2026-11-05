@@ -86,7 +86,7 @@ async function whereAmI(fresh = false): Promise<{ lat: number; lon: number }> {
 }
 
 export type Mode = { auto: boolean; zone: string };
-export function usePrayer() {
+export function usePrayer(passive = false) {
   const [mode, setMode] = useStored<Mode>('ml_prayer_mode', { auto: true, zone: 'WLY01' });
   const [lastPlace, setLastPlace] = useStored<{ lat: number; lon: number; zone: string } | null>('ml_prayer_last', null);
   const [times, setTimes] = useState<PT[]>([]);
@@ -157,7 +157,7 @@ export function usePrayer() {
   }, [mode.auto, mode.zone, tick, dayId]);
 
   useEffect(() => {
-    if (Platform.OS === 'web' || !month || !place) return;
+    if (passive || Platform.OS === 'web' || !month || !place) return;
     const list: Alert[] = [];
     for (let i = 0; i < 12; i++) {
       const d = new Date(Date.now() + 8 * 3600 * 1000 + i * 86400000);

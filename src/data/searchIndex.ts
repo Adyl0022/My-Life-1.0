@@ -1,52 +1,20 @@
 export type SearchItem = { t: string; s: string; m: string; c: string; h: string; k: string };
 export const SEARCH_INDEX: SearchItem[] = [
  {
-  "t": "Export my data",
-  "s": "Excel or PDF with totals",
-  "m": "Settings",
-  "c": "#7df0c6",
-  "h": "Export.dc.html",
-  "k": "export excel pdf xlsx download data total eksport muat turun"
- },
- {
-  "t": "Reset data / Delete account",
-  "s": "Account and data",
-  "m": "Settings",
-  "c": "#ff9aa9",
-  "h": "Settings.dc.html",
-  "k": "reset delete account padam akaun data name nama"
- },
- {
-  "t": "Notes",
-  "s": "Write and organise notes",
-  "m": "Daily Planner",
-  "c": "#ffc46b",
-  "h": "Notes.dc.html",
-  "k": "notes nota catatan memo checklist folder write tulis"
- },
- {
-  "t": "My Life Assistant",
-  "s": "Ask about your own data",
-  "m": "Dashboard",
-  "c": "#8fe9e2",
-  "h": "Assistant.dc.html",
-  "k": "assistant ai chat tanya soalan pembantu help"
- },
- {
   "t": "Daily Planner",
   "s": "Events and tasks",
   "m": "Planner",
   "c": "#7c9cff",
   "h": "Planner.dc.html",
-  "k": "planner calendar"
+  "k": "planner kalendar calendar acara tugasan event task harian"
  },
  {
   "t": "Date & Events",
-  "s": "Reminders for dates",
+  "s": "Reminders on the day, a day or a week before",
   "m": "Planner",
   "c": "#7c9cff",
   "h": "Planner.dc.html",
-  "k": "event reminder date birthday"
+  "k": "event acara reminder peringatan birthday hari lahir tarikh date"
  },
  {
   "t": "Task List",
@@ -54,71 +22,47 @@ export const SEARCH_INDEX: SearchItem[] = [
   "m": "Planner",
   "c": "#7c9cff",
   "h": "Planner.dc.html",
-  "k": "task todo to do tugas senarai priority keutamaan"
+  "k": "task tugasan todo senarai senarai tugas siap done doing"
+ },
+ {
+  "t": "Notes",
+  "s": "Write and organise notes",
+  "m": "Planner",
+  "c": "#7c9cff",
+  "h": "Notes.dc.html",
+  "k": "notes nota catatan tulis write memo"
  },
  {
   "t": "Islamic Hub",
-  "s": "Surah, doa and zikir",
+  "s": "Prayer, Quran, zikir and fasting",
   "m": "Islamic",
   "c": "#34d399",
   "h": "Islamic.dc.html",
-  "k": "islam quran"
- },
- {
-  "t": "Surah Al-Fatihah",
-  "s": "7 verses",
-  "m": "Islamic",
-  "c": "#34d399",
-  "h": "Fatihah.dc.html",
-  "k": "fatihah quran surah"
- },
- {
-  "t": "Surah Al-Mulk",
-  "s": "30 verses",
-  "m": "Islamic",
-  "c": "#34d399",
-  "h": "Mulk.dc.html",
-  "k": "mulk quran surah"
- },
- {
-  "t": "Surah Al-Kahfi",
-  "s": "First 10 and last 10 verses",
-  "m": "Islamic",
-  "c": "#34d399",
-  "h": "Kahfi.dc.html",
-  "k": "kahfi quran surah jumaat"
- },
- {
-  "t": "Surah Yasin",
-  "s": "With doa after recitation",
-  "m": "Islamic",
-  "c": "#34d399",
-  "h": "Yasin.dc.html",
-  "k": "yasin yaasin quran surah doa"
- },
- {
-  "t": "Tahlil Arwah",
-  "s": "Standard reading, 26 parts",
-  "m": "Islamic",
-  "c": "#34d399",
-  "h": "Tahlil.dc.html",
-  "k": "tahlil arwah zikir"
- },
- {
-  "t": "Al-Ma'thurat Sughra",
-  "s": "Morning and evening zikir",
-  "m": "Islamic",
-  "c": "#34d399",
-  "h": "Mathurat.dc.html",
-  "k": "mathurat matsurat zikir pagi petang"
+  "k": "islamic islam hub solat quran zikir doa puasa"
  },
  {
   "t": "Prayer Times",
-  "s": "Solat times and Qibla",
+  "s": "JAKIM times, alerts and Qibla",
   "m": "Islamic",
   "c": "#34d399",
   "h": "Prayer.dc.html",
-  "k": "solat waktu subuh zohor asar maghrib isyak azan kiblat qibla"
+  "k": "solat prayer waktu azan subuh zohor asar maghrib isyak kiblat qibla jakim zon zone alert"
+ },
+ {
+  "t": "Puasa",
+  "s": "Ramadan, qadha and sunnah fasting calendar",
+  "m": "Islamic",
+  "c": "#34d399",
+  "h": "Puasa.dc.html",
+  "k": "puasa fasting ramadan ramadhan qadha qada sunat sunnah isnin khamis ayyamul bidh syawal calendar kalendar"
+ },
+ {
+  "t": "Qadha and Ramadan log",
+  "s": "Mark each fasting day, see what is owed",
+  "m": "Islamic",
+  "c": "#34d399",
+  "h": "Puasa.dc.html",
+  "k": "qadha tertunggak owed ramadan tanda mark tick log puasa ganti"
  },
  {
   "t": "Tasbih Counter",
@@ -126,15 +70,63 @@ export const SEARCH_INDEX: SearchItem[] = [
   "m": "Islamic",
   "c": "#34d399",
   "h": "Tasbih.dc.html",
-  "k": "tasbih counter zikir subhanallah"
+  "k": "tasbih zikir counter kiraan subhanallah alhamdulillah allahuakbar"
+ },
+ {
+  "t": "Al-Ma'thurat Sughra",
+  "s": "Morning and evening zikir",
+  "m": "Islamic",
+  "c": "#34d399",
+  "h": "Mathurat.dc.html",
+  "k": "mathurat mathurat pagi petang morning evening zikir wirid"
+ },
+ {
+  "t": "Surah Yasin",
+  "s": "With doa after recitation",
+  "m": "Islamic",
+  "c": "#34d399",
+  "h": "Yasin.dc.html",
+  "k": "yasin yaasin surah quran doa"
+ },
+ {
+  "t": "Surah Al-Mulk",
+  "s": "30 verses",
+  "m": "Islamic",
+  "c": "#34d399",
+  "h": "Mulk.dc.html",
+  "k": "mulk surah quran tabarak"
+ },
+ {
+  "t": "Surah Al-Kahfi",
+  "s": "First 10 and last 10 verses",
+  "m": "Islamic",
+  "c": "#34d399",
+  "h": "Kahfi.dc.html",
+  "k": "kahfi kahf surah quran jumaat friday"
+ },
+ {
+  "t": "Surah Al-Fatihah",
+  "s": "7 verses",
+  "m": "Islamic",
+  "c": "#34d399",
+  "h": "Fatihah.dc.html",
+  "k": "fatihah fatiha surah quran"
+ },
+ {
+  "t": "Tahlil Arwah",
+  "s": "Standard reading, 26 parts",
+  "m": "Islamic",
+  "c": "#34d399",
+  "h": "Tahlil.dc.html",
+  "k": "tahlil arwah doa kenduri"
  },
  {
   "t": "My Finance",
-  "s": "Income and spending",
+  "s": "Income, spending and commitments",
   "m": "Finance",
   "c": "#ffc46b",
   "h": "Finance.dc.html",
-  "k": "money ringgit rm"
+  "k": "finance kewangan duit wang money belanja income spending"
  },
  {
   "t": "Monthly Income",
@@ -142,7 +134,7 @@ export const SEARCH_INDEX: SearchItem[] = [
   "m": "Finance",
   "c": "#ffc46b",
   "h": "Finance.dc.html",
-  "k": "salary gaji overtime claim income"
+  "k": "income gaji pendapatan salary overtime claim tuntutan bonus"
  },
  {
   "t": "Spending Tracker",
@@ -150,15 +142,79 @@ export const SEARCH_INDEX: SearchItem[] = [
   "m": "Finance",
   "c": "#ffc46b",
   "h": "Finance.dc.html",
-  "k": "spending belanja expenses"
+  "k": "spending belanja expense perbelanjaan beli petrol makan food kategori category"
+ },
+ {
+  "t": "Commitments and debts",
+  "s": "Monthly bills, instalments and payoff dates",
+  "m": "Finance",
+  "c": "#ffc46b",
+  "h": "Finance.dc.html",
+  "k": "commitment komitmen hutang debt ansuran installment bil bill phone parents bayar pay loan pinjaman"
+ },
+ {
+  "t": "Payment reminders",
+  "s": "Reminders before a bill or debt is due",
+  "m": "Finance",
+  "c": "#ffc46b",
+  "h": "Finance.dc.html",
+  "k": "reminder peringatan due tarikh bayar bil debt hutang notification"
  },
  {
   "t": "My Record",
-  "s": "Logs and records",
+  "s": "Motorcycle logs and records",
   "m": "Record",
   "c": "#ff8fab",
   "h": "Record.dc.html",
-  "k": "record log"
+  "k": "record rekod motor motosikal motorcycle kenderaan vehicle"
+ },
+ {
+  "t": "Monthly Mileage",
+  "s": "Odometer and distance by month",
+  "m": "Record",
+  "c": "#ff8fab",
+  "h": "Record.dc.html",
+  "k": "mileage milage odometer jarak km bulan month tunggang ride"
+ },
+ {
+  "t": "Yearly Mileage",
+  "s": "Distance per year",
+  "m": "Record",
+  "c": "#ff8fab",
+  "h": "Record.dc.html",
+  "k": "mileage tahun year jarak odometer km"
+ },
+ {
+  "t": "Maintenance Spending",
+  "s": "Top cost each month, by year",
+  "m": "Record",
+  "c": "#ff8fab",
+  "h": "Record.dc.html",
+  "k": "maintenance penyelenggaraan repair baiki servis service bengkel belanja spending tahun year"
+ },
+ {
+  "t": "Fuel log",
+  "s": "Litres, cost and economy",
+  "m": "Record",
+  "c": "#ff8fab",
+  "h": "Record.dc.html",
+  "k": "fuel petrol minyak liter litre kos cost fuel economy"
+ },
+ {
+  "t": "Parts and service countdown",
+  "s": "Oil, tyres, chain and when they are due",
+  "m": "Record",
+  "c": "#ff8fab",
+  "h": "Record.dc.html",
+  "k": "parts bahagian servis service oil minyak enjin tyre tayar chain rantai brake brek bateri battery"
+ },
+ {
+  "t": "Road tax, insurance and licence",
+  "s": "Renewal dates",
+  "m": "Record",
+  "c": "#ff8fab",
+  "h": "Record.dc.html",
+  "k": "road tax cukai jalan insurance insurans lesen licence renew renewal pembaharuan"
  },
  {
   "t": "Record Suggestions",
@@ -166,39 +222,15 @@ export const SEARCH_INDEX: SearchItem[] = [
   "m": "Record",
   "c": "#ff8fab",
   "h": "Record.dc.html",
-  "k": "suggestion tips cadangan motorcycle motor oil servis service"
- },
- {
-  "t": "Monthly Mileage",
-  "s": "Odometer and distance",
-  "m": "Record",
-  "c": "#ff8fab",
-  "h": "Record.dc.html",
-  "k": "mileage odometer km jarak yearly tahunan bulanan bandingan compare"
- },
- {
-  "t": "Yearly Mileage",
-  "s": "Distance per year from 2024",
-  "m": "Record",
-  "c": "#ff8fab",
-  "h": "Record.dc.html",
-  "k": "yearly mileage tahun odometer km"
- },
- {
-  "t": "Maintenance Spending",
-  "s": "Repair and service costs",
-  "m": "Record",
-  "c": "#ff8fab",
-  "h": "Record.dc.html",
-  "k": "maintenance repair spending"
+  "k": "suggestion cadangan tips record rekod"
  },
  {
   "t": "Habit & Health",
-  "s": "Mood, water, sleep and goals",
+  "s": "Steps, water, sleep, mood and goals",
   "m": "Habit",
   "c": "#b794ff",
   "h": "Habit.dc.html",
-  "k": "habit health"
+  "k": "habit health kesihatan langkah steps water air sleep tidur mood goal sasaran"
  },
  {
   "t": "Drink Water",
@@ -206,7 +238,7 @@ export const SEARCH_INDEX: SearchItem[] = [
   "m": "Habit",
   "c": "#b794ff",
   "h": "Habit.dc.html",
-  "k": "water minum air"
+  "k": "water air minum glass gelas hydrate cup"
  },
  {
   "t": "Sleep Tracker",
@@ -214,7 +246,31 @@ export const SEARCH_INDEX: SearchItem[] = [
   "m": "Habit",
   "c": "#b794ff",
   "h": "Habit.dc.html",
-  "k": "sleep tidur"
+  "k": "sleep tidur jam hours bed bangun wake"
+ },
+ {
+  "t": "Steps",
+  "s": "Pedometer or Health Connect",
+  "m": "Habit",
+  "c": "#b794ff",
+  "h": "Habit.dc.html",
+  "k": "steps langkah pedometer health connect walk jalan"
+ },
+ {
+  "t": "Mood",
+  "s": "Log how you feel",
+  "m": "Habit",
+  "c": "#b794ff",
+  "h": "Habit.dc.html",
+  "k": "mood perasaan rasa emosi feel"
+ },
+ {
+  "t": "Daily needs",
+  "s": "Water, calories and meal ideas",
+  "m": "Habit",
+  "c": "#b794ff",
+  "h": "Habit.dc.html",
+  "k": "daily needs keperluan harian kalori calories food makanan idea meal berat weight tinggi height umur age"
  },
  {
   "t": "Habit History",
@@ -222,39 +278,15 @@ export const SEARCH_INDEX: SearchItem[] = [
   "m": "Habit",
   "c": "#b794ff",
   "h": "HabitHistory.dc.html",
-  "k": "history streak sejarah"
+  "k": "history sejarah habit 30 hari days overview streak"
  },
  {
-  "t": "Stats",
-  "s": "App usage, last 30 days",
+  "t": "My Life Assistant",
+  "s": "Ask about your own data",
   "m": "System",
   "c": "#5ee7df",
-  "h": "Stats.dc.html",
-  "k": "usage time opens statistik"
- },
- {
-  "t": "Security",
-  "s": "Password, devices and alerts (in Settings)",
-  "m": "System",
-  "c": "#5ee7df",
-  "h": "Settings.dc.html",
-  "k": "password kata laluan devices peranti keselamatan"
- },
- {
-  "t": "Settings",
-  "s": "Appearance, reminders and export",
-  "m": "System",
-  "c": "#5ee7df",
-  "h": "Settings.dc.html",
-  "k": "settings theme dark light text size notification export"
- },
- {
-  "t": "About",
-  "s": "Version and privacy (in Settings)",
-  "m": "System",
-  "c": "#5ee7df",
-  "h": "Settings.dc.html",
-  "k": "about version privacy policy"
+  "h": "Assistant.dc.html",
+  "k": "assistant pembantu ai tanya ask chat bantuan help"
  },
  {
   "t": "Insights",
@@ -262,14 +294,86 @@ export const SEARCH_INDEX: SearchItem[] = [
   "m": "System",
   "c": "#5ee7df",
   "h": "Insights.dc.html",
-  "k": "insights score suggestion ringkasan"
+  "k": "insights score skor life cadangan suggestion tips weekly mingguan"
  },
  {
-  "t": "Log out",
-  "s": "Sign out of this device (in Settings)",
+  "t": "Stats",
+  "s": "App usage, last 30 days",
+  "m": "System",
+  "c": "#5ee7df",
+  "h": "Stats.dc.html",
+  "k": "stats statistik usage penggunaan spending chart graf"
+ },
+ {
+  "t": "Settings",
+  "s": "Reminders, security and about",
   "m": "System",
   "c": "#5ee7df",
   "h": "Settings.dc.html",
-  "k": "logout log out sign out keluar"
+  "k": "settings tetapan setting"
+ },
+ {
+  "t": "Reminders and notifications",
+  "s": "Prayer times, Planner events, daily zikir, quiet hours",
+  "m": "System",
+  "c": "#5ee7df",
+  "h": "Settings.dc.html",
+  "k": "reminder peringatan notification notifikasi alert quiet hours waktu senyap azan zikir event"
+ },
+ {
+  "t": "App lock",
+  "s": "PIN or fingerprint to open the app",
+  "m": "System",
+  "c": "#5ee7df",
+  "h": "Settings.dc.html",
+  "k": "app lock kunci pin fingerprint cap jari biometric face security keselamatan password"
+ },
+ {
+  "t": "Security",
+  "s": "App lock and your data",
+  "m": "System",
+  "c": "#5ee7df",
+  "h": "Settings.dc.html",
+  "k": "security keselamatan privacy privasi lock kunci encrypt sulit data"
+ },
+ {
+  "t": "Export my data",
+  "s": "Excel, PDF, CSV or full backup",
+  "m": "System",
+  "c": "#5ee7df",
+  "h": "Export.dc.html",
+  "k": "export eksport backup sandaran excel pdf csv xlsx download muat turun data"
+ },
+ {
+  "t": "Reset all data",
+  "s": "Erase everything on this phone",
+  "m": "System",
+  "c": "#5ee7df",
+  "h": "Settings.dc.html",
+  "k": "reset padam delete erase clear data kosong"
+ },
+ {
+  "t": "Privacy Policy",
+  "s": "What is stored and where",
+  "m": "System",
+  "c": "#5ee7df",
+  "h": "Settings.dc.html",
+  "k": "privacy policy dasar privasi data stored"
+ },
+ {
+  "t": "Terms of Use",
+  "s": "Using My Life",
+  "m": "System",
+  "c": "#5ee7df",
+  "h": "Settings.dc.html",
+  "k": "terms syarat penggunaan terms of use"
+ },
+ {
+  "t": "About",
+  "s": "Version 1.0.0 and licences",
+  "m": "System",
+  "c": "#5ee7df",
+  "h": "Settings.dc.html",
+  "k": "about version versi developer licence lesen"
  }
 ];

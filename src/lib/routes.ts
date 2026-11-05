@@ -17,6 +17,7 @@ export const ROUTES: Record<string, string> = {
   'Tahlil.dc.html': '/tahlil',
   'Tasbih.dc.html': '/tasbih',
   'Prayer.dc.html': '/prayer',
+  'Puasa.dc.html': '/puasa',
   'Fatihah.dc.html': '/surah/fatihah',
   'Mulk.dc.html': '/surah/mulk',
   'Kahfi.dc.html': '/surah/kahfi',

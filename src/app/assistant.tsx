@@ -1,4 +1,6 @@
-import { useName } from '../lib/store';
+import { useName, useStored } from '../lib/store';
+import { usePrayer } from '../lib/prayer';
+import { useReal, persist } from '../lib/assistantData';
 import React from 'react';
 import { View, TextInput, ScrollView, Pressable, Keyboard, Platform } from 'react-native';
 import { Text } from '../components/Txt';
@@ -69,10 +71,10 @@ class Chat extends AssistantBase {
           </View>
         </View>
 
-        <ScrollView ref={(r) => { (this as any).scrollRef = r; }} style={{ flex: 1, marginTop: 12 }} contentContainerStyle={{ gap: 14, paddingBottom: 16, paddingTop: 4 }} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={(r) => { (this as any).scrollRef = r; }} style={{ flex: 1, marginTop: 12, marginHorizontal: -8 }} contentContainerStyle={{ gap: 14, paddingBottom: 16, paddingTop: 4 }} keyboardShouldPersistTaps="handled">
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
             <OrbSvg size={32} uid="wl" />
-            <Glass radius={20} style={{ maxWidth: 300, paddingVertical: 13, paddingHorizontal: 16, borderBottomLeftRadius: 6 }}><Text style={{ color: '#fff', fontSize: 14.5, lineHeight: 22 }}>{v.welcome}</Text></Glass>
+            <Glass radius={20} style={{ maxWidth: '84%', paddingVertical: 13, paddingHorizontal: 16, borderBottomLeftRadius: 6 }}><Text style={{ color: '#fff', fontSize: 14.5, lineHeight: 22 }}>{v.welcome}</Text></Glass>
           </View>
           {v.startDisp === 'grid' && (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 10 }}>
@@ -115,9 +117,9 @@ class Chat extends AssistantBase {
               <View key={i} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end', justifyContent: me ? 'flex-end' : 'flex-start' }}>
                 {!me && <OrbSvg size={32} uid={'m' + i} />}
                 {me ? (
-                  <LinearGradient colors={['#7c9cff', '#b794ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ maxWidth: 300, paddingVertical: 13, paddingHorizontal: 16, borderRadius: 20, borderBottomRightRadius: 6 }}>{body}</LinearGradient>
+                  <LinearGradient colors={['#7c9cff', '#b794ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ maxWidth: '84%', paddingVertical: 13, paddingHorizontal: 16, borderRadius: 20, borderBottomRightRadius: 6 }}>{body}</LinearGradient>
                 ) : (
-                  <Glass radius={20} style={{ maxWidth: 300, paddingVertical: 13, paddingHorizontal: 16, borderBottomLeftRadius: 6 }}>{body}</Glass>
+                  <Glass radius={20} style={{ maxWidth: '84%', paddingVertical: 13, paddingHorizontal: 16, borderBottomLeftRadius: 6 }}>{body}</Glass>
                 )}
               </View>
             );
@@ -167,11 +169,22 @@ function gradOf(css: string): [string, string] {
   return [m[0], m[1] || m[0]];
 }
 
+// Reads today's prayer times only when the app already knows the place, so opening the Assistant never asks for location.
+function PrayerFeed({ onTimes }: { onTimes: (p: [string, number, number][]) => void }) {
+  const pr = usePrayer(true);
+  const key = JSON.stringify((pr.times || []).map((t: any) => [t.name, t.h, t.m]));
+  React.useEffect(() => { onTimes((pr.times || []).filter((t: any) => t.key !== 'syuruk').map((t: any) => [t.name, t.h, t.m])); }, [key]);
+  return null;
+}
+
 export default function Assistant() {
   const name = useName();
   const router = useRouter();
   const [note, setNote] = React.useState('');
   const chat = React.useRef<any>(null);
+  const [P, setP] = React.useState<[string, number, number][]>([]);
+  const [last] = useStored<any>('ml_prayer_last', null);
+  const real = useReal(P);
   const go = (h: string) => {
     const r = ROUTES[h];
     if (r) router.push(r as any); else { setNote('This screen is being built and will open here soon.'); setTimeout(() => setNote(''), 2200); }
@@ -191,7 +204,8 @@ export default function Assistant() {
         <Circle cx="6%" cy="70%" r={90} stroke="rgba(94,231,223,.08)" strokeWidth={1.2} fill="none" />
       </Svg>
       <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 12 + TOP }}>
-        <Chat ref={chat} userName={name} onBack={() => router.back()} go={go} onScroll={() => chat.current?.scrollRef?.scrollToEnd({ animated: true })} />
+        {last ? <PrayerFeed onTimes={setP} /> : null}
+        {real.ready ? <Chat ref={chat} real={real} persist={persist} userName={name} onBack={() => router.back()} go={go} onScroll={() => chat.current?.scrollRef?.scrollToEnd({ animated: true })} /> : null}
         {!!note && <View style={{ position: 'absolute', left: 20, right: 20, bottom: 230, alignItems: 'center' }}><Glass radius={999} style={{ paddingVertical: 9, paddingHorizontal: 18, backgroundColor: 'rgba(20,26,70,.92)' }}><Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '700' }}>{note}</Text></Glass></View>}
       </SafeAreaView>
     </View>

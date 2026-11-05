@@ -1,37 +1,40 @@
 // @ts-nocheck
 import React from 'react';
-// Answer engine ported from the My Life design. Uses sample data until the real modules are connected.
+import * as F from './fasting';
+import * as DB from './debts';
+// Answer engine. It reads the real saved data of the app, handed in through this.props.real, and saves through this.props.persist.
 export class AssistantBase extends React.Component<any, any> {
   render(): any { return null; }
   constructor(props) {
     super(props);
     this.state = {
-      msgs: [], draft: '', lang: 'en', cat: 0, typing: false, cups: 5,
-      steps: 4200, sleep: 4, mood: 3, prayed: 3, odo: 18420, nextSvc: 20300, kmMonth: 412, mtcMonth: 85, income: 3450, spends: [], pending: null, pid: 0,
-      tasks: [
-        { n: 'Finish weekly report', d: '2026-11-03', s: 'doing' },
-        { n: 'Pay phone bill', d: '2026-11-05', s: 'todo' },
-        { n: 'Buy groceries', d: '', s: 'todo' },
-        { n: 'Renew road tax', d: '', s: 'done' }
-      ]
+      msgs: [], draft: '', lang: 'en', cat: 0, typing: false, cups: 0,
+      steps: 0, sleep: 0, mood: 0, odo: 0, nextSvc: 0, kmMonth: 0, mtcMonth: 0, income: 0, pending: null, pid: 0,
+      tasks: []
     };
+    Object.assign(this.state, this.fromReal(props.real));
   }
+  // The numbers on screen come from the saved data of the app (this.props.real), never from samples.
+  R() { return this.props.real || {}; }
+  fromReal(r) {
+    r = r || {};
+    return { steps: r.steps || 0, cups: r.cups || 0, sleep: r.sleep || 0, mood: r.mood || 0, odo: r.odo || 0, kmMonth: r.kmMonth || 0, mtcMonth: r.mtcMonth || 0, income: r.income || 0, tasks: r.tasks || [], nextSvc: r.nextSvc || 0 };
+  }
+  componentDidMount() { this.setState(this.fromReal(this.props.real)); }
+  componentDidUpdate(prev) { if (prev.real !== this.props.real) this.setState(this.fromReal(this.props.real)); }
   todayStr(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   rm(n) { return String(Math.round(n * 100) / 100); }
   mk(text, x) { return Object.assign({ me: false, text: text, time: this.hm(), big: '', bigLbl: '', pct: -1, color: '#8fe9e2', label: '', href: '', pid: 0 }, x || {}); }
   D() {
-    const s = this.state; const td = this.todayStr(); const mo = td.slice(0, 7);
-    const cats = { Food: 238, Petrol: 150, Bills: 120, Shopping: 80, Other: 54 };
-    let tdy = 18; let mon = 642;
-    s.spends.forEach(x => { cats[x.cat] = (cats[x.cat] || 0) + x.amt; if (x.date === td) tdy += x.amt; if (x.date.slice(0, 7) === mo) mon += x.amt; });
-    let top = 'Food'; Object.keys(cats).forEach(k => { if (cats[k] > cats[top]) top = k; });
-    const r = (n) => Math.round(n * 100) / 100;
+    const s = this.state; const r = this.R();
+    const cats = r.cats || {}; let top = ''; let topAmt = 0;
+    Object.keys(cats).forEach(k => { if (cats[k] > topAmt) { top = k; topAmt = cats[k]; } });
+    const rr = (n) => Math.round(n * 100) / 100;
     return {
-      steps: s.steps, goal: 8000, sleep: s.sleep, sleepGoal: 7, cupGoal: 8, mood: s.mood, score: 82, streak: 4,
-      prayed: s.prayed, spendToday: r(tdy), spendMonth: r(mon), income: s.income, topCat: top, topAmt: r(cats[top]),
-      kmMonth: s.kmMonth, kmLast: 380, odo: s.odo, nextSvc: s.nextSvc, mtcMonth: r(s.mtcMonth),
-      P: [['Subuh', 5, 48], ['Zohor', 13, 14], ['Asar', 16, 23], ['Maghrib', 19, 15], ['Isyak', 20, 26]],
-      events: [{ n: 'Event name', d: '2026-11-05' }, { n: 'Another event', d: '2026-11-20' }]
+      steps: s.steps, goal: r.goal || 8000, sleep: s.sleep, sleepGoal: 7, cupGoal: r.cupGoal || 8, mood: s.mood, score: r.score || 0, streak: r.streak || 0,
+      spendToday: rr(r.spendToday || 0), spendMonth: rr(r.spendMonth || 0), income: s.income, topCat: top, topAmt: rr(topAmt), hasSpend: !!r.hasSpend,
+      kmMonth: r.kmMonth, kmLast: r.kmLast, odo: s.odo, nextSvc: r.nextSvc, nextSvcName: r.nextSvcName || '', mtcMonth: rr(s.mtcMonth), hasVehicle: !!r.hasVehicle,
+      P: r.P || [], events: r.events || []
     };
   }
   has(qn, list) { const p = ' ' + qn + ' '; return list.some(k => p.indexOf(' ' + k) >= 0); }
@@ -82,7 +85,6 @@ export class AssistantBase extends React.Component<any, any> {
     const D = this.D(); let patch = { pending: null }; let m;
     if (!yes) m = this.mk(L('Okay, I did not save it.', 'Baik, saya tidak simpan.'));
     else if (p.type === 'spend') {
-      patch.spends = s.spends.concat([{ amt: p.amt, cat: p.cat, name: p.name, date: p.date }]);
       const tdy = D.spendToday + (p.date === this.todayStr() ? p.amt : 0);
       m = this.mk(L('Saved RM ' + this.rm(p.amt) + ' under ' + p.cat + ' in My Finance. You have spent RM ' + this.rm(tdy) + ' today.', 'Dah disimpan RM ' + this.rm(p.amt) + ' di bawah ' + p.cat + ' dalam My Finance. Awak dah belanja RM ' + this.rm(tdy) + ' hari ini.'), { big: 'RM ' + this.rm(tdy), bigLbl: L('spent today', 'belanja hari ini'), color: '#ffc46b', label: L('Open Spending Tracker', 'Buka Spending Tracker'), href: 'Finance.dc.html' });
     } else if (p.type === 'mtc') {
@@ -99,6 +101,7 @@ export class AssistantBase extends React.Component<any, any> {
       m = this.mk(L('Odometer saved: ' + this.num(p.val) + ' km. You rode ' + diff + ' km since the last reading, so this month is ' + (s.kmMonth + diff) + ' km.', 'Odometer disimpan: ' + this.num(p.val) + ' km. Awak tunggang ' + diff + ' km sejak bacaan terakhir, jadi bulan ini ' + (s.kmMonth + diff) + ' km.'), { big: this.num(p.val), bigLbl: 'km', color: '#ff8fab', label: L('Open My Record', 'Buka My Record'), href: 'Record.dc.html' });
     }
     this.setState(Object.assign({ msgs: s.msgs.concat([m]) }, patch));
+    if (yes && this.props.persist) this.props.persist(p);
     this.scroll();
   }
   hm() { const d = new Date(); let h = d.getHours(); const m = String(d.getMinutes()).padStart(2, '0'); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + m + ' ' + ap; }
@@ -115,7 +118,7 @@ export class AssistantBase extends React.Component<any, any> {
   }
   fn() { return String(this.props.userName || 'Adli Syahmi').trim().split(/\s+/)[0]; }
   nextPrayer() {
-    const D = this.D(); const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
+    const D = this.D(); if (!D.P.length) return null; const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
     let pick = null; let add = 0;
     for (let i = 0; i < D.P.length; i++) { const t = D.P[i][1] * 60 + D.P[i][2]; if (t > cur) { pick = D.P[i]; break; } }
     if (!pick) { pick = D.P[0]; add = 1440; }
@@ -126,7 +129,7 @@ export class AssistantBase extends React.Component<any, any> {
   detect(q) {
     const t = this.norm(q).split(' ');
     const ms = ['berapa', 'saya', 'hari', 'ini', 'macam', 'mana', 'tahap', 'belanja', 'tidur', 'langkah', 'tugasan', 'solat', 'tambah', 'bila', 'apa', 'bulan', 'lepas', 'awak', 'boleh', 'jauh', 'baki', 'gaji', 'servis', 'kesihatan', 'adakah', 'siapa', 'tolong', 'sekarang', 'esok', 'kiblat'];
-    const en = ['what', 'how', 'my', 'today', 'am', 'the', 'is', 'many', 'much', 'did', 'can', 'who', 'when', 'steps', 'sleep'];
+    const en = ['what', 'how', 'my', 'today', 'am', 'the', 'is', 'many', 'much', 'did', 'can', 'who', 'when', 'steps', 'sleep', 'this', 'month', 'mileage', 'spent', 'spend', 'add', 'next', 'left', 'income', 'tasks', 'task', 'water', 'prayer', 'fasting', 'debts', 'reminders', 'lock', 'service', 'odometer', 'are', 'on', 'i', 'show', 'tell'];
     if (t.some(x => ms.indexOf(x) >= 0)) return 'ms';
     if (t.some(x => en.indexOf(x) >= 0)) return 'en';
     return null;
@@ -143,7 +146,7 @@ export class AssistantBase extends React.Component<any, any> {
       { id: 'streak', k: ['streak', 'konsisten', 'berturut', 'consecutive'] },
       { id: 'next', k: ['next prayer', 'solat seterusnya', 'bila solat', 'bila waktu', 'azan', 'when is prayer', 'prayer next'] },
       { id: 'times', k: ['prayer times', 'waktu solat', 'jadual solat', 'prayer schedule', 'subuh', 'zohor', 'zuhur', 'asar', 'maghrib', 'isyak', 'fajr', 'dhuhr', 'asr', 'isha'] },
-      { id: 'done', k: ['tunai', 'prayed', 'berapa solat', 'solat saya', 'prayers done', 'prayers today', 'prayers on time', 'my prayers'] },
+      { id: 'done', k: ['pray', 'tunai', 'prayed', 'berapa solat', 'solat saya', 'prayers done', 'prayers today', 'prayers on time', 'my prayers'] },
       { id: 'quran', k: ['quran', 'kahfi', 'bacaan', 'surah', 'mengaji', 'recite', 'reading'] },
       { id: 'zikir', k: ['zikir', 'zikr', 'dhikr', 'tasbih', 'mathurat', 'wirid'] },
       { id: 'qibla', k: ['kiblat', 'qibla'] },
@@ -165,6 +168,11 @@ export class AssistantBase extends React.Component<any, any> {
       { id: 'thanks', k: ['terima kasih', 'thanks', 'thank', 'tq', 'makasih', 'thx'] },
       { id: 'who', k: ['siapa', 'who are you', 'who', 'kamu', 'nama awak', 'are you ai', 'adakah awak ai', 'chatgpt'] },
       { id: 'help', k: ['boleh tanya', 'help', 'bantuan', 'apa boleh', 'what can', 'tolong', 'can i ask', 'commands'] },
+      { id: 'puasa', k: ['puasa', 'fasting', 'fast', 'ramadan', 'ramadhan', 'qadha', 'qada', 'sunat', 'sunnah', 'berpuasa'] },
+      { id: 'debt', k: ['hutang', 'debt', 'debts', 'komitmen', 'commitment', 'commitments', 'ansuran', 'installment', 'bayaran bulanan', 'monthly payment', 'bil bulanan'] },
+      { id: 'lock', k: ['kunci', 'app lock', 'lock', 'pin', 'biometrik', 'biometric', 'fingerprint', 'cap jari'] },
+      { id: 'remind', k: ['peringatan', 'reminder', 'reminders', 'notifikasi', 'notification', 'notifications', 'quiet hours', 'waktu senyap', 'alert', 'alerts'] },
+      { id: 'export', k: ['export', 'eksport', 'backup', 'sandaran', 'muat turun data'] },
       { id: 'privacy', k: ['selamat', 'safe', 'privasi', 'privacy', 'private', 'secure', 'keselamatan', 'security', 'data saya', 'my data'] }
     ];
   }
@@ -193,7 +201,7 @@ export class AssistantBase extends React.Component<any, any> {
     const s = this.state; const D = this.D(); const qn = this.norm(q);
     const L = (en, ms) => (lang === 'ms' ? ms : en);
     const mk = (text, x) => Object.assign({ me: false, text: text, time: this.hm(), big: '', bigLbl: '', pct: -1, color: '#8fe9e2', label: '', href: '' }, x || {});
-    let patch = {}; let m = null;
+    let patch = {}; let m = null; let doAct = null;
     const cmdTask = q.trim().match(/^(tambah|add|buat|create|new)\s+(tugasan|tugas|task|todo)\b\s*:?\s*(.*)$/i);
     const cmdWater = /^(tambah|add|log|minum|drink)\b/.test(qn) && /(air|water|gelas|segelas|glass|cup)/.test(qn);
     const pc = Math.round(D.steps / D.goal * 100);
@@ -201,6 +209,7 @@ export class AssistantBase extends React.Component<any, any> {
     const avg = Math.round(cs.reduce((a, c) => a + c.r, 0) / cs.length * 100);
     const weak = cs.slice().sort((a, b) => a.r - b.r)[0];
     const np = this.nextPrayer();
+    const R = this.R();
     const open = s.tasks.filter(t => t.s !== 'done');
     const dnow = s.tasks.filter(t => t.s === 'done').length;
     const act = this.parseAct(q, qn);
@@ -214,29 +223,28 @@ export class AssistantBase extends React.Component<any, any> {
         else if (act.type === 'inc') m = mk(L('Got it. Save this income to this month?\n• ' + act.name, 'Faham. Simpan pendapatan ini untuk bulan ini?\n• ' + act.name), { pid: id, big: 'RM ' + this.rm(act.amt), bigLbl: act.name, color: '#34d399' });
         else m = mk(L('Got it. Save this odometer reading?', 'Faham. Simpan bacaan odometer ini?'), { pid: id, big: this.num(act.val), bigLbl: 'km', color: '#ff8fab' });
       } else if (act.type === 'steps') {
-        patch.steps = s.steps + act.n; const pp = Math.min(100, Math.round(patch.steps / D.goal * 100));
+        doAct = act; patch.steps = s.steps + act.n; const pp = Math.min(100, Math.round(patch.steps / D.goal * 100));
         m = mk(L('Added ' + this.num(act.n) + ' steps. You are at ' + this.num(patch.steps) + ' today (' + pp + '% of goal).', 'Ditambah ' + this.num(act.n) + ' langkah. Sekarang ' + this.num(patch.steps) + ' hari ini (' + pp + '% sasaran).'), { big: this.num(patch.steps), bigLbl: L('steps today', 'langkah hari ini'), pct: pp, color: '#5ee7df', label: L('Open Habit & Health', 'Buka Habit & Health'), href: 'Habit.dc.html' });
       } else if (act.type === 'sleep') {
-        patch.sleep = act.h;
+        doAct = act; patch.sleep = act.h;
         m = mk(L('Saved: you slept ' + act.h + ' hours.', 'Disimpan: awak tidur ' + act.h + ' jam.') + (act.h < 6 ? L(' That is short. Rest early tonight.', ' Itu kurang. Rehat awal malam ini.') : ''), { big: act.h + 'h', bigLbl: L('of 7h goal', 'daripada 7j'), pct: Math.round(Math.min(act.h / 7, 1) * 100), color: '#b794ff', label: L('Open Habit & Health', 'Buka Habit & Health'), href: 'Habit.dc.html' });
       } else if (act.type === 'mood') {
-        patch.mood = act.v; const nm = L(['Awful', 'Low', 'Okay', 'Good', 'Great'][act.v - 1], ['Teruk', 'Rendah', 'Okay', 'Baik', 'Hebat'][act.v - 1]);
+        doAct = act; patch.mood = act.v; const nm = L(['Awful', 'Low', 'Okay', 'Good', 'Great'][act.v - 1], ['Teruk', 'Rendah', 'Okay', 'Baik', 'Hebat'][act.v - 1]);
         m = mk(L('Saved: your mood today is "' + nm + '".', 'Disimpan: mood awak hari ini "' + nm + '".'), { big: act.v + '/5', bigLbl: nm, pct: act.v * 20, color: '#ff8fab', label: L('Open Habit & Health', 'Buka Habit & Health'), href: 'Habit.dc.html' });
       } else if (act.type === 'pray') {
-        patch.prayed = Math.min(5, s.prayed + 1);
-        m = mk(L('Marked ' + (act.name || 'the prayer') + ' as done. That is ' + patch.prayed + ' of 5 today.', 'Ditanda ' + (act.name || 'solat') + ' sudah ditunaikan. Sekarang ' + patch.prayed + ' daripada 5 hari ini.'), { big: patch.prayed + '/5', bigLbl: L('on time', 'tepat waktu'), pct: patch.prayed * 20, color: '#34d399', label: L('Open Islamic Hub', 'Buka Islamic Hub'), href: 'Islamic.dc.html' });
+        m = mk(L('My Life does not track which prayers you have done yet. It reminds you at each prayer time. You can set the alerts in Prayer Times.', 'My Life belum merekod solat yang sudah ditunaikan. Ia hanya mengingatkan pada setiap waktu solat. Awak boleh atur peringatan di Waktu Solat.'), { label: L('Open Prayer Times', 'Buka Waktu Solat'), href: 'Prayer.dc.html' });
       }
     } else if (cmdTask) {
       let name = (cmdTask[3] || '').trim();
       if (!name) { m = mk(L('Sure. What is the task? Type for example: add task buy milk.', 'Boleh. Apa tugasannya? Contoh: tambah tugasan beli susu.')); }
       else {
         name = name.charAt(0).toUpperCase() + name.slice(1);
-        patch.tasks = s.tasks.concat([{ n: name, d: '', s: 'todo' }]);
+        doAct = { type: 'task', name: name }; patch.tasks = s.tasks.concat([{ n: name, d: '', s: 'todo' }]);
         m = mk(L('Done. I added "' + name + '" to your Daily Planner tasks. You now have ' + (open.length + 1) + ' open tasks.', 'Siap. Saya dah tambah "' + name + '" dalam tugasan Daily Planner. Awak ada ' + (open.length + 1) + ' tugasan belum siap.'), { big: String(open.length + 1), bigLbl: L('open tasks', 'tugasan belum siap'), color: '#7c9cff', label: L('Open Daily Planner', 'Buka Daily Planner'), href: 'Planner.dc.html' });
       }
     } else if (cmdWater) {
       const wn = (qn.match(/(\d+)\s*(gelas|glass|cup)/) || [0, 1])[1]; const c = Math.min(D.cupGoal, s.cups + Number(wn));
-      patch.cups = c;
+      patch.cups = c; doAct = { type: 'cups', c: c };
       m = mk(c === s.cups ? L('You already reached your water goal today. Well done.', 'Awak dah capai sasaran air hari ini. Syabas.') : L('Logged. That is ' + c + ' of ' + D.cupGoal + ' glasses today.', 'Dah direkod. Sekarang ' + c + ' daripada ' + D.cupGoal + ' gelas hari ini.'), { big: c + '/' + D.cupGoal, bigLbl: L('glasses', 'gelas'), pct: Math.round(c / D.cupGoal * 100), color: '#5ee7df', label: L('Open Habit & Health', 'Buka Habit & Health'), href: 'Habit.dc.html' });
     } else {
       let id = this.pick(qn);
@@ -255,6 +263,7 @@ export class AssistantBase extends React.Component<any, any> {
           m = mk(L('Your health score today is ' + avg + '%, which is ' + (avg >= 75 ? 'good' : avg >= 50 ? 'fair' : 'low') + '.\nWater ' + s.cups + '/' + D.cupGoal + ' · Sleep ' + D.sleep + 'h · Steps ' + this.num(D.steps) + '\nWeakest area: ' + weak.en + '. ' + weak.tipEn, 'Skor kesihatan awak hari ini ' + avg + '%, iaitu ' + (avg >= 75 ? 'baik' : avg >= 50 ? 'sederhana' : 'rendah') + '.\nAir ' + s.cups + '/' + D.cupGoal + ' · Tidur ' + D.sleep + 'j · Langkah ' + this.num(D.steps) + '\nPaling lemah: ' + weak.ms + '. ' + weak.tipMs), { big: avg + '%', bigLbl: L('daily goal', 'sasaran harian'), pct: avg, color: avg >= 75 ? '#34d399' : avg >= 50 ? '#ffc46b' : '#ff8fab', label: L('Open Habit & Health', 'Buka Habit & Health'), href: 'Habit.dc.html' });
           break;
         case 'sleep': {
+          if (!D.sleep) { m = mk(L('You have not logged last night\'s sleep yet. Tell me, for example, "I slept 7 hours".', 'Awak belum rekod tidur semalam. Beritahu saya, contohnya "saya tidur 7 jam".'), { label: L('Open Habit & Health', 'Buka Habit & Health'), href: 'Habit.dc.html' }); break; }
           const gap = Math.max(0, D.sleepGoal - D.sleep);
           m = mk(L('You slept ' + D.sleep + ' hours, ' + gap + ' hours short of your ' + D.sleepGoal + ' hour goal. ' + (gap > 1 ? 'Short sleep lowers focus and mood. Try to be in bed 1 to 2 hours earlier tonight.' : 'That is close to your goal. Keep it up.'), 'Awak tidur ' + D.sleep + ' jam, kurang ' + gap + ' jam daripada sasaran ' + D.sleepGoal + ' jam. ' + (gap > 1 ? 'Tidur kurang menjejaskan fokus dan mood. Cuba berbaring 1 hingga 2 jam lebih awal malam ini.' : 'Hampir capai sasaran. Teruskan.')), { big: D.sleep + 'h', bigLbl: L('of ' + D.sleepGoal + 'h goal', 'daripada ' + D.sleepGoal + 'j'), pct: Math.round(Math.min(D.sleep / D.sleepGoal, 1) * 100), color: '#b794ff', label: L('Open Sleep tracker', 'Buka penjejak tidur'), href: 'Habit.dc.html' });
           break;
@@ -263,29 +272,32 @@ export class AssistantBase extends React.Component<any, any> {
           m = mk(L('You have had ' + s.cups + ' of ' + D.cupGoal + ' glasses today. ' + (s.cups < D.cupGoal ? (D.cupGoal - s.cups) + ' more to reach your goal. Tell me "add a glass of water" and I will log it.' : 'Goal reached. Well done.'), 'Awak dah minum ' + s.cups + ' daripada ' + D.cupGoal + ' gelas hari ini. ' + (s.cups < D.cupGoal ? 'Tinggal ' + (D.cupGoal - s.cups) + ' gelas lagi. Cakap "tambah segelas air" dan saya akan rekodkan.' : 'Sasaran dicapai. Syabas.')), { big: s.cups + '/' + D.cupGoal, bigLbl: L('glasses', 'gelas'), pct: Math.round(s.cups / D.cupGoal * 100), color: '#5ee7df', label: L('Open Habit & Health', 'Buka Habit & Health'), href: 'Habit.dc.html' });
           break;
         case 'mood': {
+          if (!D.mood) { m = mk(L('You have not logged your mood today. Tell me, for example, "my mood is good".', 'Awak belum rekod mood hari ini. Beritahu saya, contohnya "mood saya baik".'), { label: L('Open Habit & Health', 'Buka Habit & Health'), href: 'Habit.dc.html' }); break; }
           const nm = L(['Awful', 'Low', 'Okay', 'Good', 'Great'][D.mood - 1], ['Teruk', 'Rendah', 'Okay', 'Baik', 'Hebat'][D.mood - 1]);
           m = mk(L('Your mood today is "' + nm + '". ' + (D.sleep < 6 ? 'Low sleep may be affecting it. Rest early tonight.' : 'Keep doing what works for you.'), 'Mood awak hari ini "' + nm + '". ' + (D.sleep < 6 ? 'Tidur yang kurang mungkin menjejaskannya. Rehat awal malam ini.' : 'Teruskan apa yang berkesan untuk awak.')), { big: D.mood + '/5', bigLbl: nm, pct: D.mood * 20, color: '#ff8fab', label: L('Update mood', 'Kemas kini mood'), href: 'Habit.dc.html' });
           break;
         }
         case 'score':
-          m = mk(L('Your Life Score is ' + D.score + ' out of 100. It blends prayers, water, spending and habits. Water is the easiest way to lift it today.', 'Skor Life awak ' + D.score + ' daripada 100. Ia gabungan solat, air, perbelanjaan dan habit. Air ialah cara paling mudah untuk menaikkannya hari ini.'), { big: String(D.score), bigLbl: L('out of 100', 'daripada 100'), pct: D.score, color: '#8fe9e2', label: L('Open Insights', 'Buka Insights'), href: 'Insights.dc.html' });
+          m = mk(D.score > 0 ? L('Your Life Score is ' + D.score + ' out of 100. It blends your habits, tasks, commitments, spending, zikir and fasting, using only what you have logged.', 'Skor Life awak ' + D.score + ' daripada 100. Ia gabungan habit, tugasan, komitmen, belanja, zikir dan puasa, berdasarkan apa yang awak dah rekod.') : L('There is not enough logged yet to give a Life Score. Log steps, water or sleep, and it will appear.', 'Belum cukup rekod untuk skor Life. Rekod langkah, air atau tidur dan ia akan muncul.'), { big: D.score > 0 ? String(D.score) : '', bigLbl: L('of 100', 'daripada 100'), pct: D.score > 0 ? D.score : -1, color: '#8fe9e2', label: L('Open Insights', 'Buka Insights'), href: 'Insights.dc.html' });
           break;
         case 'streak':
-          m = mk(L('Your habit streak is ' + D.streak + ' days in a row. Log one habit today to make it ' + (D.streak + 1) + '.', 'Streak habit awak ' + D.streak + ' hari berturut-turut. Rekod satu habit hari ini untuk jadikan ' + (D.streak + 1) + '.'), { big: D.streak + ' d', bigLbl: L('streak', 'streak'), pct: Math.min(100, D.streak * 14), color: '#ff8fab', label: L('See habit history', 'Lihat sejarah habit'), href: 'HabitHistory.dc.html' });
+          m = mk(D.streak > 0 ? L('Your best habit streak is ' + D.streak + ' days in a row (days at 70% or more of your goals).', 'Streak habit terbaik awak ' + D.streak + ' hari berturut-turut (hari dengan 70% atau lebih sasaran).') : L('No streak yet. A day counts when you reach 70% of your steps, water and sleep goals.', 'Belum ada streak. Satu hari dikira bila awak capai 70% sasaran langkah, air dan tidur.'), { big: D.streak > 0 ? D.streak + ' d' : '', bigLbl: L('streak', 'streak'), color: '#ffc46b', label: L('Open Habit & Health', 'Buka Habit & Health'), href: 'Habit.dc.html' });
           break;
         case 'next': {
+          if (!np) { m = mk(L('I do not have your prayer times yet. Open Prayer Times once so the app can find your zone, then ask me again.', 'Saya belum ada waktu solat awak. Buka Waktu Solat sekali supaya app cari zon awak, kemudian tanya semula.'), { label: L('Open Prayer Times', 'Buka Waktu Solat'), href: 'Prayer.dc.html' }); break; }
           const when = np.hh > 0 ? np.hh + 'h ' + np.mm + 'm' : np.mm + ' min';
-          m = mk(L('Next prayer is ' + np.name + ' at ' + np.time + ', in ' + when + '. These are sample times. The real app follows JAKIM for your zone.', 'Solat seterusnya ialah ' + np.name + ' pada ' + np.time + ', lagi ' + when + '. Ini waktu contoh. App sebenar akan ikut JAKIM mengikut zon awak.'), { big: np.time, bigLbl: np.name, pct: -1, color: '#34d399', label: L('Open Prayer Times', 'Buka Waktu Solat'), href: 'Prayer.dc.html' });
+          m = mk(L('Next prayer is ' + np.name + ' at ' + np.time + ', in ' + when + '.', 'Solat seterusnya ialah ' + np.name + ' pada ' + np.time + ', lagi ' + when + '.'), { big: np.time, bigLbl: np.name, color: '#34d399', label: L('Open Prayer Times', 'Buka Waktu Solat'), href: 'Prayer.dc.html' });
           break;
         }
         case 'times':
-          m = mk(L('Prayer times today (sample, Kuala Lumpur):\n', 'Waktu solat hari ini (contoh, Kuala Lumpur):\n') + D.P.map(p => { let h = p[1]; const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return p[0] + '  ' + h + ':' + String(p[2]).padStart(2, '0') + ' ' + ap; }).join('\n') + L('\nThe real app follows JAKIM by zone.', '\nApp sebenar akan ikut JAKIM mengikut zon.'), { label: L('Open Prayer Times', 'Buka Waktu Solat'), href: 'Prayer.dc.html' });
+          m = D.P.length ? mk(L('Prayer times today:\n', 'Waktu solat hari ini:\n') + D.P.map(p => { let h = p[1]; const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return p[0] + '  ' + h + ':' + String(p[2]).padStart(2, '0') + ' ' + ap; }).join('\n'), { label: L('Open Prayer Times', 'Buka Waktu Solat'), href: 'Prayer.dc.html' })
+            : mk(L('I do not have your prayer times yet. Open Prayer Times once so the app can find your zone.', 'Saya belum ada waktu solat awak. Buka Waktu Solat sekali supaya app cari zon awak.'), { label: L('Open Prayer Times', 'Buka Waktu Solat'), href: 'Prayer.dc.html' });
           break;
         case 'done':
-          m = mk(L('You have prayed ' + D.prayed + ' of 5 prayers on time today. Next is ' + np.name + ' at ' + np.time + '.', 'Awak dah tunaikan ' + D.prayed + ' daripada 5 solat pada waktunya hari ini. Seterusnya ' + np.name + ' pada ' + np.time + '.'), { big: D.prayed + '/5', bigLbl: L('on time', 'tepat waktu'), pct: D.prayed * 20, color: '#34d399', label: L('Open Islamic Hub', 'Buka Islamic Hub'), href: 'Islamic.dc.html' });
+          m = mk(L('My Life does not track which prayers you have done yet. It reminds you at each prayer time' + (np ? ', and the next is ' + np.name + ' at ' + np.time : '') + '.', 'My Life belum merekod solat yang sudah ditunaikan. Ia mengingatkan pada setiap waktu solat' + (np ? ', dan yang seterusnya ' + np.name + ' pada ' + np.time : '') + '.'), { label: L('Open Prayer Times', 'Buka Waktu Solat'), href: 'Prayer.dc.html' });
           break;
         case 'quran':
-          m = mk(L('You are in Surah Al-Kahfi. ' + (new Date().getDay() === 5 ? 'Today is Friday, a good day to finish it.' : 'Friday is a good day to finish it.') + ' Tap below to continue where you stopped.', 'Awak sedang membaca Surah Al-Kahfi. ' + (new Date().getDay() === 5 ? 'Hari ini Jumaat, waktu yang baik untuk menghabiskannya.' : 'Jumaat ialah hari yang baik untuk menghabiskannya.') + ' Tekan di bawah untuk sambung di tempat awak berhenti.'), { label: L('Continue Al-Kahfi', 'Sambung Al-Kahfi'), href: 'Kahfi.dc.html' });
+          m = mk(L('Open the Islamic Hub to read or continue your Quran. ' + (new Date().getDay() === 5 ? 'Today is Friday, a good day for Surah Al-Kahfi.' : 'Friday is a good day for Surah Al-Kahfi.'), 'Buka Islamic Hub untuk membaca atau sambung Quran. ' + (new Date().getDay() === 5 ? 'Hari ini Jumaat, sesuai untuk Surah Al-Kahfi.' : 'Jumaat sesuai untuk Surah Al-Kahfi.')), { label: L('Open Islamic Hub', 'Buka Islamic Hub'), href: 'Islamic.dc.html' });
           break;
         case 'zikir': {
           const h = new Date().getHours();
@@ -294,7 +306,37 @@ export class AssistantBase extends React.Component<any, any> {
           break;
         }
         case 'qibla':
-          m = mk(L('Qibla in the sample is 292° from north (Kuala Lumpur). The real app will follow JAKIM for the Qibla direction.', 'Kiblat dalam contoh ialah 292° dari utara (Kuala Lumpur). App sebenar akan ikut JAKIM untuk arah kiblat.'), { big: '292°', bigLbl: L('from north', 'dari utara'), label: L('Open Prayer Times', 'Buka Waktu Solat'), href: 'Prayer.dc.html' });
+          m = mk(L('The Qibla compass is in Prayer Times. It uses your location to point the way.', 'Kompas kiblat ada dalam Waktu Solat. Ia guna lokasi awak untuk tunjuk arah.'), { label: L('Open Prayer Times', 'Buka Waktu Solat'), href: 'Prayer.dc.html' });
+          break;
+        case 'puasa': {
+          const P = R.puasa || {}; const rs = F.ramadanState(P, new Date()); const sn = F.sunatToday(new Date(), P.off || 0); const qd = F.qadhaOwed(P, new Date());
+          const lines = [];
+          if (rs.phase === 'during') lines.push(L('It is Ramadan, day ' + rs.day + '. You have fasted ' + rs.fasted + ' days so far.', 'Sekarang Ramadan, hari ke-' + rs.day + '. Awak dah puasa ' + rs.fasted + ' hari setakat ini.'));
+          else if (rs.phase === 'before') lines.push(L('Ramadan is in about ' + rs.daysTo + ' days.', 'Ramadan lagi kira-kira ' + rs.daysTo + ' hari.'));
+          if (sn) lines.push(L('Today: ' + sn + '.', 'Hari ini: ' + sn + '.'));
+          lines.push(qd > 0 ? L('Qadha owed: ' + qd + ' days.', 'Qadha tertunggak: ' + qd + ' hari.') : L('No qadha owed.', 'Tiada qadha tertunggak.'));
+          m = mk(lines.join('\n'), { big: qd > 0 ? String(qd) : '', bigLbl: L('qadha days', 'hari qadha'), color: '#34d399', label: L('Open Puasa', 'Buka Puasa'), href: 'Puasa.dc.html' });
+          break;
+        }
+        case 'debt': {
+          const ds = DB.debtSummary(R.debts || DB.DEBT_EMPTY);
+          if (!ds.list.length) { m = mk(L('You have not added any commitments or debts yet. You can add them in My Finance.', 'Awak belum tambah komitmen atau hutang. Boleh tambah dalam My Finance.'), { label: L('Open My Finance', 'Buka My Finance'), href: 'Finance.dc.html' }); break; }
+          const un = ds.unpaid.slice(0, 4).map(x => '• ' + x.name + ' RM ' + this.rm(DB.amountDue(x, ds.ym)) + ' (' + L('day ', 'hari ') + x.due + ')').join('\n');
+          m = mk(L('This month: RM ' + this.rm(ds.paid) + ' paid of RM ' + this.rm(ds.commit) + '. ' + (ds.toPay > 0.004 ? 'Still to pay RM ' + this.rm(ds.toPay) + ':\n' + un : 'All settled.') + (ds.totalLeft > 0 ? '\nDebt balance left: RM ' + this.num(this.rm(ds.totalLeft)) + '.' : ''), 'Bulan ini: RM ' + this.rm(ds.paid) + ' dibayar daripada RM ' + this.rm(ds.commit) + '. ' + (ds.toPay > 0.004 ? 'Belum bayar RM ' + this.rm(ds.toPay) + ':\n' + un : 'Semua selesai.') + (ds.totalLeft > 0 ? '\nBaki hutang: RM ' + this.num(this.rm(ds.totalLeft)) + '.' : '')), { big: 'RM ' + this.rm(ds.toPay), bigLbl: L('left to pay', 'belum dibayar'), pct: ds.commit > 0 ? Math.round(ds.paid / ds.commit * 100) : -1, color: '#ff8fab', label: L('Open My Finance', 'Buka My Finance'), href: 'Finance.dc.html' });
+          break;
+        }
+        case 'lock': {
+          const lk = R.lock || {};
+          m = mk(lk.on ? L('App lock is on. It asks for ' + (lk.bio ? 'your fingerprint or PIN' : 'your PIN') + ' and locks again after ' + (lk.after === 0 ? 'you leave the app' : lk.after / 60 + ' min') + '. You can change it in Settings, Security.', 'Kunci app sedang hidup. Ia minta ' + (lk.bio ? 'cap jari atau PIN' : 'PIN') + ' dan kunci semula selepas ' + (lk.after === 0 ? 'awak keluar app' : lk.after / 60 + ' minit') + '. Boleh ubah di Settings, Security.') : L('App lock is off. Turn it on in Settings, Security, to protect My Life with a PIN or fingerprint.', 'Kunci app belum hidup. Hidupkan di Settings, Security, untuk lindungi My Life dengan PIN atau cap jari.'), { label: L('Open Settings', 'Buka Settings'), href: 'Settings.dc.html' });
+          break;
+        }
+        case 'remind': {
+          const tg = R.tg || {}; const on = (b) => (b ? L('on', 'hidup') : L('off', 'mati'));
+          m = mk(L('Reminders:\n• Prayer times: ' + on(tg.pr) + '\n• Planner events: ' + on(tg.ev) + '\n• Daily zikir: ' + on(tg.zk) + '\n• Quiet hours (12 am to 5 am): ' + on(tg.qh), 'Peringatan:\n• Waktu solat: ' + on(tg.pr) + '\n• Acara Planner: ' + on(tg.ev) + '\n• Zikir harian: ' + on(tg.zk) + '\n• Waktu senyap (12 pagi hingga 5 pagi): ' + on(tg.qh)), { label: L('Open Settings', 'Buka Settings'), href: 'Settings.dc.html' });
+          break;
+        }
+        case 'export':
+          m = mk(L('You can export all your data from Settings, Export all my data, as Excel, PDF, CSV or a full backup. Keep a backup before you change phones.', 'Awak boleh eksport semua data di Settings, Export all my data, dalam Excel, PDF, CSV atau backup penuh. Simpan backup sebelum tukar telefon.'), { label: L('Open Export', 'Buka Export'), href: 'Export.dc.html' });
           break;
         case 'spend':
           m = mk(L('You spent RM ' + D.spendToday + ' today. Your month so far is RM ' + D.spendMonth + '.', 'Awak belanja RM ' + D.spendToday + ' hari ini. Bulan ini setakat ini RM ' + D.spendMonth + '.'), { big: 'RM ' + D.spendToday, bigLbl: L('spent today', 'belanja hari ini'), label: L('Open Spending Tracker', 'Buka Spending Tracker'), href: 'Finance.dc.html' });
@@ -311,27 +353,27 @@ export class AssistantBase extends React.Component<any, any> {
           break;
         }
         case 'top':
+          if (!D.topCat) { m = mk(L('No spending logged this month yet.', 'Belum ada belanja direkod bulan ini.'), { label: L('Open My Finance', 'Buka My Finance'), href: 'Finance.dc.html' }); break; }
           m = mk(L('Your top spending category this month is ' + D.topCat + ': RM ' + D.topAmt + ', about ' + Math.round(D.topAmt / D.spendMonth * 100) + '% of your spending.', 'Kategori belanja tertinggi bulan ini ialah ' + D.topCat + ': RM ' + D.topAmt + ', kira-kira ' + Math.round(D.topAmt / D.spendMonth * 100) + '% daripada belanja awak.'), { big: 'RM ' + D.topAmt, bigLbl: D.topCat, pct: Math.round(D.topAmt / D.spendMonth * 100), color: '#ffc46b', label: L('See Spending by Category', 'Lihat Belanja ikut Kategori'), href: 'Finance.dc.html' });
           break;
         case 'mmonth':
-          m = mk(L('You rode ' + D.kmMonth + ' km this month. Last month was ' + D.kmLast + ' km.', 'Awak tunggang ' + D.kmMonth + ' km bulan ini. Bulan lepas ' + D.kmLast + ' km.'), { big: D.kmMonth + ' km', bigLbl: L('this month', 'bulan ini'), pct: Math.min(100, Math.round(D.kmMonth / Math.max(D.kmMonth, D.kmLast) * 100)), color: '#ff8fab', label: L('Open My Record', 'Buka My Record'), href: 'Record.dc.html' });
-          break;
-        case 'mcmp': {
-          const df = D.kmMonth - D.kmLast; const pp = Math.round(Math.abs(df) / D.kmLast * 100);
-          m = mk(L('This month ' + D.kmMonth + ' km vs last month ' + D.kmLast + ' km. That is ' + Math.abs(df) + ' km ' + (df >= 0 ? 'more' : 'less') + ' (' + pp + '%).', 'Bulan ini ' + D.kmMonth + ' km berbanding bulan lepas ' + D.kmLast + ' km. Ia ' + Math.abs(df) + ' km ' + (df >= 0 ? 'lebih' : 'kurang') + ' (' + pp + '%).'), { big: (df >= 0 ? '+' : '-') + Math.abs(df) + ' km', bigLbl: L('vs last month', 'berbanding bulan lepas'), color: '#ff8fab', label: L('See monthly mileage', 'Lihat jarak bulanan'), href: 'Record.dc.html' });
-          break;
-        }
+        case 'mcmp':
         case 'odo':
-          m = mk(L('Your last odometer reading is ' + this.num(D.odo) + ' km.', 'Bacaan odometer terakhir awak ialah ' + this.num(D.odo) + ' km.'), { big: this.num(D.odo), bigLbl: 'km', label: L('Add new reading', 'Tambah bacaan baru'), href: 'Record.dc.html' });
-          break;
-        case 'svc': {
-          const left = D.nextSvc - D.odo;
-          m = mk(L('Your next service is at ' + this.num(D.nextSvc) + ' km, which is ' + this.num(left) + ' km away. At your pace of about ' + D.kmMonth + ' km a month, that is roughly ' + Math.max(1, Math.round(left / D.kmMonth)) + ' months.', 'Servis seterusnya pada ' + this.num(D.nextSvc) + ' km, iaitu ' + this.num(left) + ' km lagi. Dengan kadar lebih kurang ' + D.kmMonth + ' km sebulan, ia dalam ' + Math.max(1, Math.round(left / D.kmMonth)) + ' bulan.'), { big: this.num(left), bigLbl: L('km to service', 'km ke servis'), pct: Math.round((3000 - left) / 3000 * 100), color: '#ffc46b', label: L('Open My Record', 'Buka My Record'), href: 'Record.dc.html' });
+        case 'svc':
+        case 'mtc': {
+          const rec = { label: L('Open My Record', 'Buka My Record'), href: 'Record.dc.html' };
+          if (!D.hasVehicle && id !== 'mtc') { m = mk(L('You have no odometer readings yet. Add one in My Record, or tell me, for example, "add mileage 18500 km".', 'Belum ada bacaan odometer. Tambah dalam My Record, atau beritahu saya, contohnya "tambah milage 18500 km".'), rec); break; }
+          if (id === 'mmonth') m = mk(D.kmMonth == null ? L('Not enough readings to work out this month. Add another odometer reading.', 'Bacaan belum cukup untuk bulan ini. Tambah satu lagi bacaan odometer.') : L('You rode ' + this.num(D.kmMonth) + ' km this month' + (D.kmLast != null ? '. Last month was ' + this.num(D.kmLast) + ' km.' : '.'), 'Awak tunggang ' + this.num(D.kmMonth) + ' km bulan ini' + (D.kmLast != null ? '. Bulan lepas ' + this.num(D.kmLast) + ' km.' : '.')), Object.assign({ big: D.kmMonth == null ? '' : this.num(D.kmMonth) + ' km', bigLbl: L('this month', 'bulan ini'), color: '#ff8fab' }, rec));
+          else if (id === 'mcmp') {
+            if (D.kmMonth == null || D.kmLast == null || !D.kmLast) m = mk(L('I need readings for both this month and last month to compare.', 'Saya perlukan bacaan untuk bulan ini dan bulan lepas untuk banding.'), rec);
+            else { const df = D.kmMonth - D.kmLast; const pp = Math.round(Math.abs(df) / D.kmLast * 100); m = mk(L('This month ' + this.num(D.kmMonth) + ' km vs last month ' + this.num(D.kmLast) + ' km. That is ' + this.num(Math.abs(df)) + ' km ' + (df >= 0 ? 'more' : 'less') + ' (' + pp + '%).', 'Bulan ini ' + this.num(D.kmMonth) + ' km berbanding bulan lepas ' + this.num(D.kmLast) + ' km. Ia ' + this.num(Math.abs(df)) + ' km ' + (df >= 0 ? 'lebih' : 'kurang') + ' (' + pp + '%).'), Object.assign({ big: (df >= 0 ? '+' : '-') + this.num(Math.abs(df)) + ' km', bigLbl: L('vs last month', 'berbanding bulan lepas'), color: df > 0 ? '#ffb3a0' : '#7df0c6' }, rec)); }
+          } else if (id === 'odo') m = mk(L('Your last odometer reading is ' + this.num(D.odo) + ' km.', 'Bacaan odometer terakhir awak ialah ' + this.num(D.odo) + ' km.'), Object.assign({ big: this.num(D.odo), bigLbl: 'km', color: '#ff8fab' }, rec));
+          else if (id === 'svc') {
+            if (D.nextSvc == null || !D.nextSvc) m = mk(L('No service is set up yet. Add a part in My Record, for example Engine oil with the odometer when you changed it and how long it lasts.', 'Belum ada servis ditetapkan. Tambah bahagian dalam My Record, contohnya Minyak enjin dengan odometer semasa tukar dan jangka hayatnya.'), rec);
+            else { const left = D.nextSvc - D.odo; m = mk(left > 0 ? L(D.nextSvcName + ' is due at ' + this.num(D.nextSvc) + ' km, which is ' + this.num(left) + ' km away.', D.nextSvcName + ' perlu ditukar pada ' + this.num(D.nextSvc) + ' km, lagi ' + this.num(left) + ' km.') : L(D.nextSvcName + ' is overdue by ' + this.num(-left) + ' km.', D.nextSvcName + ' sudah lewat ' + this.num(-left) + ' km.'), Object.assign({ big: this.num(Math.abs(left)), bigLbl: left > 0 ? L('km to go', 'km lagi') : L('km overdue', 'km lewat'), color: left > 0 ? '#ff8fab' : '#ffb3a0' }, rec)); }
+          } else m = mk(L('You spent RM ' + this.rm(D.mtcMonth) + ' on motorcycle maintenance this month.', 'Awak belanja RM ' + this.rm(D.mtcMonth) + ' untuk penyelenggaraan motosikal bulan ini.'), Object.assign({ big: 'RM ' + this.rm(D.mtcMonth), bigLbl: L('maintenance', 'penyelenggaraan'), color: '#ffc46b' }, rec));
           break;
         }
-        case 'mtc':
-          m = mk(L('You spent RM ' + D.mtcMonth + ' on motorcycle maintenance this month.', 'Awak belanja RM ' + D.mtcMonth + ' untuk penyelenggaraan motosikal bulan ini.'), { big: 'RM ' + D.mtcMonth, bigLbl: L('maintenance', 'penyelenggaraan'), color: '#ffc46b', label: L('See spending graph', 'Lihat graf belanja'), href: 'Record.dc.html' });
-          break;
         case 'tasks': {
           const lines = open.slice(0, 5).map(t => '• ' + t.n + ' (' + this.dueText(t.d, L) + ')').join('\n');
           m = mk(open.length ? L('You have ' + open.length + ' open tasks:\n', 'Awak ada ' + open.length + ' tugasan belum siap:\n') + lines : L('No open tasks. Nice and clear.', 'Tiada tugasan tertunggak. Bagus.'), { big: String(open.length), bigLbl: L('open · ' + dnow + ' done', 'belum siap · ' + dnow + ' siap'), pct: Math.round(dnow / Math.max(1, s.tasks.length) * 100), color: '#7c9cff', label: L('Open Daily Planner', 'Buka Daily Planner'), href: 'Planner.dc.html' });
@@ -348,18 +390,18 @@ export class AssistantBase extends React.Component<any, any> {
           break;
         }
         case 'summary':
-          m = mk(L('Your day so far:\nSteps ' + this.num(D.steps) + ' (' + pc + '%)\nWater ' + s.cups + '/' + D.cupGoal + ' · Sleep ' + D.sleep + 'h\nPrayers ' + D.prayed + '/5 on time\nSpent RM ' + D.spendToday + '\nOpen tasks ' + open.length, 'Hari awak setakat ini:\nLangkah ' + this.num(D.steps) + ' (' + pc + '%)\nAir ' + s.cups + '/' + D.cupGoal + ' · Tidur ' + D.sleep + 'j\nSolat ' + D.prayed + '/5 tepat waktu\nBelanja RM ' + D.spendToday + '\nTugasan belum siap ' + open.length), { big: avg + '%', bigLbl: L('daily goal', 'sasaran harian'), pct: avg, color: '#8fe9e2', label: L('Open Insights', 'Buka Insights'), href: 'Insights.dc.html' });
+          m = mk(L('Your day so far:\nSteps ' + this.num(D.steps) + ' (' + pc + '%)\nWater ' + s.cups + '/' + D.cupGoal + ' · Sleep ' + D.sleep + 'h\nSpent RM ' + D.spendToday + '\nOpen tasks ' + open.length, 'Hari awak setakat ini:\nLangkah ' + this.num(D.steps) + ' (' + pc + '%)\nAir ' + s.cups + '/' + D.cupGoal + ' · Tidur ' + D.sleep + 'j\nBelanja RM ' + D.spendToday + '\nTugasan belum siap ' + open.length), { big: avg + '%', bigLbl: L('daily goal', 'sasaran harian'), pct: avg, color: '#8fe9e2', label: L('Open Insights', 'Buka Insights'), href: 'Insights.dc.html' });
           break;
         case 'advice': {
           const a = [];
-          if (np.mins <= 45) a.push(L('Get ready for ' + np.name + ' in ' + np.mins + ' minutes.', 'Bersedia untuk ' + np.name + ' dalam ' + np.mins + ' minit.'));
+          if (np && np.mins <= 45) a.push(L('Get ready for ' + np.name + ' in ' + np.mins + ' minutes.', 'Bersedia untuk ' + np.name + ' dalam ' + np.mins + ' minit.'));
           a.push(L(weak.tipEn + ' Your ' + weak.en + ' is the lowest today.', weak.tipMs + ' ' + weak.ms.charAt(0).toUpperCase() + weak.ms.slice(1) + ' awak paling rendah hari ini.'));
           const soon = open.filter(t => t.d && this.daysTo(t.d) <= 2).sort((x, y) => this.daysTo(x.d) - this.daysTo(y.d))[0];
           if (soon) a.push(L('Finish "' + soon.n + '" (' + this.dueText(soon.d, L) + ').', 'Siapkan "' + soon.n + '" (' + this.dueText(soon.d, L) + ').'));
           const h = new Date().getHours();
           if (h >= 16 && h < 20) a.push(L('Read evening Al-Ma\'thurat.', 'Baca Al-Ma\'thurat petang.'));
-          else if (h < 10) a.push(L('Read morning Al-Ma\'thurat.', 'Baca Al-Ma\'thurat pagi.'));
-          if (D.nextSvc - D.odo < 2000) a.push(L('Plan your motorcycle service soon.', 'Rancang servis motosikal tidak lama lagi.'));
+          else if (h >= 5 && h < 10) a.push(L('Read morning Al-Ma\'thurat.', 'Baca Al-Ma\'thurat pagi.'));
+          if (D.nextSvc && D.nextSvc - D.odo < 2000) a.push(L('Plan your motorcycle service soon.', 'Rancang servis motosikal tidak lama lagi.'));
           m = mk(L('Here is what I would do next:\n', 'Ini yang saya cadang seterusnya:\n') + a.slice(0, 3).map((x, i) => (i + 1) + '. ' + x).join('\n'));
           break;
         }
@@ -373,16 +415,16 @@ export class AssistantBase extends React.Component<any, any> {
           m = mk(L('I am the My Life assistant. I am not a chatbot on the internet. I read your own data on this device and put the answer together using rules written for this app.', 'Saya pembantu My Life. Saya bukan chatbot di internet. Saya baca data awak sendiri dalam peranti ini dan susun jawapan menggunakan peraturan yang ditulis untuk app ini.'));
           break;
         case 'privacy':
-          m = mk(L('Your data stays on this device. I work offline, nothing is sent to a server or an AI service. The real app adds a secure login and encrypted storage.', 'Data awak kekal dalam peranti ini. Saya berfungsi tanpa internet, tiada apa dihantar ke pelayan atau perkhidmatan AI. App sebenar menambah log masuk selamat dan simpanan terenkripsi.'), { label: L('Open Security', 'Buka Security'), href: 'Settings.dc.html' });
+          m = mk(L('Your data stays on this phone and is encrypted there. I work offline, nothing is sent to a server or an AI service. You can also lock the app with a PIN or fingerprint in Settings, Security.', 'Data awak kekal dalam telefon ini dan disulitkan di sini. Saya berfungsi tanpa internet, tiada apa dihantar ke pelayan atau perkhidmatan AI. Awak juga boleh kunci app dengan PIN atau cap jari di Settings, Security.'), { label: L('Open Security', 'Buka Security'), href: 'Settings.dc.html' });
           break;
         case 'help':
-          m = mk(L('You can ask me about:\n• Health: steps, distance, sleep, water, mood\n• Faith: next prayer, prayers done, Quran, zikir\n• Money: spending, income, what is left\n• Motorcycle: mileage, service, odometer\n• Tasks: open tasks, due soon, events\nI can save for you: "spent RM10 on lunch", "service motor RM120", "add mileage 18500 km", "I slept 7 hours", "add task buy milk".', 'Awak boleh tanya saya tentang:\n• Kesihatan: langkah, jarak, tidur, air, mood\n• Ibadah: solat seterusnya, solat tunai, Quran, zikir\n• Wang: belanja, pendapatan, baki\n• Motosikal: jarak, servis, odometer\n• Tugasan: tugasan, hampir tarikh, acara\nSaya boleh simpankan: "belanja RM10 untuk makan", "servis motor RM120", "tambah milage 18500 km", "saya tidur 7 jam", "tambah tugasan beli susu".'));
+          m = mk(L('You can ask me about:\n• Health: steps, distance, sleep, water, mood\n• Faith: next prayer, prayer times, Quran, zikir, fasting and qadha\n• Money: spending, income, what is left, commitments and debts\n• Motorcycle: mileage, service, odometer\n• Tasks: open tasks, due soon, events\n• App: reminders, app lock, export\nI can save for you: "spent RM10 on lunch", "service motor RM120", "add mileage 18500 km", "I slept 7 hours", "add task buy milk".', 'Awak boleh tanya saya tentang:\n• Kesihatan: langkah, jarak, tidur, air, mood\n• Ibadah: solat seterusnya, waktu solat, Quran, zikir, puasa dan qadha\n• Wang: belanja, pendapatan, baki, komitmen dan hutang\n• Motosikal: jarak, servis, odometer\n• Tugasan: tugasan, hampir tarikh, acara\n• App: peringatan, kunci app, eksport\nSaya boleh simpankan: "belanja RM10 untuk makan", "servis motor RM120", "tambah milage 18500 km", "saya tidur 7 jam", "tambah tugasan beli susu".'));
           break;
         default:
           m = mk(L('I have not learned that question yet. I only answer from your own data, so try something like "How many steps today?", "How did I sleep?" or "What did I spend this month?".', 'Saya belum belajar soalan itu. Saya hanya jawab berdasarkan data awak sendiri, jadi cuba seperti "Berapa step saya hari ini?", "Berapa jam saya tidur?" atau "Belanja bulan ini?".'));
       }
     }
-    return { m: m, patch: patch };
+    return { m: m, patch: patch, act: doAct };
   }
   scroll() { setTimeout(() => { try { this.props.onScroll && this.props.onScroll(); } catch (e) { } }, 80); }
   ask(q) {
@@ -394,6 +436,7 @@ export class AssistantBase extends React.Component<any, any> {
     setTimeout(() => {
       const r = this.reply(q, lang);
       this.setState(Object.assign({ msgs: this.state.msgs.concat([r.m]), typing: false }, r.patch));
+      if (r.act && this.props.persist) this.props.persist(r.act);
       this.scroll();
     }, 700);
   }
@@ -403,12 +446,12 @@ export class AssistantBase extends React.Component<any, any> {
     const Q = {
       0: [['Summary of my day', 'Ringkasan hari ini'], ['How am I doing today?', 'Macam mana hari saya setakat ini?'], ['What should I do next?', 'Apa patut saya buat sekarang?'], ['My Life Score', 'Skor Life saya'], ['My habit streak', 'Streak habit saya']],
       1: [['How many steps today?', 'Berapa step saya hari ini?'], ['How far did I walk?', 'Berapa jauh saya jalan?'], ['How is my health now?', 'Macam mana tahap kesihatan saya sekarang?'], ['How did I sleep?', 'Berapa jam saya tidur?'], ['How much water have I had?', 'Berapa air saya minum?'], ['How is my mood?', 'Mood saya hari ini?'], ['Add a glass of water', 'Tambah segelas air']],
-      2: [['When is the next prayer?', 'Bila waktu solat seterusnya?'], ['How many prayers on time?', 'Berapa solat saya tunai?'], ['Prayer times today', 'Waktu solat hari ini'], ['Continue my Quran reading', 'Sambung bacaan Quran saya'], ['Suggest a zikir', 'Cadangan zikir untuk saya'], ['Qibla direction', 'Arah kiblat']],
-      3: [['What did I spend today?', 'Berapa saya belanja hari ini?'], ['What did I spend this month?', 'Belanja bulan ini?'], ['My income this month', 'Pendapatan saya bulan ini'], ['How much is left?', 'Berapa baki saya?'], ['Top spending category', 'Kategori belanja paling banyak']],
+      2: [['When is the next prayer?', 'Bila waktu solat seterusnya?'], ['My fasting and qadha', 'Puasa dan qadha saya'], ['Prayer times today', 'Waktu solat hari ini'], ['Continue my Quran reading', 'Sambung bacaan Quran saya'], ['Suggest a zikir', 'Cadangan zikir untuk saya'], ['Qibla direction', 'Arah kiblat']],
+      3: [['What did I spend today?', 'Berapa saya belanja hari ini?'], ['What did I spend this month?', 'Belanja bulan ini?'], ['My income this month', 'Pendapatan saya bulan ini'], ['How much is left?', 'Berapa baki saya?'], ['Top spending category', 'Kategori belanja paling banyak'], ['My commitments and debts', 'Komitmen dan hutang saya']],
       4: [['Motorcycle mileage this month', 'Jarak motor bulan ini'], ['Compare with last month', 'Banding dengan bulan lepas'], ['What is my odometer?', 'Bacaan odometer saya?'], ['When is my next service?', 'Bila servis seterusnya?'], ['Maintenance spending', 'Belanja penyelenggaraan']],
       5: [['My open tasks', 'Tugasan saya'], ['What is due soon?', 'Apa yang hampir tarikh?'], ['Upcoming events', 'Acara akan datang'], ['Add task buy milk', 'Tambah tugasan beli susu'], ['Add task call mom', 'Tambah tugasan call mak']],
-      7: [['I spent RM10 on lunch', 'Saya belanja RM10 untuk makan'], ['Paid RM50 for petrol', 'Bayar RM50 untuk minyak'], ['Service motorcycle RM120', 'Servis motor RM120'], ['Add mileage 18500 km', 'Tambah milage 18500 km'], ['Overtime received RM180', 'Overtime masuk RM180'], ['Add 2 glasses of water', 'Tambah 2 gelas air'], ['Add 1000 steps', 'Tambah 1000 langkah'], ['I slept 7 hours', 'Saya tidur 7 jam'], ['My mood is good', 'Mood saya baik'], ['I prayed Asar', 'Saya dah solat Asar'], ['Add task buy milk', 'Tambah tugasan beli susu']],
-      6: [['What can I ask?', 'Apa boleh saya tanya?'], ['Is my data safe?', 'Adakah data saya selamat?'], ['Who are you?', 'Siapa awak?'], ['Hello', 'Hai']]
+      7: [['I spent RM10 on lunch', 'Saya belanja RM10 untuk makan'], ['Paid RM50 for petrol', 'Bayar RM50 untuk minyak'], ['Service motorcycle RM120', 'Servis motor RM120'], ['Add mileage 18500 km', 'Tambah milage 18500 km'], ['Overtime received RM180', 'Overtime masuk RM180'], ['Add 2 glasses of water', 'Tambah 2 gelas air'], ['Add 1000 steps', 'Tambah 1000 langkah'], ['I slept 7 hours', 'Saya tidur 7 jam'], ['My mood is good', 'Mood saya baik'], ['Add task buy milk', 'Tambah tugasan beli susu']],
+      6: [['What can I ask?', 'Apa boleh saya tanya?'], ['Is my data safe?', 'Adakah data saya selamat?'], ['Are my reminders on?', 'Peringatan saya hidup?'], ['Is app lock on?', 'Kunci app hidup?'], ['Who are you?', 'Siapa awak?'], ['Hello', 'Hai']]
     };
     const catNames = [['Today', 'Hari ini'], ['Health', 'Kesihatan'], ['Faith', 'Ibadah'], ['Money', 'Wang'], ['Motor', 'Motor'], ['Tasks', 'Tugasan'], ['Help', 'Bantuan'], ['Save record', 'Simpan rekod']];
     const order = [0, 7, 1, 2, 3, 4, 5, 6];
@@ -442,7 +485,7 @@ export class AssistantBase extends React.Component<any, any> {
       l1: ms ? '' : 'on', l2: ms ? 'on' : '',
       goEn: () => this.setState({ lang: 'en' }), goMs: () => this.setState({ lang: 'ms' }),
       clear: () => this.setState({ msgs: [], typing: false }),
-      welcome: L('Hi ' + this.fn() + '! I am your My Life assistant. I answer from your own data, on this device, with no internet or AI service. I can also save records for you, like "I spent RM10 on lunch". Tap a question below or type your own.\nThis preview uses sample data.', 'Hai ' + this.fn() + '! Saya pembantu My Life awak. Saya jawab berdasarkan data awak sendiri, dalam peranti ini, tanpa internet atau perkhidmatan AI. Saya juga boleh simpankan rekod, contohnya "Saya belanja RM10 untuk makan". Tekan soalan di bawah atau taip sendiri.\nPratonton ini guna data contoh.'),
+      welcome: L('Hi ' + this.fn() + '! I am your My Life assistant. I answer from your own data, on this device, with no internet or AI service. I can also save records for you, like "I spent RM10 on lunch". Tap a question below or type your own.', 'Hai ' + this.fn() + '! Saya pembantu My Life awak. Saya jawab berdasarkan data awak sendiri, dalam peranti ini, tanpa internet atau perkhidmatan AI. Saya juga boleh simpankan rekod, contohnya "Saya belanja RM10 untuk makan". Tekan soalan di bawah atau taip sendiri.'),
       startDisp: s.msgs.length === 0 ? 'grid' : 'none',
       starters: S.map(x => { const q = Q[x[0]][x[1]][ix]; return { label: q, d: x[2], bg: x[3], go: () => this.ask(q) }; }),
       msgs: msgs,

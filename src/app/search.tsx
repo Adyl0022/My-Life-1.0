@@ -19,7 +19,7 @@ export default function Search() {
   const [mod, setMod] = useState('All');
   const [note, setNote] = useState('');
   const ql = q.trim().toLowerCase();
-  const res = useMemo(() => SEARCH_INDEX.filter((x) => (mod === 'All' || x.m === mod) && (!ql || (x.t + ' ' + x.s + ' ' + x.k + ' ' + x.m).toLowerCase().indexOf(ql) >= 0)), [ql, mod]);
+  const res = useMemo(() => { const w = ql.split(/\s+/).filter(Boolean); return SEARCH_INDEX.filter((x) => { if (mod !== 'All' && x.m !== mod) return false; const hay = (x.t + ' ' + x.s + ' ' + x.k + ' ' + x.m).toLowerCase(); return w.every((t) => hay.indexOf(t) >= 0); }); }, [ql, mod]);
   const open = (h: string) => {
     const r = ROUTES[h];
     if (r) router.push(r as any); else { setNote('This screen is being built and will open here soon.'); setTimeout(() => setNote(''), 2200); }

@@ -41,7 +41,7 @@ export default function Insights() {
   const anyData = scoreParts(core0, week).length > 0;
   const parts = scoreParts(core0, week);
   const score = lifeScore(parts);
-  const rm = (n: number) => 'RM ' + (Math.round(n * 100) / 100).toLocaleString('en-MY', { maximumFractionDigits: 2 });
+  const rm = (n: number) => 'RM ' + (Math.round(n * 100) / 100).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   let metrics: { l: string; v: string; p: number; c: string; ic: React.ReactNode }[];
   if (week) {
     let st = 0, sl = 0, sn = 0, wd = 0;

@@ -15,7 +15,8 @@ import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useStored } from '../../lib/store';
 import { MODS, ModCount } from '../../lib/modules';
 import { HEMPTY, getDay, cupsGoal, dateOf, keyOfDate, MOODS } from '../../lib/habit';
-import { useCore, weekly, records, hasData as hasHab, dayPct } from '../../lib/insights';
+import { useCore, weekly, records, hasData as hasHab, dayPct, incomeOf } from '../../lib/insights';
+import { debtSummary, remainingAt, amountDue, yearsMonths, payoffLabel } from '../../lib/debts';
 import { TOP } from '../../lib/layout';
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -56,6 +57,13 @@ export default function Stats() {
   const [mc] = useStored<ModCount>('ml_modules', {});
   const cg = cupsGoal(hd);
   const core = useCore();
+  const ds = debtSummary(core.debts); const incNow = incomeOf(core);
+  const PAL = ['#ff8fab', '#ffc46b', '#7c9cff', '#b794ff', '#8fe9e2', '#5ee7b5', '#ff8a5c'];
+  const segs = ds.act.map((x, i) => ({ n: x.name, v: amountDue(x, ds.ym), c: PAL[i % PAL.length] })).concat(ds.food > 0 ? [{ n: 'Food', v: ds.food, c: '#e8d5ff' }] : []);
+  const used = segs.reduce((a, b) => a + b.v, 0); const base = Math.max(incNow, used, 1);
+  const freeAmt = Math.max(0, incNow - used);
+  const dm6 = [5, 4, 3, 2, 1, 0].map((b) => { const d0 = new Date(); d0.setDate(1); d0.setMonth(d0.getMonth() - b); const k = d0.getFullYear() + '-' + String(d0.getMonth() + 1).padStart(2, '0'); const has = ds.list.filter((x) => !x.fixed && x.since <= k); return { k, l: MON[d0.getMonth()], v: has.reduce((a, x) => a + remainingAt(x, k), 0), has: has.length > 0 }; });
+  const dmax = Math.max(...dm6.map((x) => x.v), 1);
   const wk = weekly(core);
   const rc = records(core);
   const [hrs] = useStored<number[]>('ml_hours', new Array(24).fill(0));
@@ -253,6 +261,51 @@ export default function Stats() {
             )}
           </Glass>
           </Rise>
+
+          {ds.commit + ds.food > 0 ? (
+            <Rise i={4}>
+            <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Where your income goes</Text>
+              <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 11.5, marginTop: 2 }}>{incNow > 0 ? 'This month, out of RM ' + Math.round(incNow).toLocaleString() : 'Add this month\'s income in My Finance to see the full split.'}</Text>
+              <View style={{ flexDirection: 'row', height: 14, borderRadius: 7, overflow: 'hidden', marginTop: 12, backgroundColor: 'rgba(255,255,255,.1)' }}>
+                {segs.map((g) => <View key={g.n} style={{ width: (g.v / base) * 100 + '%', backgroundColor: g.c }} />)}
+                {freeAmt > 0 ? <View style={{ width: (freeAmt / base) * 100 + '%', backgroundColor: '#34d399' }} /> : null}
+              </View>
+              <View style={{ marginTop: 10, gap: 6 }}>
+                {segs.concat(incNow > 0 ? [{ n: freeAmt > 0 ? 'Free' : 'Short', v: freeAmt > 0 ? freeAmt : used - incNow, c: freeAmt > 0 ? '#34d399' : '#ff8fab' }] : []).map((g) => (
+                  <View key={g.n} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: g.c }} />
+                    <Text style={{ flex: 1, color: '#fff', fontSize: 12.5 }}>{g.n}</Text>
+                    <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11.5 }}>{Math.round((g.v / base) * 100)}%</Text>
+                    <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '700', minWidth: 78, textAlign: 'right' }}>RM {Math.round(g.v).toLocaleString()}</Text>
+                  </View>
+                ))}
+              </View>
+            </Glass>
+            </Rise>
+          ) : null}
+
+          {ds.debts.length > 0 ? (
+            <Rise i={4}>
+            <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Debt remaining</Text>
+                <Text style={{ color: '#ffd593', fontSize: 13, fontWeight: '800' }}>RM {Math.round(ds.totalLeft).toLocaleString()}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, height: 90, marginTop: 14 }}>
+                {dm6.map((x, i) => (
+                  <View key={x.k} style={{ flex: 1, height: 90, justifyContent: 'flex-end' }}>
+                    <GrowBar h={x.has ? Math.max(6, Math.round((x.v / dmax) * 86)) : 4} delay={i * 60} dep={dm6.map((y) => y.v).join()} style={{ width: '100%' }}>
+                      <LinearGradient colors={i === 5 ? ['#ffc46b', '#ff8fab'] : ['rgba(255,255,255,.4)', 'rgba(255,255,255,.14)']} style={{ flex: 1, borderTopLeftRadius: 7, borderTopRightRadius: 7, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, opacity: x.has ? 1 : 0.3 }} />
+                    </GrowBar>
+                  </View>
+                ))}
+              </View>
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 5 }}>{dm6.map((x) => <Text key={x.k} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.65)', fontSize: 10.5 }}>{x.l}</Text>)}</View>
+              <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, marginTop: 10 }}>{'Debt-free by ' + payoffLabel(ds.worst, ds.debts.every((x) => (x.paid || {})[ds.ym] > 0)) + ', about ' + yearsMonths(ds.worst) + ' to go.'}</Text>
+            </Glass>
+            </Rise>
+          ) : null}
 
           <Rise i={4}>
           <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>

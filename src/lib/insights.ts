@@ -1,5 +1,5 @@
 import { useStored } from './store';
-import { DEBT_EMPTY, DebtData, remaining, isActive, ymOf, dueDay, amountDue } from './debts';
+import { DEBT_EMPTY, DebtData, remaining, isActive, ymOf, dueDay, amountDue, debtSummary, monthsLeft, yearsMonths, payoffLabel } from './debts';
 import { HEMPTY, HData, getDay, cupsGoal, goalPctOf, keyOfDate, dateOf, MOODS, WD, bestStreakAll } from './habit';
 
 export type Sp = { amt: number; date: string; cat?: string; name?: string };
@@ -31,7 +31,8 @@ export const hasData = (c: Core, o: number) => { const x = getDay(c.hd, o); retu
 export const dayPct = (c: Core, o: number) => goalPctOf(getDay(c.hd, o), c.hd.goal || 8000, cupsGoal(c.hd));
 export const avgPct = (c: Core, from: number, to: number) => { let n = 0, t = 0; for (let o = from; o <= to; o++) if (hasData(c, o)) { n++; t += dayPct(c, o); } return n ? Math.round(t / n) : 0; };
 const daysTo = (s: string) => { const a = new Date(s + 'T00:00:00').getTime(); const n = new Date(); n.setHours(0, 0, 0, 0); return Math.round((a - n.getTime()) / 86400000); };
-const rmf = (n: number) => 'RM ' + (Math.round(n * 100) / 100).toLocaleString('en-MY', { maximumFractionDigits: 2 });
+export const incomeOf = (c: Core) => Object.values((c.fin && c.fin.inc && c.fin.inc[ymOf(new Date())]) || {}).reduce((a: number, b: any) => a + (b || 0), 0) as number;
+const rmf = (n: number) => 'RM ' + (Math.round(n * 100) / 100).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // Everyday spending guide: average of days that had spending in the last 30 days.
 const usualSpend = (c: Core) => { let t = 0, n = 0; for (let o = -30; o <= -1; o++) { const v = spendOn(c, o); if (v > 0) { t += v; n++; } } return n >= 3 ? t / n : 0; };
@@ -43,6 +44,8 @@ export function scoreParts(c: Core, week: boolean): Part[] {
   if (hAny) { const p = week ? avgPct(c, -6, 0) : dayPct(c, 0); parts.push({ k: 'habit', label: 'Health habits', pct: p, detail: week ? 'Steps, water and sleep over 7 days' : 'Steps, water and sleep today', c: '#34d399' }); }
   const due = tasksDue(c);
   if (due.length) { const dn = due.filter((t) => t.status === 'done').length; parts.push({ k: 'tasks', label: 'Tasks', pct: Math.round((dn / due.length) * 100), detail: dn + ' of ' + due.length + ' tasks due or overdue', c: '#7c9cff' }); }
+  const ds = debtSummary(c.debts);
+  if (ds.commit > 0) parts.push({ k: 'bills', label: 'Commitments', pct: Math.round((ds.paid / ds.commit) * 100), detail: rmf(ds.paid) + ' of ' + rmf(ds.commit) + ' paid this month', c: '#ff8fab' });
   const us = usualSpend(c);
   if (us > 0) {
     if (week) { const w = spendSum(c, -6, 0) / 7; const pct = w <= us ? 100 : Math.max(20, Math.round(100 - ((w - us) / us) * 60)); parts.push({ k: 'spend', label: 'Spending', pct, detail: rmf(w) + ' a day against ' + rmf(us) + ' usual', c: '#ffc46b' }); }
@@ -157,6 +160,34 @@ export function tips(c: Core, week: boolean): Tip[] {
     if (dd < 0) add({ id: 'debt-' + x.id, title: x.name + ' is ' + -dd + (dd === -1 ? ' day' : ' days') + ' overdue', sub: 'RM ' + Math.round(amountDue(x, dym)).toLocaleString() + ' is still unpaid this month.', why: 'The due day has passed and this month is not ticked as paid in My Finance.', go: '/finance', k: 'goal', pri: 92 });
     else if (dd <= 3) add({ id: 'debt-' + x.id, title: x.name + (dd === 0 ? ' is due today' : dd === 1 ? ' is due tomorrow' : ' is due in ' + dd + ' days'), sub: 'RM ' + Math.round(amountDue(x, dym)).toLocaleString() + '. Tick it off in My Finance once paid.', why: 'Based on the due day you saved for this debt.', go: '/finance', k: 'goal', pri: 89 });
   });
+  // Commitments
+  {
+    const ds = debtSummary(c.debts), inc = incomeOf(c);
+    const dmonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    if (ds.commit > 0 && inc > 0) {
+      const share = Math.round(((ds.commit + ds.food) / inc) * 100), free = inc - ds.commit - ds.food;
+      if (free < 0) add({ id: 'cm-over', title: 'Commitments are higher than your income', sub: rmf(-free) + ' short this month after bills and food.', why: 'Income minus all monthly commitments and your food amount is below zero.', go: '/finance', k: 'goal', pri: 87 });
+      else {
+        if (share >= 60) add({ id: 'cm-share', title: 'Commitments take ' + share + '% of your income', sub: 'Little room is left for surprises. Try to clear the smallest debt first.', why: 'A common guide is to keep fixed payments below about half of take-home pay.', go: '/finance', k: 'goal', pri: 64 });
+        if (free > 50) add({ id: 'cm-free', title: rmf(free) + ' is free this month', sub: ds.debts.length ? 'Put half of it toward ' + ds.debts.slice().sort((a, b) => remaining(a) - remaining(b))[0].name + ' or into savings.' : 'Consider moving some of it into savings.', why: 'Income minus bills, debts and food. Paying extra early shortens how long a debt lasts and cuts interest.', go: '/finance', k: 'goal', pri: 46 });
+      }
+    }
+    if (ds.debts.length >= 2) {
+      const sm = ds.debts.slice().sort((a, b) => remaining(a) - remaining(b))[0];
+      add({ id: 'cm-snow', title: 'Clear ' + sm.name + ' first', sub: rmf(remaining(sm)) + ' left, about ' + yearsMonths(monthsLeft(sm)) + '. Then add its ' + rmf(sm.monthly) + ' to the next debt.', why: 'Paying off the smallest balance first frees up monthly cash sooner and keeps you motivated. This is often called the snowball method.', go: '/finance', k: 'badge', pri: 48 });
+    }
+    if (ds.debts.length >= 1) {
+      const big = ds.debts.slice().sort((a, b) => remaining(b) - remaining(a))[0];
+      const extra = Math.max(20, Math.round((big.monthly * 0.2) / 10) * 10); const was = monthsLeft(big), now2 = Math.ceil(remaining(big) / (big.monthly + extra));
+      if (was - now2 >= 1) add({ id: 'cm-extra', title: 'Pay RM ' + extra + ' extra on ' + big.name, sub: 'You would finish ' + (was - now2) + (was - now2 === 1 ? ' month' : ' months') + ' sooner.', why: 'Works out how long the balance lasts at ' + rmf(big.monthly + extra) + ' a month instead of ' + rmf(big.monthly) + '. Extra payments often save interest too.', go: '/finance', k: 'goal', pri: 47 });
+      add({ id: 'cm-free-date', title: 'Debt-free by ' + payoffLabel(ds.worst, ds.unpaid.every((x) => x.fixed) || ds.debts.every((x) => (x.paid || {})[ds.ym] > 0)), sub: 'About ' + yearsMonths(ds.worst) + ' to go, ' + rmf(ds.totalLeft) + ' remaining.', why: 'Based on your balances and monthly payments if you keep paying every month.', go: '/finance', k: 'badge', pri: 24 });
+    }
+    if (ds.unpaid.length > 0 && dmonth - now.getDate() <= 5) add({ id: 'cm-left', title: ds.unpaid.length + (ds.unpaid.length === 1 ? ' payment is' : ' payments are') + ' not ticked yet', sub: rmf(ds.toPay) + ' with ' + (dmonth - now.getDate()) + (dmonth - now.getDate() === 1 ? ' day' : ' days') + ' left this month.', why: 'Tick each payment in My Finance once paid so your balances stay right.', go: '/finance', k: 'goal', pri: 70 });
+    if (ds.commit > 0 && !ds.food) add({ id: 'cm-food', title: 'Set aside an amount for food', sub: 'Your plan is more accurate when food is counted too.', why: 'Food is part of your monthly plan but no amount is set yet.', go: '/finance', k: 'goal', pri: 30 });
+    const lastD = new Date(now.getFullYear(), now.getMonth() - 1, 1), lastYm = ymOf(lastD);
+    const ms = ds.list.filter((x) => x.since <= lastYm && !((x.paid || {})[lastYm] > 0) && (x.fixed || remaining(x) > 0));
+    if (ms.length) add({ id: 'cm-miss', title: ms.length + (ms.length === 1 ? ' payment' : ' payments') + ' not ticked last month', sub: ms.map((x) => x.name).slice(0, 3).join(', ') + '. Mark them paid to keep balances right.', why: 'Debt balances only go down when a month is ticked as paid.', go: '/finance', k: 'goal', pri: 56 });
+  }
   // Record
   const vs = Object.entries((c.rec && c.rec.data) || {});
   let hadOdo = false, anyReading = false;

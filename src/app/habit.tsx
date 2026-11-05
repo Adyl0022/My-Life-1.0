@@ -45,6 +45,7 @@ function Bars({ vals, labels, max, goal, color, hi }: { vals: number[]; labels: 
 export default function Habit() {
   const router = useRouter();
   const [h, setH] = useStored<HData>('ml_habit', HEMPTY);
+  const [tab, setTab] = useState<'today' | 'progress' | 'body'>('today');
   const [edit, setEdit] = useState(false); const [gv, setGv] = useState('');
   const hRef = useRef(h); hRef.current = h;
   const [autoMsg, setAutoMsg] = useState('');
@@ -143,7 +144,7 @@ export default function Habit() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Pressable onPress={() => router.back()} accessibilityLabel="Back"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 24, marginTop: -3 }}>‹</Text></Glass></Pressable>
             <Text style={{ flex: 1, color: W, fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Habit & Health</Text>
-            <Glass radius={999} style={{ paddingVertical: 9, paddingHorizontal: 14 }}><Text style={{ color: W, fontSize: 13, fontWeight: '700' }}>Today</Text></Glass>
+            <Glass radius={999} style={{ paddingVertical: 9, paddingHorizontal: 14 }}><Text style={{ color: W, fontSize: 13, fontWeight: '700' }}>{dateOf(0).toDateString().slice(0, 10)}</Text></Glass>
           </View>
 
           <Glass radius={24} style={{ marginTop: 14, paddingVertical: 10, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
@@ -152,7 +153,53 @@ export default function Habit() {
             <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>Small habits, big health</Text><Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, marginTop: 1 }}>Mood, water, sleep and goals</Text></View>
           </Glass>
 
-          {/* Steps */}
+          <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)', marginTop: 12 }}>
+            {([['today', 'Today'], ['progress', 'Progress'], ['body', 'Body']] as ['today' | 'progress' | 'body', string][]).map(([k, n]) => (
+              <Pressable key={k} onPress={() => setTab(k)} style={{ flex: 1 }}>
+                {tab === k ? (
+                  <LinearGradient colors={['#7c9cff', '#b794ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 8, borderRadius: 999, alignItems: 'center' }}><Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>{n}</Text></LinearGradient>
+                ) : (<View style={{ paddingVertical: 8, alignItems: 'center' }}><Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 13, fontWeight: '700' }}>{n}</Text></View>)}
+              </Pressable>
+            ))}
+          </View>
+
+          {tab === 'today' && (<>
+          <Glass radius={24} style={{ marginTop: 12, padding: 14 }}>
+            <Ttl k="goal" t="Goal Tracker" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8 }}>
+              <Text style={{ color: W, fontSize: 30, fontWeight: '800' }}>{gp}%</Text>
+              <View style={{ flex: 1 }}>
+                <View style={{ height: 10, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.14)', overflow: 'hidden' }}><LinearGradient colors={['#b794ff', T]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 10, width: (Math.min(gp, 100) + '%') as any }} /></View>
+                <Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 11.5, marginTop: 6 }}>Water, sleep and steps combined</Text>
+              </View>
+            </View>
+          </Glass>
+          <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <Ttl nm k="sleep" t="Sleep Tracker" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+              <Lbl t="Last night" />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Step t="−" label="Less sleep" onPress={() => put({ sleep: Math.max(0, t.sleep - 0.5) })} />
+                <Text style={{ color: W, fontSize: 22, fontWeight: '800', minWidth: 58, textAlign: 'center' }}>{t.sleep.toFixed(1)}h</Text>
+                <Step t="+" label="More sleep" onPress={() => put({ sleep: Math.min(14, t.sleep + 0.5) })} />
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, alignItems: 'center' }}>
+              <View style={{ flex: 1 }}><Lbl t="Went to bed" /><Inp value={bed || t.bed || ''} onChangeText={setBed} placeholder="e.g. 08:30" style={{ marginTop: 4 }} /></View>
+              <View style={{ flex: 1 }}><Lbl t="Woke up" /><Inp value={wake || t.wake || ''} onChangeText={setWake} placeholder="e.g. 15:30" style={{ marginTop: 4 }} /></View>
+              <Pressable onPress={() => { const b = bed || t.bed || '', w = wake || t.wake || ''; const hr = hoursBetween(b, w); if (hr > 0) { put({ bed: b, wake: w, sleep: hr }); setBed(''); setWake(''); } }} style={{ marginTop: 18, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 14, backgroundColor: '#b794ff' }}><Text style={{ color: '#0d1030', fontWeight: '800', fontSize: 13 }}>Set</Text></Pressable>
+            </View>
+            <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11, marginTop: 6 }}>Night shift? Sleep in the day counts too. Use 24-hour time like 08:30 and the hours fill in for you.</Text>
+            <Bars vals={wk.map((x) => x.d.sleep)} labels={wl} max={10} goal={7} color="#b794ff" hi={6} />
+            <View style={{ marginTop: 12, padding: 11, borderRadius: 14, backgroundColor: tip[2] }}><Text style={{ color: W, fontSize: 13, fontWeight: '800' }}>{tip[0]}</Text><Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12, marginTop: 2 }}>{tip[1]}</Text></View>
+          </Glass>
+          <Glass radius={24} style={{ marginTop: 12, paddingVertical: 16, paddingHorizontal: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Ttl nm k="water" t="Drink Water" /><Text style={{ color: t.cups >= cg ? '#7df0c6' : 'rgba(255,255,255,.7)', fontSize: 13, fontWeight: '800' }}>{t.cups} of {cg} glasses</Text></View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+              {Array.from({ length: Math.max(cg, t.cups) }).map((_, i) => <Pressable key={i} accessibilityLabel={'Glass ' + (i + 1)} onPress={() => put({ cups: t.cups === i + 1 ? i : i + 1 })} style={{ width: '17.5%', flexGrow: 1, alignItems: 'center', paddingVertical: 2 }}><GlassIcon full={i < t.cups} size={50} /></Pressable>)}
+            </View>
+            <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 11.5, marginTop: 10 }}>{(t.cups * GLASS / 1000).toFixed(2)} of {(cg * GLASS / 1000).toFixed(1)} L{kg > 0 ? ' · based on ' + kg + ' kg' : ''}</Text>
+          </Glass>
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Ttl k="steps" t="Steps & Distance" />
@@ -205,7 +252,6 @@ export default function Habit() {
             )}
             <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, marginTop: 10, lineHeight: 16 }}>{Platform.OS === 'web' ? 'Add steps by hand here. On the phone app you can turn on automatic counting.' : !h.auto ? 'Turn this on to count steps. You can always add or correct steps by hand.' : hcOn ? 'Counting all day through Health Connect. Open My Life to refresh the total.' : 'You can always add or correct steps by hand.'}</Text>
           </Glass>
-
           <Glass radius={24} style={{ marginTop: 12, paddingVertical: 16, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Ttl nm k="mood" t="Mood" /><Text style={{ color: t.mood >= 0 ? MOODS[t.mood][1] : 'rgba(255,255,255,.6)', fontSize: 13, fontWeight: '800' }}>{t.mood >= 0 ? MOODS[t.mood][0] : 'How do you feel?'}</Text></View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
@@ -216,15 +262,6 @@ export default function Habit() {
                 </Pressable>); })}
             </View>
           </Glass>
-
-          <Glass radius={24} style={{ marginTop: 12, paddingVertical: 16, paddingHorizontal: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Ttl nm k="water" t="Drink Water" /><Text style={{ color: t.cups >= cg ? '#7df0c6' : 'rgba(255,255,255,.7)', fontSize: 13, fontWeight: '800' }}>{t.cups} of {cg} glasses</Text></View>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
-              {Array.from({ length: Math.max(cg, t.cups) }).map((_, i) => <Pressable key={i} accessibilityLabel={'Glass ' + (i + 1)} onPress={() => put({ cups: t.cups === i + 1 ? i : i + 1 })} style={{ width: '17.5%', flexGrow: 1, alignItems: 'center', paddingVertical: 2 }}><GlassIcon full={i < t.cups} size={50} /></Pressable>)}
-            </View>
-            <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 11.5, marginTop: 10 }}>{(t.cups * GLASS / 1000).toFixed(2)} of {(cg * GLASS / 1000).toFixed(1)} L{kg > 0 ? ' · based on ' + kg + ' kg' : ''}</Text>
-          </Glass>
-
           <Glass radius={24} style={{ marginTop: 12, padding: 14 }}>
             <Ttl k="note" t="Today's note" /><Lbl t="Why do you feel this way? (optional)" />
             <Inp value={t.note || ''} onChangeText={(v: string) => put({ note: v })} placeholder="e.g. Long shift, but a good rest" multiline style={{ marginTop: 8, minHeight: 44 }} />
@@ -233,51 +270,8 @@ export default function Habit() {
               <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>Fasting today</Text><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5 }}>{sunnahDay ? 'Today is a sunnah fasting day (' + (dow === 1 ? 'Monday' : 'Thursday') + ').' : 'Sunnah fasts: Monday, Thursday and the white days.'}</Text></View>
             </Pressable>
           </Glass>
-
-          <Glass radius={24} style={{ marginTop: 12, padding: 14 }}>
-            <Ttl k="goal" t="Goal Tracker" />
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8 }}>
-              <Text style={{ color: W, fontSize: 30, fontWeight: '800' }}>{gp}%</Text>
-              <View style={{ flex: 1 }}>
-                <View style={{ height: 10, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.14)', overflow: 'hidden' }}><LinearGradient colors={['#b794ff', T]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 10, width: (Math.min(gp, 100) + '%') as any }} /></View>
-                <Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 11.5, marginTop: 6 }}>Water, sleep and steps combined</Text>
-              </View>
-            </View>
-          </Glass>
-
-          <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Ttl nm k="sleep" t="Sleep Tracker" />
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
-              <Lbl t="Last night" />
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <Step t="−" label="Less sleep" onPress={() => put({ sleep: Math.max(0, t.sleep - 0.5) })} />
-                <Text style={{ color: W, fontSize: 22, fontWeight: '800', minWidth: 58, textAlign: 'center' }}>{t.sleep.toFixed(1)}h</Text>
-                <Step t="+" label="More sleep" onPress={() => put({ sleep: Math.min(14, t.sleep + 0.5) })} />
-              </View>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, alignItems: 'center' }}>
-              <View style={{ flex: 1 }}><Lbl t="Went to bed" /><Inp value={bed || t.bed || ''} onChangeText={setBed} placeholder="e.g. 08:30" style={{ marginTop: 4 }} /></View>
-              <View style={{ flex: 1 }}><Lbl t="Woke up" /><Inp value={wake || t.wake || ''} onChangeText={setWake} placeholder="e.g. 15:30" style={{ marginTop: 4 }} /></View>
-              <Pressable onPress={() => { const b = bed || t.bed || '', w = wake || t.wake || ''; const hr = hoursBetween(b, w); if (hr > 0) { put({ bed: b, wake: w, sleep: hr }); setBed(''); setWake(''); } }} style={{ marginTop: 18, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 14, backgroundColor: '#b794ff' }}><Text style={{ color: '#0d1030', fontWeight: '800', fontSize: 13 }}>Set</Text></Pressable>
-            </View>
-            <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11, marginTop: 6 }}>Night shift? Sleep in the day counts too. Use 24-hour time like 08:30 and the hours fill in for you.</Text>
-            <Bars vals={wk.map((x) => x.d.sleep)} labels={wl} max={10} goal={7} color="#b794ff" hi={6} />
-            <View style={{ marginTop: 12, padding: 11, borderRadius: 14, backgroundColor: tip[2] }}><Text style={{ color: W, fontSize: 13, fontWeight: '800' }}>{tip[0]}</Text><Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12, marginTop: 2 }}>{tip[1]}</Text></View>
-          </Glass>
-
-          <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Ttl k="link" t="Life Link" /><Lbl t="Suggestions from your day" />
-            <View style={{ gap: 8, marginTop: 10 }}>
-              {sgs.map((s, i) => (
-                <Pressable key={i} disabled={!s.to} onPress={() => s.to && router.push(s.to as any)} style={{ padding: 12, borderRadius: 16, backgroundColor: 'rgba(255,255,255,.09)' }}>
-                  <Text style={{ color: W, fontSize: 13.5, fontWeight: '800' }}>{s.t}</Text>
-                  <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, marginTop: 2, lineHeight: 17 }}>{s.b}</Text>
-                  <Text style={{ color: T, fontSize: 11, fontWeight: '700', marginTop: 6 }}>{s.tag}{s.to ? '  ›' : ''}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </Glass>
-
+          </>)}
+          {tab === 'progress' && (<>
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View><Ttl k="streak" t="Habit Streak" /><Lbl t="Days reaching 70% of your goal" /></View>
@@ -292,7 +286,58 @@ export default function Habit() {
             </View>
             <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12, marginTop: 10 }}>{gp >= 70 ? 'Goal reached today, keep it going.' : 'Reach 70% today to extend it.'}</Text>
           </Glass>
-
+          <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <Ttl k="week" t="This week" /><Lbl t="Last 7 days compared with the 7 before" />
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+              {([['Water', (x: HDay) => x.cups, 'glasses', 1], ['Sleep', (x: HDay) => x.sleep, 'h', 1], ['Steps', (x: HDay) => x.steps, 'steps', 0]] as [string, (x: HDay) => number, string, number][]).map((r) => (
+                <View key={r[0]} style={{ flex: 1, padding: 10, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.08)' }}>
+                  <Lbl t={r[0]} /><Text style={{ color: W, fontSize: 17, fontWeight: '800', marginTop: 2 }}>{r[3] ? cur7(r[1]).toFixed(1) : Math.round(cur7(r[1])).toLocaleString('en-MY')}</Text>
+                  <Delta a={cur7(r[1])} b={prev7(r[1])} u={r[2]} d={r[3]} />
+                </View>))}
+            </View>
+          </Glass>
+          <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <Ttl k="insight" t="Water & You" /><Lbl t="How water links to your mood and sleep" />
+            {insOk ? (
+              <View style={{ gap: 8, marginTop: 10 }}>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <View style={{ flex: 1, padding: 11, borderRadius: 14, backgroundColor: 'rgba(124,156,255,.22)' }}><Lbl t={'Goal met · ' + hiW.length + ' days'} /><Text style={{ color: W, fontSize: 15, fontWeight: '800', marginTop: 3 }}>Mood {mName(mAvg(hiW))}</Text><Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12 }}>Sleep {sAvgL(hiW).toFixed(1)} h</Text></View>
+                  <View style={{ flex: 1, padding: 11, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.09)' }}><Lbl t={'Below goal · ' + loW.length + ' days'} /><Text style={{ color: W, fontSize: 15, fontWeight: '800', marginTop: 3 }}>Mood {mName(mAvg(loW))}</Text><Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12 }}>Sleep {sAvgL(loW).toFixed(1)} h</Text></View>
+                </View>
+                <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12.5, lineHeight: 18 }}>{mAvg(hiW) - mAvg(loW) > 0.3 ? 'On days you reach your water goal your mood is higher. Keep drinking.' : mAvg(hiW) - mAvg(loW) < -0.3 ? 'No clear boost to your mood from water yet. Your sleep may matter more.' : 'Your mood looks similar either way so far. More days will make this clearer.'}</Text>
+              </View>
+            ) : <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12.5, lineHeight: 18, marginTop: 10 }}>Log water and mood for at least 3 days above your goal and 3 days below it. Then you will see how water changes your mood and sleep.</Text>}
+          </Glass>
+          <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <Ttl k="link" t="Life Link" /><Lbl t="Suggestions from your day" />
+            <View style={{ gap: 8, marginTop: 10 }}>
+              {sgs.map((s, i) => (
+                <Pressable key={i} disabled={!s.to} onPress={() => s.to && router.push(s.to as any)} style={{ padding: 12, borderRadius: 16, backgroundColor: 'rgba(255,255,255,.09)' }}>
+                  <Text style={{ color: W, fontSize: 13.5, fontWeight: '800' }}>{s.t}</Text>
+                  <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, marginTop: 2, lineHeight: 17 }}>{s.b}</Text>
+                  <Text style={{ color: T, fontSize: 11, fontWeight: '700', marginTop: 6 }}>{s.tag}{s.to ? '  ›' : ''}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </Glass>
+          <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <Ttl k="badge" t="Badges" /><Lbl t={'Best streak so far: ' + best + (best === 1 ? ' day' : ' days')} />
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+              {[7, 30, 100].map((n) => { const on = best >= n; return (
+                <View key={n} style={{ flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 16, backgroundColor: on ? 'rgba(94,231,223,.22)' : 'rgba(255,255,255,.07)', borderWidth: 1, borderColor: on ? T : 'rgba(255,255,255,.1)' }}>
+                  <Text style={{ fontSize: 24, opacity: on ? 1 : 0.3 }}>{n === 7 ? '🌱' : n === 30 ? '🔥' : '🏆'}</Text>
+                  <Text style={{ color: W, fontSize: 15, fontWeight: '800', marginTop: 4, opacity: on ? 1 : 0.6 }}>{n} days</Text>
+                  <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 10.5 }}>{on ? 'Unlocked' : 'Locked'}</Text>
+                </View>); })}
+            </View>
+          </Glass>
+          <Pressable onPress={() => router.push('/habit-history' as any)}>
+            <Glass radius={22} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>30-Day History</Text><Text style={{ color: W, fontSize: 20 }}>›</Text>
+            </Glass>
+          </Pressable>
+          </>)}
+          {tab === 'body' && (<>
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <Ttl k="weight" t="Weight & BMI" /><Lbl t={kg > 0 ? 'Your water goal follows your weight' : 'Add your weight to personalise your water goal'} />
             {kg > 0 && (
@@ -310,48 +355,7 @@ export default function Habit() {
             </View>
             <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11, marginTop: 6 }}>Weigh yourself once a week. Water goal is about 33 ml per kg. BMI is a rough guide only.</Text>
           </Glass>
-
-          <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Ttl k="insight" t="Water & You" /><Lbl t="How water links to your mood and sleep" />
-            {insOk ? (
-              <View style={{ gap: 8, marginTop: 10 }}>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <View style={{ flex: 1, padding: 11, borderRadius: 14, backgroundColor: 'rgba(124,156,255,.22)' }}><Lbl t={'Goal met · ' + hiW.length + ' days'} /><Text style={{ color: W, fontSize: 15, fontWeight: '800', marginTop: 3 }}>Mood {mName(mAvg(hiW))}</Text><Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12 }}>Sleep {sAvgL(hiW).toFixed(1)} h</Text></View>
-                  <View style={{ flex: 1, padding: 11, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.09)' }}><Lbl t={'Below goal · ' + loW.length + ' days'} /><Text style={{ color: W, fontSize: 15, fontWeight: '800', marginTop: 3 }}>Mood {mName(mAvg(loW))}</Text><Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12 }}>Sleep {sAvgL(loW).toFixed(1)} h</Text></View>
-                </View>
-                <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12.5, lineHeight: 18 }}>{mAvg(hiW) - mAvg(loW) > 0.3 ? 'On days you reach your water goal your mood is higher. Keep drinking.' : mAvg(hiW) - mAvg(loW) < -0.3 ? 'No clear boost to your mood from water yet. Your sleep may matter more.' : 'Your mood looks similar either way so far. More days will make this clearer.'}</Text>
-              </View>
-            ) : <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12.5, lineHeight: 18, marginTop: 10 }}>Log water and mood for at least 3 days above your goal and 3 days below it. Then you will see how water changes your mood and sleep.</Text>}
-          </Glass>
-
-          <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Ttl k="week" t="This week" /><Lbl t="Last 7 days compared with the 7 before" />
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-              {([['Water', (x: HDay) => x.cups, 'glasses', 1], ['Sleep', (x: HDay) => x.sleep, 'h', 1], ['Steps', (x: HDay) => x.steps, 'steps', 0]] as [string, (x: HDay) => number, string, number][]).map((r) => (
-                <View key={r[0]} style={{ flex: 1, padding: 10, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.08)' }}>
-                  <Lbl t={r[0]} /><Text style={{ color: W, fontSize: 17, fontWeight: '800', marginTop: 2 }}>{r[3] ? cur7(r[1]).toFixed(1) : Math.round(cur7(r[1])).toLocaleString('en-MY')}</Text>
-                  <Delta a={cur7(r[1])} b={prev7(r[1])} u={r[2]} d={r[3]} />
-                </View>))}
-            </View>
-          </Glass>
-
-          <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Ttl k="badge" t="Badges" /><Lbl t={'Best streak so far: ' + best + (best === 1 ? ' day' : ' days')} />
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-              {[7, 30, 100].map((n) => { const on = best >= n; return (
-                <View key={n} style={{ flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 16, backgroundColor: on ? 'rgba(94,231,223,.22)' : 'rgba(255,255,255,.07)', borderWidth: 1, borderColor: on ? T : 'rgba(255,255,255,.1)' }}>
-                  <Text style={{ fontSize: 24, opacity: on ? 1 : 0.3 }}>{n === 7 ? '🌱' : n === 30 ? '🔥' : '🏆'}</Text>
-                  <Text style={{ color: W, fontSize: 15, fontWeight: '800', marginTop: 4, opacity: on ? 1 : 0.6 }}>{n} days</Text>
-                  <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 10.5 }}>{on ? 'Unlocked' : 'Locked'}</Text>
-                </View>); })}
-            </View>
-          </Glass>
-
-          <Pressable onPress={() => router.push('/habit-history' as any)}>
-            <Glass radius={22} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>30-Day History</Text><Text style={{ color: W, fontSize: 20 }}>›</Text>
-            </Glass>
-          </Pressable>
+          </>)}
           <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, textAlign: 'center', marginTop: 14 }}>Your habits are saved on this device.</Text>
         </ScrollView>
       </SafeAreaView>

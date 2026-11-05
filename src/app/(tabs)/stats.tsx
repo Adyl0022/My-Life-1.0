@@ -38,6 +38,7 @@ const MI = ({ k, s = 30 }: { k: string; s?: number }) => {
 const Lbl = ({ t }: { t: string }) => <Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 11.5, fontWeight: '700', letterSpacing: 1.2 }}>{t.toUpperCase()}</Text>;
 
 export default function Stats() {
+  const [tab, setTab] = useState<'use' | 'health' | 'money'>('use');
   const u = useUsage(16);
   const [metric, setMetric] = useState<'time' | 'opens'>('time');
   const days = u.days;
@@ -95,6 +96,17 @@ export default function Stats() {
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView onScroll={navScroll} scrollEventThrottle={16} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 130 }}>
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Stats</Text>
+          <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)', marginTop: 14 }}>
+            {([['use', 'App use'], ['health', 'Health'], ['money', 'Money']] as ['use' | 'health' | 'money', string][]).map(([k, n]) => (
+              <Pressable key={k} onPress={() => setTab(k)} style={{ flex: 1 }}>
+                {tab === k ? (
+                  <LinearGradient colors={['#7c9cff', '#b794ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 8, borderRadius: 999, alignItems: 'center' }}><Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>{n}</Text></LinearGradient>
+                ) : (<View style={{ paddingVertical: 8, alignItems: 'center' }}><Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 13, fontWeight: '700' }}>{n}</Text></View>)}
+              </Pressable>
+            ))}
+          </View>
+
+          {tab === 'use' && (<>
           <Rise i={0}>
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 14 }}>
             <Glass radius={22} style={{ flex: 1, padding: 14 }}>
@@ -203,7 +215,8 @@ export default function Stats() {
             )}
           </Glass>
           </Rise>
-
+          </>)}
+          {tab === 'health' && (<>
           <Rise i={4}>
           <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -262,6 +275,40 @@ export default function Stats() {
           </Glass>
           </Rise>
 
+          <Rise i={4}>
+          <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Your last 7 days</Text>
+            <View style={{ gap: 16, marginTop: 14 }}>
+              {trends.map((tr, ti) => {
+                const mx = Math.max(...tr.v, 1); const avg = tr.v.reduce((a, b) => a + b, 0) / 7;
+                return (
+                  <View key={tr.t}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      {tr.k ? <HeadIcon k={tr.k} size={24} /> : <MI k="finance" s={24} />}
+                      <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700', flex: 1 }}>{tr.t}</Text>
+                      <Text style={{ color: tr.c, fontSize: 13, fontWeight: '800' }}>{tr.fmt(avg)}</Text>
+                      <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11 }}>{tr.unit}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 44 }}>
+                      {tr.v.map((v, i) => (
+                        <View key={i} style={{ flex: 1, height: 44, justifyContent: 'flex-end' }}>
+                          <GrowBar h={Math.max(4, Math.round((v / mx) * 44))} delay={ti * 60 + i * 40} dep={tr.v.join()} style={{ width: '100%' }}>
+                            <View style={{ flex: 1, borderRadius: 4, backgroundColor: tr.c, opacity: i === 6 ? 1 : 0.5 }} />
+                          </GrowBar>
+                        </View>
+                      ))}
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+                      {wd.map((d, i) => <Text key={i} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.55)', fontSize: 9.5 }}>{d}</Text>)}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </Glass>
+          </Rise>
+          </>)}
+          {tab === 'money' && (<>
           {ds.commit + ds.food > 0 ? (
             <Rise i={4}>
             <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
@@ -306,39 +353,16 @@ export default function Stats() {
             </Glass>
             </Rise>
           ) : null}
+          {ds.commit + ds.food <= 0 && ds.debts.length === 0 ? (
+            <Rise i={1}>
+            <Glass style={{ marginTop: 14, paddingVertical: 16, paddingHorizontal: 16 }}>
+              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>No money plan yet</Text>
+              <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12.5, lineHeight: 19, marginTop: 6 }}>Add your monthly commitments and debts in My Finance. Your income split and debt progress will show here.</Text>
+            </Glass>
+            </Rise>
+          ) : null}
 
-          <Rise i={4}>
-          <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Your last 7 days</Text>
-            <View style={{ gap: 16, marginTop: 14 }}>
-              {trends.map((tr, ti) => {
-                const mx = Math.max(...tr.v, 1); const avg = tr.v.reduce((a, b) => a + b, 0) / 7;
-                return (
-                  <View key={tr.t}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      {tr.k ? <HeadIcon k={tr.k} size={24} /> : <MI k="finance" s={24} />}
-                      <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700', flex: 1 }}>{tr.t}</Text>
-                      <Text style={{ color: tr.c, fontSize: 13, fontWeight: '800' }}>{tr.fmt(avg)}</Text>
-                      <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11 }}>{tr.unit}</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 44 }}>
-                      {tr.v.map((v, i) => (
-                        <View key={i} style={{ flex: 1, height: 44, justifyContent: 'flex-end' }}>
-                          <GrowBar h={Math.max(4, Math.round((v / mx) * 44))} delay={ti * 60 + i * 40} dep={tr.v.join()} style={{ width: '100%' }}>
-                            <View style={{ flex: 1, borderRadius: 4, backgroundColor: tr.c, opacity: i === 6 ? 1 : 0.5 }} />
-                          </GrowBar>
-                        </View>
-                      ))}
-                    </View>
-                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
-                      {wd.map((d, i) => <Text key={i} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.55)', fontSize: 9.5 }}>{d}</Text>)}
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          </Glass>
-          </Rise>
+          </>)}
           <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 12, lineHeight: 18, marginTop: 12, marginHorizontal: 4 }}>Counted on this device and kept for 30 days.</Text>
         </ScrollView>
       </SafeAreaView>

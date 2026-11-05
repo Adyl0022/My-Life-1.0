@@ -220,3 +220,11 @@ export function records(c: Core) {
   }
   return { streak: bestStreakAll(c.hd), steps: bs, stepsDate: bsd, water: bw, waterDate: bwd, score: bsc, scoreDate: bscd };
 }
+
+export const tipCat = (id: string): string => {
+  if (/^(water|steps|sleeplog|sleeplow|mood|wlog|debt)$/.test(id)) return 'Health';
+  if (/^(fast|fastnext|kahfi|zikir|tasbih)$/.test(id)) return 'Faith';
+  if (/^(overdue|duetoday|event)$/.test(id)) return 'Tasks';
+  if (/^(part-|ren-|cpk-|odo)/.test(id)) return 'Vehicle';
+  return 'Money';
+};

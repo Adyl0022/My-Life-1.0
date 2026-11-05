@@ -12,7 +12,7 @@ import Svg, { Circle, Defs, Path, LinearGradient as SvgGrad, Stop } from 'react-
 import { useRouter } from 'expo-router';
 import { Glass } from '../../components/Glass';
 import { getDay, cupsGoal, goalPctOf, keyOfDate, dateOf } from '../../lib/habit';
-import { useCore, scoreParts, lifeScore, tips, weekly, patterns, hideTip } from '../../lib/insights';
+import { useCore, scoreParts, lifeScore, tips, weekly, patterns, hideTip, tipCat } from '../../lib/insights';
 import { TOP } from '../../lib/layout';
 
 const ACirc: any = Animated.createAnimatedComponent(Circle);
@@ -29,6 +29,7 @@ export default function Insights() {
   const core0 = useCore();
   const [showAll, setShowAll] = useState(false);
   const [why, setWhy] = useState('');
+  const [cat, setCat] = useState('All');
   const hd = core0.hd, fin = core0.fin;
   const cg = cupsGoal(hd), goal = hd.goal || 8000;
   const has = (o: number) => { const x = getDay(hd, o); return x.cups > 0 || x.sleep > 0 || x.steps > 0; };
@@ -73,7 +74,10 @@ export default function Insights() {
 
   const core = core0;
   const allTips = tips(core, week);
-  const shown = showAll ? allTips : allTips.slice(0, 3);
+  const cats = ['All'].concat(['Health', 'Money', 'Faith', 'Tasks', 'Vehicle'].filter((k) => allTips.some((x) => tipCat(x.id) === k)));
+  const curCat = cats.indexOf(cat) >= 0 ? cat : 'All';
+  const pool = curCat === 'All' ? allTips : allTips.filter((x) => tipCat(x.id) === curCat);
+  const shown = showAll || curCat !== 'All' ? pool : pool.slice(0, 3);
   const wk = weekly(core);
   const pats = patterns(core);
 
@@ -128,20 +132,49 @@ export default function Insights() {
           </Glass>
           </Rise>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
-            {metrics.map((m, i) => (
-              <Rise key={m.l} i={i + 1} style={{ width: '47.8%', flexGrow: 1 }}>
-                <Glass radius={22} style={{ paddingVertical: 13, paddingHorizontal: 14 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12, fontWeight: '600' }}>{m.l}</Text>
-                    {m.ic}
+          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', marginTop: 16, marginBottom: 8, marginHorizontal: 4 }}>Smart suggestions</Text>
+          {cats.length > 2 ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+              {cats.map((k) => (
+                <Pressable key={k} onPress={() => setCat(k)} style={{ paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: curCat === k ? 'transparent' : 'rgba(255,255,255,.2)', backgroundColor: curCat === k ? '#7c9cff' : 'rgba(255,255,255,.08)' }}>
+                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{k}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+          <View style={{ gap: 10 }}>
+            {shown.length === 0 && (
+              <Glass radius={22} style={{ paddingVertical: 16, paddingHorizontal: 16 }}>
+                <Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '700' }}>All caught up</Text>
+                <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, marginTop: 2 }}>No suggestions right now. Hidden tips return after 7 days.</Text>
+              </Glass>
+            )}
+            {shown.map((tp, i) => (
+              <Rise key={tp.id} i={6 + i}>
+                <Glass radius={22} style={{ paddingVertical: 12, paddingHorizontal: 14 }}>
+                  <Pressable onPress={() => router.push(tp.go as any)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <HeadIcon k={tp.k} size={40} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '700' }}>{tp.title}</Text>
+                      <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, marginTop: 2, lineHeight: 15 }}>{tp.sub}</Text>
+                    </View>
+                    <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 20 }}>›</Text>
+                  </Pressable>
+                  <View style={{ flexDirection: 'row', gap: 18, marginTop: 9, marginLeft: 52 }}>
+                    <Pressable hitSlop={8} onPress={() => setWhy(why === tp.id ? '' : tp.id)}><Text style={{ color: '#8fe9e2', fontSize: 11.5, fontWeight: '700' }}>{why === tp.id ? 'Hide reason' : 'Why this?'}</Text></Pressable>
+                    <Pressable hitSlop={8} onPress={() => hideTip(core, tp.id)}><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, fontWeight: '600' }}>Hide for 7 days</Text></Pressable>
                   </View>
-                  <Text style={{ color: '#fff', fontSize: 17, fontWeight: '800', marginTop: 4 }}>{m.v}</Text>
-                  <View style={{ marginTop: 8 }}><FillBar p={m.p} color={m.c} delay={i * 80} dep={String(week) + m.v} /></View>
+                  {why === tp.id && <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 11.5, lineHeight: 16, marginTop: 7, marginLeft: 52 }}>{tp.why}</Text>}
                 </Glass>
               </Rise>
             ))}
+            {curCat === 'All' && allTips.length > 3 && (
+              <Pressable onPress={() => setShowAll(!showAll)} style={{ alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 14 }}>
+                <Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '700' }}>{showAll ? 'Show fewer' : 'Show all ' + allTips.length}</Text>
+              </Pressable>
+            )}
           </View>
+
 
           {parts.length > 1 && (
             <Rise i={4}>
@@ -201,6 +234,22 @@ export default function Insights() {
             </Rise>
           )}
 
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
+            {metrics.map((m, i) => (
+              <Rise key={m.l} i={i + 1} style={{ width: '47.8%', flexGrow: 1 }}>
+                <Glass radius={22} style={{ paddingVertical: 13, paddingHorizontal: 14 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12, fontWeight: '600' }}>{m.l}</Text>
+                    {m.ic}
+                  </View>
+                  <Text style={{ color: '#fff', fontSize: 17, fontWeight: '800', marginTop: 4 }}>{m.v}</Text>
+                  <View style={{ marginTop: 8 }}><FillBar p={m.p} color={m.c} delay={i * 80} dep={String(week) + m.v} /></View>
+                </Glass>
+              </Rise>
+            ))}
+          </View>
+
+
           <Rise i={5}>
           <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -221,39 +270,6 @@ export default function Insights() {
           </Glass>
           </Rise>
 
-          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', marginTop: 16, marginBottom: 8, marginHorizontal: 4 }}>Smart suggestions</Text>
-          <View style={{ gap: 10 }}>
-            {shown.length === 0 && (
-              <Glass radius={22} style={{ paddingVertical: 16, paddingHorizontal: 16 }}>
-                <Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '700' }}>All caught up</Text>
-                <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, marginTop: 2 }}>No suggestions right now. Hidden tips return after 7 days.</Text>
-              </Glass>
-            )}
-            {shown.map((tp, i) => (
-              <Rise key={tp.id} i={6 + i}>
-                <Glass radius={22} style={{ paddingVertical: 12, paddingHorizontal: 14 }}>
-                  <Pressable onPress={() => router.push(tp.go as any)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <HeadIcon k={tp.k} size={40} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '700' }}>{tp.title}</Text>
-                      <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, marginTop: 2, lineHeight: 15 }}>{tp.sub}</Text>
-                    </View>
-                    <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 20 }}>›</Text>
-                  </Pressable>
-                  <View style={{ flexDirection: 'row', gap: 18, marginTop: 9, marginLeft: 52 }}>
-                    <Pressable hitSlop={8} onPress={() => setWhy(why === tp.id ? '' : tp.id)}><Text style={{ color: '#8fe9e2', fontSize: 11.5, fontWeight: '700' }}>{why === tp.id ? 'Hide reason' : 'Why this?'}</Text></Pressable>
-                    <Pressable hitSlop={8} onPress={() => hideTip(core, tp.id)}><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, fontWeight: '600' }}>Hide for 7 days</Text></Pressable>
-                  </View>
-                  {why === tp.id && <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 11.5, lineHeight: 16, marginTop: 7, marginLeft: 52 }}>{tp.why}</Text>}
-                </Glass>
-              </Rise>
-            ))}
-            {allTips.length > 3 && (
-              <Pressable onPress={() => setShowAll(!showAll)} style={{ alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 14 }}>
-                <Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '700' }}>{showAll ? 'Show fewer' : 'Show all ' + allTips.length}</Text>
-              </Pressable>
-            )}
-          </View>
           <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, lineHeight: 17, marginTop: 14, marginHorizontal: 4 }}>Calculated from your own habits, tasks, spending, records and zikir on this device.</Text>
         </ScrollView>
       </SafeAreaView>

@@ -37,7 +37,7 @@ export const HOWTO: Sec[] = [
 ];
 export const FAQ: Sec[] = [
   { h: 'Where is my data?', p: 'Only on your phone, encrypted. Nothing is sent to a server.' },
-  { h: 'I changed phone. How do I move my data?', p: 'On the old phone, go to Settings, Export, choose Backup (JSON) and keep the file. Restoring from a file is coming soon.' },
+  { h: 'I changed phone. How do I move my data?', p: 'On the old phone, go to Settings, Export, choose Backup (JSON) and keep the file. On the new phone, open Settings, Security, Backup and restore, then Restore from a file. Photos such as receipts are not included.' },
   { h: 'I forgot my PIN.', p: 'On the lock screen tap Forgot PIN. You can use your fingerprint to set a new PIN, or erase the app data and start fresh.' },
   { h: 'Notifications do not ring.', p: 'Use Settings, General, Send a test notification. If nothing shows, allow notifications for My Life in your phone settings and turn off battery saving for the app.' },
   { h: 'Prayer times look wrong.', p: 'Open Islamic Hub and refresh your location. Times follow JAKIM. Please confirm with your local authority.' },

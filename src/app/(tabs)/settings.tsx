@@ -18,6 +18,7 @@ import { TOP } from '../../lib/layout';
 import { useLock, setPin, patchLock, disableLock, bioReady, AFTER } from '../../lib/lock';
 import { PinDialog } from '../../components/LockScreen';
 import { useKb } from '../../lib/keyboard';
+import { storageInfo, clearTemp, fmtBytes, pickText, parseBackup, applyBackup, Backup } from '../../lib/storage';
 
 const W = '#fff', DIM = 'rgba(255,255,255,.7)';
 const G = ['#34d399', '#5ee7df'] as [string, string];
@@ -150,7 +151,10 @@ export default function Settings() {
       say('Sent. It will appear in 3 seconds');
     } catch (e) { say('Could not send a test notification'); }
   };
-  const [dlg, setDlg] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq' | 'done'>('');
+  const [dlg, setDlg] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq' | 'done' | 'restore' | 'confirm'>('');
+  const [bk, setBk] = useState<Backup | null>(null); const [bkErr, setBkErr] = useState('');
+  const [sto, setSto] = useState<{ data: number; temp: number } | null>(null); const [stoMsg, setStoMsg] = useState('');
+  React.useEffect(() => { if (tab === 2) storageInfo().then(setSto); }, [tab]);
   const [doneMsg, setDoneMsg] = useState('');
   const [typed, setTyped] = useState(''); const [pwv, setPwv] = useState('');
   const [p1, setP1] = useState(''); const [p2, setP2] = useState(''); const [p3, setP3] = useState(''); const [pwErr, setPwErr] = useState('');
@@ -249,7 +253,7 @@ export default function Settings() {
                 <Row k="bk" t="Backup reminder" sub={(bkLast ? 'Last backup ' + new Date(bkLast).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'You have not saved a backup yet') + (bkRem ? '. Reminds every 30 days' : '')} last onPress={() => setBkRem(!bkRem)} right={<Sw on={!!bkRem} />} />
               </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
-                <Row k="bk" last t="Encrypted backup & restore" onPress={() => setDlg('backup')} right={<Chev />} />
+                <Row k="bk" last t="Backup and restore" sub="Save a copy, or restore from a backup file" onPress={() => { setBkErr(''); setDlg('restore'); }} right={<Chev />} />
               </Glass>
               <Glass style={{ padding: 16 }}>
                 <Ttl t="Account and data" />
@@ -293,6 +297,17 @@ export default function Settings() {
                 <Row t="Send feedback" last onPress={() => mail('My Life: feedback', 'My idea or comment:\n\n\n' + info)} right={<Chev />} />
               </Glass>
               <Glass style={{ padding: 16 }}>
+                <Ttl t="Storage" />
+                <Lbl t="What My Life uses on this phone" style={{ marginBottom: 10 }} />
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <View style={{ flex: 1, borderRadius: 14, padding: 12, backgroundColor: 'rgba(255,255,255,.08)' }}><Text style={{ color: W, fontSize: 16, fontWeight: '800' }}>{sto ? fmtBytes(sto.data) : '...'}</Text><Lbl t="Your data" /></View>
+                  <View style={{ flex: 1, borderRadius: 14, padding: 12, backgroundColor: 'rgba(255,255,255,.08)' }}><Text style={{ color: W, fontSize: 16, fontWeight: '800' }}>{sto ? fmtBytes(sto.temp) : '...'}</Text><Lbl t="Temporary files" /></View>
+                </View>
+                <Lbl t="Temporary files are things like export files and leftovers. Clearing them is safe and never touches your data." style={{ marginTop: 10 }} />
+                <View style={{ flexDirection: 'row', marginTop: 10 }}><Btn t="Clear temporary files" onPress={async () => { const n = await clearTemp(); setStoMsg(n > 0 ? 'Cleared ' + fmtBytes(n) : 'Nothing to clear'); setSto(await storageInfo()); }} /></View>
+                {stoMsg ? <Text style={{ color: '#8fe9e2', fontSize: 12, marginTop: 6 }}>{stoMsg}</Text> : null}
+              </Glass>
+              <Glass style={{ padding: 16 }}>
                 <Ttl t="Privacy at a glance" />
                 {['Your data stays yours. It is stored only on your phone.', 'Encrypted on your phone, with an optional PIN or fingerprint lock.', 'No ads, no tracking, never sold or shared.'].map((t) => (
                   <View key={t} style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}><Text style={{ color: '#5ee7df', fontSize: 13 }}>✓</Text><Text style={{ flex: 1, color: 'rgba(255,255,255,.82)', fontSize: 12.5, lineHeight: 18 }}>{t}</Text></View>
@@ -316,6 +331,34 @@ export default function Settings() {
             <Text style={{ color: W, fontSize: 18, fontWeight: '800', marginTop: 12 }}>Done</Text>
             <Text style={{ color: DIM, fontSize: 13.5, lineHeight: 20, marginTop: 6, textAlign: 'center' }}>{doneMsg}</Text>
             <View style={{ flexDirection: 'row', marginTop: 16, alignSelf: 'stretch' }}><Btn t="Back to Home" kind="primary" onPress={() => { close(); router.replace('/' as any); }} /></View>
+          </View></Overlay>
+        )}
+        {dlg === 'restore' && (
+          <Overlay onClose={close}><View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
+            <Text style={{ color: W, fontSize: 18, fontWeight: '800' }}>Backup and restore</Text>
+            <Text style={{ color: DIM, fontSize: 13, lineHeight: 19, marginTop: 6 }}>Save a copy of your data as a file, or bring it back from a file you saved before. This is how you move to a new phone until accounts arrive.</Text>
+            {bkErr ? <Text style={{ color: '#ffb3bf', fontSize: 12.5, marginTop: 10 }}>{bkErr}</Text> : null}
+            <View style={{ gap: 8, marginTop: 14 }}>
+              <Btn t="Save a backup" kind="primary" onPress={() => { close(); router.push('/export' as any); }} />
+              <Btn t="Restore from a file" onPress={async () => {
+                try { const t = await pickText(); if (t == null) return; const b = parseBackup(t); if (!b) return setBkErr('That file is not a My Life backup. Choose a Backup (JSON) file from Export.'); setBk(b); setDlg('confirm'); }
+                catch (e) { setBkErr('Could not open that file.'); }
+              }} />
+              <Btn t="Cancel" onPress={close} />
+            </View>
+          </View></Overlay>
+        )}
+        {dlg === 'confirm' && bk && (
+          <Overlay onClose={close}><View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
+            <Text style={{ color: W, fontSize: 18, fontWeight: '800' }}>Restore this backup?</Text>
+            {bk.created ? <Text style={{ color: '#8fe9e2', fontSize: 12.5, marginTop: 4 }}>Saved {bk.created}</Text> : null}
+            <Text style={{ color: DIM, fontSize: 13, lineHeight: 19, marginTop: 8 }}>This backup holds:</Text>
+            {bk.parts.map((n) => <Text key={n} style={{ color: W, fontSize: 13.5, marginTop: 3 }}>•  {n}</Text>)}
+            <Text style={{ color: '#ffd593', fontSize: 12.5, lineHeight: 18, marginTop: 10 }}>These parts will be replaced with what is in the file. Anything else on this phone stays as it is. Photos such as receipts are not part of a backup.</Text>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+              <Btn t="Cancel" onPress={close} />
+              <Btn t="Restore" kind="primary" onPress={async () => { await applyBackup(bk); setDoneMsg('Your backup has been restored: ' + bk.parts.join(', ') + '.'); setBk(null); setDlg('done'); }} />
+            </View>
           </View></Overlay>
         )}
         {dlg === 'howto' && <Doc title="How to use My Life" secs={HOWTO} onClose={close} />}

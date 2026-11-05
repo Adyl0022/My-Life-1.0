@@ -10,7 +10,7 @@ export function FastMonths({ months, now = new Date(), color = '#34d399' }: { mo
   const rows = [tiles.slice(0, 6), tiles.slice(6)];
   return (
     <View style={{ marginTop: 14 }}>
-      <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11.5, fontWeight: '700', marginBottom: 8 }}>Fasts each month</Text>
+      <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11.5, fontWeight: '700', marginBottom: 8 }}>Sunat fasts each month (days)</Text>
       <View style={{ gap: 6 }}>
         {rows.map((r, ri) => (
           <View key={ri} style={{ flexDirection: 'row', gap: 6 }}>

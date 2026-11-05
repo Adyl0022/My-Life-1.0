@@ -57,6 +57,7 @@ export function StatsBg() {
         </G>
         <Path d="M0 150 L32 140 L64 150 L96 120 L128 130 L160 96 L192 112 L224 70 L256 86 L288 50 L320 66 L352 30 L390 20" fill="none" stroke="url(#sl)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
+      <Star x={12} y={30} s={1} i={0} /><Star x={84} y={44} s={2} i={2} c="#8fe9e2" /><Star x={30} y={62} s={1} i={4} /><Star x={70} y={78} s={1} i={1} c="#b794ff" />
     </View>
   );
 }
@@ -82,6 +83,7 @@ export function InsightsBg() {
           <Circle cx={14} cy={190} r={4} fill="#ffc46b" opacity={0.8} />
         </Svg>
       </Spin>
+      <Star x={10} y={12} s={2} i={0} /><Star x={44} y={6} s={1} i={3} /><Star x={90} y={34} s={2} i={5} c="#8fe9e2" /><Star x={18} y={48} s={1} i={2} /><Star x={78} y={60} s={1} i={4} c="#ff8fab" /><Star x={52} y={86} s={2} i={6} /><Star x={92} y={90} s={1} i={1} />
     </View>
   );
 }

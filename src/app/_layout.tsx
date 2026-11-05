@@ -9,7 +9,7 @@ import { useStored, encryptExisting } from '../lib/store';
 import { useLockWatcher } from '../lib/lock';
 import { LockScreen } from '../components/LockScreen';
 import { DEBT_EMPTY, DebtData, syncDebtAlerts } from '../lib/debts';
-import { syncEventAlerts, syncZikirAlerts, PEvent } from '../lib/alerts';
+import { syncEventAlerts, syncZikirAlerts, syncBackupAlert, PEvent } from '../lib/alerts';
 import { TG_DEFAULT, Toggles } from '../lib/adhan';
 
 // Keeps prayer alerts scheduled after the user has opened Prayer Times once (never asks for location on first launch).
@@ -31,6 +31,9 @@ function AlertSync() {
   const t = { ...TG_DEFAULT, ...tg };
   useEffect(() => { if (ok && ok2 && Platform.OS !== 'web') syncEventAlerts(pl.events || [], t); }, [ok, ok2, JSON.stringify(pl.events || []), t.ev, t.qh]);
   useEffect(() => { if (ok2 && Platform.OS !== 'web') syncZikirAlerts(t); }, [ok2, t.zk, t.qh]);
+  const [bk, , okb] = useStored<number>('ml_backup_last', 0);
+  const [bo, , okc] = useStored<boolean>('ml_backup_rem', false);
+  useEffect(() => { if (okb && okc && Platform.OS !== 'web') syncBackupAlert(!!bo, bk); }, [okb, okc, bk, bo]);
   return null;
 }
 function Tracker() { const p = usePathname(); useEffect(() => { trackModule(p); }, [p]); return null; }

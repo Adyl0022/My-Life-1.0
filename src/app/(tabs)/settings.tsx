@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { PageIn } from '../../components/PageIn';
 import { navScroll } from '../../lib/navbar';
-import { View, ScrollView, Pressable, TextInput, Modal, Animated, Easing } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, Modal, Animated, Easing, Linking, Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import { setup } from '../../lib/adhan';
 import { Text } from '../../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,7 +13,7 @@ import { Glass } from '../../components/Glass';
 import { Blob } from '../../components/Bg';
 import { SettingsBg } from '../../components/SettingsBg';
 import { useStored, clearMine, DEFAULT_NAME } from '../../lib/store';
-import { PRIVACY, TERMS, WHATS_NEW, LICENCES, Sec } from '../../lib/legal';
+import { PRIVACY, TERMS, WHATS_NEW, LICENCES, HOWTO, FAQ, SUPPORT_EMAIL, PRIVACY_URL, Sec } from '../../lib/legal';
 import { TOP } from '../../lib/layout';
 import { useLock, setPin, patchLock, disableLock, bioReady, AFTER } from '../../lib/lock';
 import { PinDialog } from '../../components/LockScreen';
@@ -118,8 +120,21 @@ export default function Settings() {
   const [draft, setDraft] = useState<string | null>(null);
   const [nameMsg, setNameMsg] = useState('');
   const [tg, setTg] = useStored<Record<string, boolean>>('ml_toggles', { ev: true, pr: true, zk: true, qh: true });
+  const [lead, setLead] = useStored<number>('ml_prayer_lead', 0);
+  const [bkRem, setBkRem] = useStored<boolean>('ml_backup_rem', false);
+  const [bkLast] = useStored<number>('ml_backup_last', 0);
+  const mail = (subj: string, body: string) => Linking.openURL('mailto:' + SUPPORT_EMAIL + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body)).catch(() => say('No email app found. Write to ' + SUPPORT_EMAIL));
+  const info = 'App: My Life 1.0 (1.0.0, build 1)\nPhone: ' + Platform.OS + ' ' + String(Platform.Version) + '\n\n';
+  const testNotif = async () => {
+    if (Platform.OS === 'web') return say('Notifications work in the phone app only');
+    try {
+      if (!(await setup())) return say('Allow notifications for My Life in your phone settings');
+      await Notifications.scheduleNotificationAsync({ identifier: 'test-now', content: { title: 'Test notification', body: 'Your reminders are working.', sound: true }, trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 3, channelId: 'prayer' } as any });
+      say('Sent. It will appear in 3 seconds');
+    } catch (e) { say('Could not send a test notification'); }
+  };
   const [checked, setChecked] = useState(false);
-  const [dlg, setDlg] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log'>('');
+  const [dlg, setDlg] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq'>('');
   const [typed, setTyped] = useState(''); const [pwv, setPwv] = useState('');
   const [p1, setP1] = useState(''); const [p2, setP2] = useState(''); const [p3, setP3] = useState(''); const [pwErr, setPwErr] = useState('');
   const [toast, setToast] = useState('');
@@ -166,6 +181,15 @@ export default function Settings() {
                 {TOG.map(([k, t, s], i) => <Row key={k} k={k} ic="x" t={t} sub={s} last={i === TOG.length - 1} onPress={() => setTg({ ...tg, [k]: !tg[k] })} right={<Sw on={!!tg[k]} />} />)}
               </Glass>
 
+              <Glass style={{ padding: 16 }}>
+                <Ttl t="Prayer alert timing" />
+                <Lbl t="When to ring, relative to the solat time" style={{ marginBottom: 8 }} />
+                <View style={{ flexDirection: 'row', gap: 6 }}>{([[0, 'On time'], [5, '5 min'], [10, '10 min'], [15, '15 min']] as const).map(([v, n]) => (
+                  <Pressable key={v} onPress={() => setLead(v)} style={{ flex: 1, paddingVertical: 8, borderRadius: 12, alignItems: 'center', backgroundColor: lead === v ? 'rgba(124,156,255,.45)' : 'rgba(255,255,255,.1)' }}><Text style={{ color: W, fontSize: 12, fontWeight: '700' }}>{n}</Text></Pressable>))}</View>
+                {lead ? <Lbl t={'Rings ' + lead + ' minutes before each prayer'} style={{ marginTop: 8 }} /> : null}
+                <View style={{ flexDirection: 'row', marginTop: 12 }}><Btn t="Send a test notification" onPress={testNotif} /></View>
+              </Glass>
+
               <Pressable onPress={() => router.push('/export' as any)}>
                 <Glass style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <Dot k="export" />
@@ -208,6 +232,9 @@ export default function Settings() {
                 <Lbl t="Coming soon, together with accounts and sync." />
               </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
+                <Row k="bk" t="Backup reminder" sub={(bkLast ? 'Last backup ' + new Date(bkLast).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'You have not saved a backup yet') + (bkRem ? '. Reminds every 30 days' : '')} last onPress={() => setBkRem(!bkRem)} right={<Sw on={!!bkRem} />} />
+              </Glass>
+              <Glass style={{ paddingHorizontal: 16 }}>
                 <Row k="bk" last t="Encrypted backup & restore" onPress={() => setDlg('backup')} right={<Chev />} />
               </Glass>
               <Glass style={{ padding: 16 }}>
@@ -240,8 +267,15 @@ export default function Settings() {
               <Glass style={{ paddingHorizontal: 16 }}>
                 <Row t="What's new in 1.0.0" onPress={() => setDlg('new')} right={<Chev />} />
                 <Row t="Privacy Policy" onPress={() => setDlg('privacy')} right={<Chev />} />
+                <Row t="Privacy Policy on the web" onPress={() => Linking.openURL(PRIVACY_URL)} right={<Chev />} />
                 <Row t="Terms of Use" onPress={() => setDlg('terms')} right={<Chev />} />
                 <Row t="Open-source licences" last onPress={() => setDlg('lic')} right={<Chev />} />
+              </Glass>
+              <Glass style={{ paddingHorizontal: 16 }}>
+                <Row t="How to use My Life" onPress={() => setDlg('howto')} right={<Chev />} />
+                <Row t="Help and FAQ" onPress={() => setDlg('faq')} right={<Chev />} />
+                <Row t="Report a problem" onPress={() => mail('My Life: problem report', 'What happened?\n\n\nWhat did you expect?\n\n\n' + info)} right={<Chev />} />
+                <Row t="Send feedback" last onPress={() => mail('My Life: feedback', 'My idea or comment:\n\n\n' + info)} right={<Chev />} />
               </Glass>
               <Glass style={{ padding: 16 }}>
                 <Ttl t="Privacy at a glance" />
@@ -261,6 +295,8 @@ export default function Settings() {
         {dlg === 'privacy' && <Doc title="Privacy Policy" secs={PRIVACY} onClose={close} />}
         {dlg === 'terms' && <Doc title="Terms of Use" secs={TERMS} onClose={close} />}
         {dlg === 'new' && <Doc title="What's new in 1.0.0" secs={WHATS_NEW} onClose={close} />}
+        {dlg === 'howto' && <Doc title="How to use My Life" secs={HOWTO} onClose={close} />}
+        {dlg === 'faq' && <Doc title="Help and FAQ" secs={FAQ} onClose={close} />}
         {dlg === 'lic' && <Doc title="Open-source licences" secs={LICENCES} onClose={close} />}
         {dlg === 'backup' && <Doc title="Encrypted backup & restore" secs={[{ h: 'Coming with sync', p: 'Backups will be encrypted and tied to your account. For now you can save a full copy with Export, using the Backup (JSON) format.' }]} onClose={close} />}
         {dlg === 'log' && <Doc title="Security activity log" secs={[{ h: 'Last 30 days', p: 'Sign-ins, password changes and device removals will be listed here once your account is connected.' }]} onClose={close} />}

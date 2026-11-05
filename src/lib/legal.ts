@@ -23,3 +23,22 @@ export const TERMS: Sec[] = [
 export const LICENCES: Sec[] = [
   { h: 'Open-source software', p: 'My Life is built with React Native, Expo (including expo-router, expo-notifications, expo-location, expo-secure-store, expo-local-authentication and expo-crypto), react-native-svg, react-native-reanimated, AsyncStorage, aes-js and noble-hashes. They are released under the MIT licence.' },
 ];
+
+export const SUPPORT_EMAIL = 'adlisyahmi324@gmail.com';
+export const PRIVACY_URL = 'https://adyl0022.github.io/My-Life-1.0/privacy.html';
+export const HOWTO: Sec[] = [
+  { h: '1. Start on Home', p: 'The Dashboard shows your day: next prayer, tasks, spending and habits. Use the bottom bar to move between Home, Stats, Insights and Settings.' },
+  { h: '2. Plan your days', p: 'Planner holds your tasks and events. Add an event and choose when to be reminded.' },
+  { h: '3. Islamic Hub', p: 'Prayer times, Quran, zikir, fasting log and more. Allow location once so prayer times are right for where you are.' },
+  { h: '4. Money and motorcycle', p: 'My Finance tracks spending, income and commitments. My Record keeps mileage, service and fuel for your motorcycle.' },
+  { h: '5. Habit and Health', p: 'Log steps, sleep, mood and water. Your streaks and score show up in Stats and Insights.' },
+  { h: '6. Ask the Assistant', p: 'Type things like "I spent RM10 on lunch". It answers from your own data and can save entries for you after you confirm.' },
+  { h: '7. Keep it safe', p: 'Turn on App lock in Settings, Security. Save a backup now and then from Settings, Export.' },
+];
+export const FAQ: Sec[] = [
+  { h: 'Where is my data?', p: 'Only on your phone, encrypted. Nothing is sent to a server.' },
+  { h: 'I changed phone. How do I move my data?', p: 'On the old phone, go to Settings, Export, choose Backup (JSON) and keep the file. Restoring from a file is coming soon.' },
+  { h: 'I forgot my PIN.', p: 'On the lock screen tap Forgot PIN. You can use your fingerprint to set a new PIN, or erase the app data and start fresh.' },
+  { h: 'Notifications do not ring.', p: 'Use Settings, General, Send a test notification. If nothing shows, allow notifications for My Life in your phone settings and turn off battery saving for the app.' },
+  { h: 'Prayer times look wrong.', p: 'Open Islamic Hub and refresh your location. Times follow JAKIM. Please confirm with your local authority.' },
+];

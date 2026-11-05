@@ -98,6 +98,7 @@ export function usePrayer(passive = false) {
   const [locName, setLocName] = useState('');
   const [updAt, setUpdAt] = useStored<number>('ml_prayer_upd', 0);
   const freshRef = useRef(false);
+  const [lead] = useStored<number>('ml_prayer_lead', 0);
   const [tgRaw] = useStored<Partial<Toggles>>('ml_toggles', {});
   const tgs = { ...TG_DEFAULT, ...tgRaw };
   const [alarms] = useStored<Record<string, boolean>>('ml_prayer_alerts', { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true });
@@ -168,7 +169,7 @@ export function usePrayer(passive = false) {
     }
     const zn = ZONES.find((x) => x.code === place.zone)?.name.split(' (')[0] || place.zone;
     if (list.length) syncPrayerAlerts(list, zn); else clearPrayerAlerts();
-  }, [month, month2, place, JSON.stringify(alarms), tgs.pr, tgs.qh]);
+  }, [month, month2, place, JSON.stringify(alarms), tgs.pr, tgs.qh, lead]);
 
   const nd = myNow(); const mins = nd.getUTCHours() * 60 + nd.getUTCMinutes();
   const pick = (list: PT[]) => { let i = list.findIndex((p) => p.h * 60 + p.m > mins); const tomorrow = i < 0 && list.length > 0; if (tomorrow) i = 0; return list.length ? { ...list[i], tomorrow, idx: i, diff: list[i].h * 60 + list[i].m - mins + (tomorrow ? 1440 : 0) } : null; };

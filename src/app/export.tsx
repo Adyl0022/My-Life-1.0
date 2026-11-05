@@ -4,7 +4,7 @@ import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { getText } from '../lib/store';
+import { getText, useStored } from '../lib/store';
 import { Glass } from '../components/Glass';
 import { Blob } from '../components/Bg';
 import { TOP } from '../lib/layout';
@@ -59,6 +59,7 @@ async function deliver(name: string, mime: string, text: string) {
 export default function Export() {
   const router = useRouter();
   const [inc, setInc] = useState<Record<string, boolean>>({ planner: true, islamic: true, finance: true, record: true, habit: true, usage: true });
+  const [, setBkLast] = useStored<number>('ml_backup_last', 0);
   const [per, setPer] = useState(0); const [fmt, setFmt] = useState(3);
   const [phase, setPhase] = useState(0); const [msg, setMsg] = useState('');
   const sel = MODS.filter((m) => inc[m.k]).map((m) => m.k);
@@ -86,6 +87,7 @@ export default function Export() {
       const data = await collect(sel);
       const body = k === 'json' ? JSON.stringify({ app: 'My Life', version: '1.0', exported: new Date().toISOString(), period: PER[per], data }, null, 2) : toCsv(data);
       await deliver(file, k === 'json' ? 'application/json' : 'text/csv', body);
+      if (k === 'json') setBkLast(Date.now());
       setMsg('Saved as ' + file); setPhase(2);
     } catch (e) { setMsg('Could not create the file. Please try again.'); setPhase(3); }
   };

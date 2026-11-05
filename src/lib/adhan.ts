@@ -8,7 +8,7 @@ export const TG_DEFAULT: Toggles = { ev: true, pr: true, zk: true, qh: true };
 export const readToggles = async (): Promise<Toggles> => ({ ...TG_DEFAULT, ...(await getItem<Partial<Toggles>>('ml_toggles', {})) });
 // Quiet hours: nothing rings between 12 am and 5 am.
 export const inQuiet = (at: Date, tg: Toggles) => !!tg.qh && at.getHours() < 5;
-const OWN = ['debt-', 'event-', 'zikir-'];
+const OWN = ['debt-', 'event-', 'zikir-', 'backup-'];
 
 export type Alert = { key: string; name: string; at: Date };
 let ready = false;
@@ -32,11 +32,14 @@ export async function syncPrayerAlerts(list: Alert[], zoneName: string): Promise
     await cancelPrayer();
     const tg = await readToggles(); if (!tg.pr) return;
     const now = Date.now();
-    for (const a of list.filter((x) => x.at.getTime() > now + 5000 && !inQuiet(x.at, tg)).slice(0, 60)) {
+    const lead = Number(await getItem<number>('ml_prayer_lead', 0)) || 0;
+    const fire = (x: Alert) => new Date(x.at.getTime() - lead * 60000);
+    for (const a of list.filter((x) => fire(x).getTime() > now + 5000 && !inQuiet(fire(x), tg)).slice(0, 60)) {
       await Notifications.scheduleNotificationAsync({
         identifier: 'prayer-' + a.key + '-' + a.at.getTime(),
-        content: { title: 'Waktu ' + a.name, body: 'Masuk waktu ' + a.name + (zoneName ? ' · ' + zoneName : ''), sound: true },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: a.at, channelId: 'prayer' } as any,
+        content: lead ? { title: a.name + ' in ' + lead + ' minutes', body: 'Get ready for ' + a.name + (zoneName ? ' · ' + zoneName : ''), sound: true }
+          : { title: 'Waktu ' + a.name, body: 'Masuk waktu ' + a.name + (zoneName ? ' · ' + zoneName : ''), sound: true },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: fire(a), channelId: 'prayer' } as any,
       });
     }
   } catch (e) {}

@@ -51,3 +51,22 @@ export async function syncZikirAlerts(tg: Toggles): Promise<void> {
     }
   } catch (e) { /* ignore */ }
 }
+
+// One reminder to back up, 30 days after the last backup (or 30 days from now if there has never been one).
+export async function syncBackupAlert(on: boolean, last: number): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    await cancelPrefix('backup-');
+    if (!on) return;
+    const p = await Notifications.getPermissionsAsync(); if (p.status !== 'granted') return;
+    if (Platform.OS === 'android') await Notifications.setNotificationChannelAsync('backup', { name: 'Backup reminder', importance: Notifications.AndroidImportance.DEFAULT, lightColor: '#6a4df0' });
+    const base = new Date(last || Date.now()); base.setDate(base.getDate() + 30); base.setHours(10, 0, 0, 0);
+    let at = base;
+    if (at.getTime() <= Date.now() + 5000) { at = new Date(); at.setDate(at.getDate() + 1); at.setHours(10, 0, 0, 0); }
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'backup-next',
+      content: { title: 'Time for a backup', body: 'It has been a while. Save a copy of your data from Settings, Export.', sound: false },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId: 'backup' } as any,
+    });
+  } catch (e) { /* ignore */ }
+}

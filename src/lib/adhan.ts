@@ -8,7 +8,7 @@ export async function setup(): Promise<boolean> {
   try {
     if (!ready) {
       Notifications.setNotificationHandler({ handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }) });
-      if (Platform.OS === 'android') await Notifications.setNotificationChannelAsync('prayer', { name: 'Prayer times', importance: Notifications.AndroidImportance.HIGH, vibrationPattern: [0, 250, 150, 250], lightColor: '#34d399' });
+      if (Platform.OS === 'android') await Notifications.setNotificationChannelAsync('prayer', { name: 'Prayer times', importance: Notifications.AndroidImportance.HIGH, vibrationPattern: [0, 250, 150, 250], lightColor: '#6a4df0' });
       ready = true;
     }
     let p = await Notifications.getPermissionsAsync();

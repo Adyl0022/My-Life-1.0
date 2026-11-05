@@ -11,6 +11,7 @@ import { Inp, W } from '../components/Ui';
 import { Face, GlassIcon, HeadIcon } from '../components/HabitIcons';
 import { useStored } from '../lib/store';
 import { TOP } from '../lib/layout';
+import { WeightGoal, DailyNeeds } from '../components/BodyCards';
 import { HData, HEMPTY, MOODS, WD, MON, GLASS, dateOf, getDay, keyOfDate, goalPctOf, HDay, BLANK as BLANKD, cupsGoal, latestKg, hoursBetween, bestStreakAll, avgOf } from '../lib/habit';
 
 const T = '#5ee7df';
@@ -355,6 +356,8 @@ export default function Habit() {
             </View>
             <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11, marginTop: 6 }}>Weigh yourself once a week. Water goal is about 33 ml per kg. BMI is a rough guide only.</Text>
           </Glass>
+          <WeightGoal h={h} setH={setH} />
+          <DailyNeeds h={h} setH={setH} />
           </>)}
           <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, textAlign: 'center', marginTop: 14 }}>Your habits are saved on this device.</Text>
         </ScrollView>

@@ -1,14 +1,29 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
+import { seal, open } from './secure';
 
 export const DEFAULT_NAME = 'Adli Syahmi';
 const listeners = new Set<() => void>();
 export async function getItem<T>(k: string, d: T): Promise<T> {
-  try { const r = await AsyncStorage.getItem(k); return r == null ? d : (JSON.parse(r) as T); } catch (e) { return d; }
+  try { const r = await AsyncStorage.getItem(k); return r == null ? d : (JSON.parse(await open(r)) as T); } catch (e) { return d; }
 }
 export async function setItem(k: string, v: unknown) {
-  try { await AsyncStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
+  try { await AsyncStorage.setItem(k, await seal(JSON.stringify(v))); } catch (e) {}
   listeners.forEach((f) => f());
+}
+// Raw readable JSON text of a saved key (used by Export).
+export async function getText(k: string): Promise<string | null> {
+  try { const r = await AsyncStorage.getItem(k); return r == null ? null : await open(r); } catch (e) { return null; }
+}
+// One-time pass after the update: encrypts everything that was saved as plain text before.
+export async function encryptExisting() {
+  try {
+    const ks = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith('ml_') && !k.startsWith('ml_pt_') && !k.startsWith('ml_usage'));
+    for (const k of ks) {
+      const r = await AsyncStorage.getItem(k);
+      if (r != null && !r.startsWith('enc1:')) { const e = await seal(r); if (e !== r) await AsyncStorage.setItem(k, e); }
+    }
+  } catch (e) {}
 }
 export async function clearMine(keepName: boolean) {
   try {

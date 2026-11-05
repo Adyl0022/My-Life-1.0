@@ -12,6 +12,8 @@ import { Blob } from '../../components/Bg';
 import { useStored, clearMine, DEFAULT_NAME } from '../../lib/store';
 import { PRIVACY, TERMS, WHATS_NEW, LICENCES, Sec } from '../../lib/legal';
 import { TOP } from '../../lib/layout';
+import { useLock, setPin, patchLock, disableLock, bioReady, AFTER } from '../../lib/lock';
+import { PinDialog } from '../../components/LockScreen';
 
 const W = '#fff', DIM = 'rgba(255,255,255,.7)';
 const G = ['#34d399', '#5ee7df'] as [string, string];
@@ -120,6 +122,10 @@ export default function Settings() {
   const [typed, setTyped] = useState(''); const [pwv, setPwv] = useState('');
   const [p1, setP1] = useState(''); const [p2, setP2] = useState(''); const [p3, setP3] = useState(''); const [pwErr, setPwErr] = useState('');
   const [toast, setToast] = useState('');
+  const { cfg: lk } = useLock();
+  const [lkd, setLkd] = useState<'' | 'set' | 'off' | 'chk' | 'change'>('');
+  const [bioAv, setBioAv] = useState(false);
+  React.useEffect(() => { bioReady().then(setBioAv); }, []);
   const say = (t: string) => { setToast(t); setTimeout(() => setToast(''), 2200); };
   const close = () => { setDlg(''); setTyped(''); setPwv(''); setP1(''); setP2(''); setP3(''); setPwErr(''); };
 
@@ -177,6 +183,21 @@ export default function Settings() {
                 <Dot c="rgba(94,231,181,.4)" />
                 <View style={{ flex: 1 }}><Ttl t="Your data stays on your phone" /><Lbl t="Stored on this phone only. Account sync is coming soon." /></View>
               </Glass>
+              <Glass style={{ paddingHorizontal: 16, paddingVertical: 6 }}>
+                <Row k="pw" t="App lock" sub={lk.on ? 'On. Asks for ' + (lk.bio ? 'fingerprint or PIN' : 'your PIN') : 'Ask for a PIN or fingerprint to open the app'} last={!lk.on} onPress={() => setLkd(lk.on ? 'off' : 'set')} right={<Sw on={lk.on} />} />
+                {lk.on ? (
+                  <View style={{ paddingBottom: 12 }}>
+                    {bioAv ? <Row k="pw" t="Use fingerprint or face" onPress={() => patchLock({ bio: !lk.bio })} right={<Sw on={lk.bio} />} /> : null}
+                    <Text style={{ color: DIM, fontSize: 12, marginTop: 10, marginBottom: 6 }}>Lock again after the app has been closed for</Text>
+                    <View style={{ flexDirection: 'row', gap: 6 }}>{AFTER.map(([v, n]) => (
+                      <Pressable key={v} onPress={() => patchLock({ after: v })} style={{ flex: 1, paddingVertical: 8, borderRadius: 12, alignItems: 'center', backgroundColor: lk.after === v ? 'rgba(124,156,255,.45)' : 'rgba(255,255,255,.1)' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{n}</Text></Pressable>))}</View>
+                    <Text style={{ color: DIM, fontSize: 12, marginTop: 12, marginBottom: 6 }}>What to lock</Text>
+                    <View style={{ flexDirection: 'row', gap: 6 }}>{([['all', 'Whole app'], ['sensitive', 'Finance, Notes, Records']] as const).map(([v, n]) => (
+                      <Pressable key={v} onPress={() => patchLock({ scope: v })} style={{ flex: v === 'all' ? 1 : 1.6, paddingVertical: 8, borderRadius: 12, alignItems: 'center', backgroundColor: lk.scope === v ? 'rgba(124,156,255,.45)' : 'rgba(255,255,255,.1)' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{n}</Text></Pressable>))}</View>
+                    <View style={{ flexDirection: 'row', marginTop: 12 }}><Btn t="Change PIN" onPress={() => setLkd('chk')} /></View>
+                  </View>
+                ) : null}
+              </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
                 <Row k="pw" t="Change password" last onPress={() => setDlg('pw')} right={<Chev />} />
               </Glass>
@@ -231,6 +252,10 @@ export default function Settings() {
           )}
         </ScrollView>
 
+        {lkd === 'set' && <PinDialog mode="new" onClose={() => setLkd('')} onOk={async (pin) => { await setPin(pin!, bioAv); setLkd(''); say('App lock is on'); }} />}
+        {lkd === 'off' && <PinDialog mode="verify" bio={lk.bio} onClose={() => setLkd('')} onOk={async () => { await disableLock(); setLkd(''); say('App lock is off'); }} />}
+        {lkd === 'chk' && <PinDialog mode="verify" bio={lk.bio} onClose={() => setLkd('')} onOk={() => setLkd('change')} />}
+        {lkd === 'change' && <PinDialog mode="new" onClose={() => setLkd('')} onOk={async (pin) => { await setPin(pin!, lk.bio); setLkd(''); say('PIN changed'); }} />}
         {dlg === 'privacy' && <Doc title="Privacy Policy" secs={PRIVACY} onClose={close} />}
         {dlg === 'terms' && <Doc title="Terms of Use" secs={TERMS} onClose={close} />}
         {dlg === 'new' && <Doc title="What's new in 1.0" secs={WHATS_NEW} onClose={close} />}

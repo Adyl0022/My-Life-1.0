@@ -5,7 +5,9 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationBar } from 'expo-navigation-bar';
 import { Platform } from 'react-native';
 import { usePrayer } from '../lib/prayer';
-import { useStored } from '../lib/store';
+import { useStored, encryptExisting } from '../lib/store';
+import { useLockWatcher } from '../lib/lock';
+import { LockScreen } from '../components/LockScreen';
 import { DEBT_EMPTY, DebtData, syncDebtAlerts } from '../lib/debts';
 import { syncEventAlerts, syncZikirAlerts, PEvent } from '../lib/alerts';
 import { TG_DEFAULT, Toggles } from '../lib/adhan';
@@ -33,5 +35,7 @@ function AlertSync() {
 }
 function Tracker() { const p = usePathname(); useEffect(() => { trackModule(p); }, [p]); return null; }
 export default function Root() {
-  return (<><Tracker /><StatusBar style="light" />{Platform.OS === 'android' ? <NavigationBar hidden style="light" /> : null}<PrayerSync /><DebtSync /><AlertSync /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0f2c' }, animation: 'slide_from_right' }} /></>);
+  useLockWatcher();
+  useEffect(() => { encryptExisting(); }, []);
+  return (<><Tracker /><StatusBar style="light" />{Platform.OS === 'android' ? <NavigationBar hidden style="light" /> : null}<PrayerSync /><DebtSync /><AlertSync /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0f2c' }, animation: 'slide_from_right' }} /><LockScreen /></>);
 }

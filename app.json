@@ -23,7 +23,8 @@
       "permissions": [
         "android.permission.health.READ_STEPS",
         "android.permission.ACTIVITY_RECOGNITION"
-      ]
+      ],
+      "allowBackup": false
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -79,6 +80,13 @@
           "android": {
             "minSdkVersion": 26
           }
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow My Life to use Face ID to unlock the app."
         }
       ]
     ],

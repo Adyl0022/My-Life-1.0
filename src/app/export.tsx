@@ -4,7 +4,7 @@ import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getText } from '../lib/store';
 import { Glass } from '../components/Glass';
 import { Blob } from '../components/Bg';
 import { TOP } from '../lib/layout';
@@ -34,7 +34,7 @@ async function collect(sel: string[]) {
   const out: Record<string, any> = {};
   for (const m of MODS.filter((x) => sel.includes(x.k))) {
     out[m.k] = {};
-    for (const k of m.keys) { try { const r = await AsyncStorage.getItem(k); if (r != null) out[m.k][k] = JSON.parse(r); } catch (e) {} }
+    for (const k of m.keys) { try { const r = await getText(k); if (r != null) out[m.k][k] = JSON.parse(r); } catch (e) {} }
   }
   return out;
 }

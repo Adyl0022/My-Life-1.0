@@ -17,6 +17,7 @@ import { PRIVACY, TERMS, WHATS_NEW, LICENCES, HOWTO, FAQ, SUPPORT_EMAIL, PRIVACY
 import { TOP } from '../../lib/layout';
 import { useLock, setPin, patchLock, disableLock, bioReady, AFTER } from '../../lib/lock';
 import { PinDialog } from '../../components/LockScreen';
+import { useKb } from '../../lib/keyboard';
 
 const W = '#fff', DIM = 'rgba(255,255,255,.7)';
 const G = ['#34d399', '#5ee7df'] as [string, string];
@@ -78,9 +79,10 @@ const Btn = ({ t, onPress, kind = 'glass', style }: { t: string; onPress: () => 
 const Inp = (p: any) => <TextInput placeholderTextColor="rgba(255,255,255,.4)" {...p} style={[{ color: W, fontSize: 14, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 14, backgroundColor: 'rgba(0,0,0,.28)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', outlineStyle: 'none' } as any, p.style]} />;
 
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  const kb = useKb();
   return (
     <Modal transparent animationType="fade" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(5,8,25,.72)', justifyContent: 'center', padding: 24 }}>
+      <View style={{ flex: 1, backgroundColor: 'rgba(5,8,25,.72)', justifyContent: 'center', padding: 24, paddingBottom: 24 + kb }}>
         <Pressable onPress={onClose} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
         {children}
       </View>
@@ -120,6 +122,21 @@ export default function Settings() {
   const [draft, setDraft] = useState<string | null>(null);
   const [nameMsg, setNameMsg] = useState('');
   const [tg, setTg] = useStored<Record<string, boolean>>('ml_toggles', { ev: true, pr: true, zk: true, qh: true });
+  const kb = useKb(); const sref = React.useRef<any>(null);
+  React.useEffect(() => { if (kb > 0) setTimeout(() => sref.current?.scrollToEnd({ animated: true }), 80); }, [kb]);
+  const [upd, setUpd] = useState<'' | 'busy' | 'latest' | 'new' | 'web' | 'err'>('');
+  const checkUpd = async () => {
+    const cur = String(process.env.EXPO_PUBLIC_BUILD_SHA || '').slice(0, 7);
+    if (Platform.OS === 'web') return setUpd('web');
+    setUpd('busy');
+    try {
+      const r = await fetch('https://api.github.com/repos/Adyl0022/My-Life-1.0/releases/tags/apk-latest', { headers: { Accept: 'application/vnd.github+json' } });
+      if (!r.ok) throw new Error('x');
+      const j = await r.json(); const m = /commit ([0-9a-f]{7})/.exec(String(j.body || ''));
+      if (!m || !cur) return setUpd('err');
+      setUpd(m[1] === cur ? 'latest' : 'new');
+    } catch (e) { setUpd('err'); }
+  };
   const [lead, setLead] = useStored<number>('ml_prayer_lead', 0);
   const [bkRem, setBkRem] = useStored<boolean>('ml_backup_rem', false);
   const [bkLast] = useStored<number>('ml_backup_last', 0);
@@ -133,7 +150,6 @@ export default function Settings() {
       say('Sent. It will appear in 3 seconds');
     } catch (e) { say('Could not send a test notification'); }
   };
-  const [checked, setChecked] = useState(false);
   const [dlg, setDlg] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq'>('');
   const [typed, setTyped] = useState(''); const [pwv, setPwv] = useState('');
   const [p1, setP1] = useState(''); const [p2, setP2] = useState(''); const [p3, setP3] = useState(''); const [pwErr, setPwErr] = useState('');
@@ -163,7 +179,7 @@ export default function Settings() {
       <SettingsBg tab={tab} />
       <PageIn i={3}>
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView onScroll={navScroll} scrollEventThrottle={16} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 130 }}>
+        <ScrollView ref={sref} onScroll={navScroll} scrollEventThrottle={16} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 130 + kb }}>
           <Text style={{ color: W, fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Settings</Text>
           <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)', marginTop: 14 }}>
             {['General', 'Security', 'About'].map((n, i) => (
@@ -238,7 +254,7 @@ export default function Settings() {
                 <Ttl t="Account and data" />
                 <Lbl t="Name shown on your Dashboard and in the assistant" style={{ marginBottom: 8 }} />
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <Inp style={{ flex: 1 }} value={draft ?? name} onChangeText={(v: string) => { setDraft(v); setNameMsg(''); }} placeholder="Your name" maxLength={30} />
+                  <Inp style={{ flex: 1 }} onFocus={() => setTimeout(() => sref.current?.scrollToEnd({ animated: true }), 350)} value={draft ?? name} onChangeText={(v: string) => { setDraft(v); setNameMsg(''); }} placeholder="Your name" maxLength={30} />
                   <Btn t="Save" kind="primary" style={{ flex: 0, minWidth: 80 }} onPress={() => { const v = (draft ?? name).trim(); if (!v) return setNameMsg('Please enter a name.'); setName(v); setDraft(null); setNameMsg('Saved. It will show on your Dashboard and assistant.'); }} />
                 </View>
                 {nameMsg ? <Text style={{ color: '#8fe9e2', fontSize: 12, marginTop: 6 }}>{nameMsg}</Text> : null}
@@ -256,7 +272,8 @@ export default function Settings() {
                 <Float><LinearGradient colors={['#7c9cff', '#b794ff', '#5ee7df']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0.2 }} end={{ x: 1, y: 0.8 }} style={{ width: 72, height: 72, borderRadius: 23, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)', boxShadow: '0 14px 36px rgba(124,156,255,.5)' } as any}><Svg width={36} height={36} viewBox="0 0 30 30"><Path d="M5 24V6l10 12L25 6v18" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" /></Svg></LinearGradient></Float>
                 <Text style={{ color: W, fontSize: 20, fontWeight: '800', marginTop: 10 }}>My Life 1.0</Text>
                 <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4, marginTop: 3 }}>YOUR LIFE, ALL IN ONE PLACE</Text>
-                <Pressable onPress={() => setChecked(!checked)} style={{ marginTop: 12, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, backgroundColor: checked ? 'rgba(94,231,181,.25)' : 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{checked ? "You're up to date" : 'Check for updates'}</Text></Pressable>
+                <Pressable onPress={checkUpd} disabled={upd === 'busy'} style={{ marginTop: 12, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, backgroundColor: upd === 'latest' || upd === 'web' ? 'rgba(94,231,181,.25)' : upd === 'new' ? 'rgba(124,156,255,.4)' : upd === 'err' ? 'rgba(255,196,107,.25)' : 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{upd === 'busy' ? 'Checking...' : upd === 'latest' ? "You're up to date" : upd === 'web' ? 'The web version is always the latest' : upd === 'new' ? 'A new version is available' : upd === 'err' ? 'Could not check. Tap to try again' : 'Check for updates'}</Text></Pressable>
+                {upd === 'new' ? <Pressable onPress={() => Linking.openURL('https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest')} style={{ marginTop: 8 }}><LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999 }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '800' }}>Download the new version</Text></LinearGradient></Pressable> : null}
               </View>
               <Glass style={{ paddingHorizontal: 16 }}>
                 {[['Version', '1.0.0'], ['Build', '1'], ['Developed', 'November 2026'], ['Developer', 'Adli Syahmi']].map(([a, b], i) => <Row key={a} t={a} last={i === 3} right={<Text style={{ color: DIM, fontSize: 13 }}>{b}</Text>} />)}

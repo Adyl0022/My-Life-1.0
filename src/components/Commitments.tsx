@@ -28,6 +28,7 @@ export function Commitments({ income }: { income: number }) {
   const [n, setN] = useState(''); const [bal, setBal] = useState(''); const [mo, setMo] = useState(''); const [day, setDay] = useState('');
   const [msg, setMsg] = useState(''); const [fixed, setFixed] = useState(false); const [fb, setFb] = useState(''); const [fe, setFe] = useState(false);
   const now = new Date(); const ym = ymOf(now); const today = now.getDate();
+  const lastD = new Date(now.getFullYear(), now.getMonth() - 1, 1); const lastYm = ymOf(lastD); const LM = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][lastD.getMonth()];
   const list = d.debts || [];
   const act = list.filter((x) => isActive(x, ym));
   const done = list.filter((x) => !isActive(x, ym));
@@ -55,6 +56,8 @@ export function Commitments({ income }: { income: number }) {
     }
     reset();
   };
+  const missed = (x: Debt) => x.since <= lastYm && !((x.paid || {})[lastYm] > 0) && (x.fixed || remaining(x) > 0);
+  const tickLast = (x: Debt) => save({ ...d, debts: list.map((y) => (y.id === x.id ? { ...y, paid: { ...(y.paid || {}), [lastYm]: y.fixed ? y.monthly : Math.min(y.monthly, remaining(y)) } } : y)) });
   const tick = (x: Debt) => {
     const paidNow = (x.paid || {})[ym] > 0; const p = { ...(x.paid || {}) };
     if (paidNow) delete p[ym]; else p[ym] = Math.min(x.monthly, remaining(x));
@@ -128,7 +131,8 @@ export function Commitments({ income }: { income: number }) {
             const pd = (x.paid || {})[ym] > 0; const dday = dueDay(x, now.getFullYear(), now.getMonth()); const late = !pd && today > dday; const diff = dday - today;
             const status = pd ? 'Paid this month' : late ? 'Overdue by ' + (today - dday) + (today - dday === 1 ? ' day' : ' days') : diff === 0 ? 'Due today' : diff === 1 ? 'Due tomorrow' : 'Due on the ' + ord(dday);
             return (
-              <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 11, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,.1)' }}>
+              <View key={x.id} style={{ borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,.1)' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 11 }}>
                 <Pressable accessibilityLabel={pd ? 'Mark as unpaid' : 'Mark as paid'} onPress={() => tick(x)} style={{ width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: pd ? '#34d399' : 'rgba(255,255,255,.4)', backgroundColor: pd ? '#34d399' : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                   {pd ? <Text style={{ color: '#062b1c', fontSize: 16, fontWeight: '900', marginTop: -1 }}>✓</Text> : null}
                 </Pressable>
@@ -144,6 +148,13 @@ export function Commitments({ income }: { income: number }) {
                     <Pressable accessibilityLabel="Delete" onPress={() => save({ ...d, debts: list.filter((y) => y.id !== x.id) })} style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ff9aa9', fontSize: 13 }}>✕</Text></Pressable>
                   </View>
                 </View>
+              </View>
+              {missed(x) ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: -2, marginBottom: 10, marginLeft: 41, paddingVertical: 7, paddingHorizontal: 11, borderRadius: 12, backgroundColor: 'rgba(255,196,107,.14)' }}>
+                  <Text style={{ flex: 1, color: '#ffd593', fontSize: 11.5 }}>{LM + ' was not ticked'}</Text>
+                  <Pressable hitSlop={8} onPress={() => tickLast(x)}><Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>Mark paid</Text></Pressable>
+                </View>
+              ) : null}
               </View>
             );
           })}

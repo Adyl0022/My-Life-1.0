@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FastMonths } from '../../components/FastMonths';
 import { StatsBg } from '../../components/PageBg';
 import { PageIn } from '../../components/PageIn';
 import { navScroll } from '../../lib/navbar';
@@ -270,10 +271,7 @@ export default function Stats() {
                   ))}
                 </View>
                 {rs.phase === 'during' ? <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12.5, marginTop: 10 }}>Ramadan: {rs.fasted} of {rs.r.len} days fasted</Text> : rs.phase === 'before' ? <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12.5, marginTop: 10 }}>Next Ramadan in {rs.daysTo} days</Text> : null}
-                <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 5, height: 60, marginTop: 12 }}>
-                  {yr.months.map((n, i) => (<View key={i} style={{ flex: 1, height: 60, justifyContent: 'flex-end' }}><View style={{ height: Math.max(4, Math.round((n / mx) * 56)), borderRadius: 4, backgroundColor: i === 11 ? '#34d399' : 'rgba(255,255,255,.35)' }} /></View>))}
-                </View>
-                <View style={{ flexDirection: 'row', gap: 5, marginTop: 4 }}>{yr.months.map((_, i) => <Text key={i} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.55)', fontSize: 9 }}>{L[(now.getMonth() - 11 + i + 12) % 12]}</Text>)}</View>
+                <FastMonths months={yr.months} now={now} />
               </>);
             })()}
           </Glass>

@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { Glass } from '../components/Glass';
 import { IslamicBg, Header, Ic } from '../components/IslamicUi';
 import { Inp, W } from '../components/Ui';
+import { FastMonths } from '../components/FastMonths';
 import { PuasaSky, RamadanHero, Crescent, Lantern, TipIcon, Bob } from '../components/PuasaArt';
 import { Rise, FillBar, GrowBar } from '../components/Anim';
 import { useStored } from '../lib/store';
@@ -321,16 +322,7 @@ export default function Puasa() {
                   ))}
                 </View>
               ) : <Text style={{ color: dim, fontSize: 12.5, lineHeight: 18, marginTop: 10 }}>Log your sunnah fasts and they will be counted here by type: Monday and Thursday, White Days (13th to 15th of the Hijri month), Arafah, Asyura and Syawal.</Text>}
-              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 5, height: 70, marginTop: 16 }}>
-                {yr.months.map((n, i) => (
-                  <View key={i} style={{ flex: 1, height: 70, justifyContent: 'flex-end' }}>
-                    <GrowBar h={Math.max(4, Math.round((n / Math.max(...yr.months, 1)) * 66))} delay={i * 40} dep={yr.months.join()} style={{ width: '100%' }}>
-                      <View style={{ flex: 1, borderRadius: 4, backgroundColor: i === 11 ? G : 'rgba(255,255,255,.35)' }} />
-                    </GrowBar>
-                  </View>
-                ))}
-              </View>
-              <View style={{ flexDirection: 'row', gap: 5, marginTop: 4 }}>{yr.months.map((_, i) => <Text key={i} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.55)', fontSize: 9 }}>{MS[(today.getMonth() - 11 + i + 12) % 12][0]}</Text>)}</View>
+              <FastMonths months={yr.months} now={today} color={G} />
             </Card></Rise>
 
             {upcoming.length ? (

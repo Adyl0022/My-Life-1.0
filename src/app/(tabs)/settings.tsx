@@ -9,6 +9,7 @@ import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { Glass } from '../../components/Glass';
 import { Blob } from '../../components/Bg';
+import { SettingsBg } from '../../components/SettingsBg';
 import { useStored, clearMine, DEFAULT_NAME } from '../../lib/store';
 import { PRIVACY, TERMS, WHATS_NEW, LICENCES, Sec } from '../../lib/legal';
 import { TOP } from '../../lib/layout';
@@ -144,6 +145,7 @@ export default function Settings() {
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
       <LinearGradient colors={['#0a0f2c', '#1a1048', '#0c2b4d']} locations={[0, 0.48, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
+      <SettingsBg tab={tab} />
       <PageIn i={3}>
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView onScroll={navScroll} scrollEventThrottle={16} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 130 }}>

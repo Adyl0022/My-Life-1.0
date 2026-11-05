@@ -226,9 +226,13 @@ export default function Stats() {
               <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Habit calendar</Text>
               <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11 }}>Last 30 days</Text>
             </View>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-              {heat.map((p, i) => (
-                <View key={i} style={{ width: '8.9%', aspectRatio: 1, borderRadius: 6, backgroundColor: p < 0 ? 'rgba(255,255,255,.08)' : p >= 80 ? '#34d399' : p >= 50 ? 'rgba(52,211,153,.6)' : p >= 25 ? 'rgba(52,211,153,.35)' : 'rgba(52,211,153,.18)', borderWidth: i === 29 ? 1.5 : 0, borderColor: '#fff' }} />
+            <View style={{ gap: 6, marginTop: 12 }}>
+              {[0, 1, 2].map((r) => (
+                <View key={r} style={{ flexDirection: 'row', gap: 6 }}>
+                  {heat.slice(r * 10, r * 10 + 10).map((p, j) => { const i = r * 10 + j; return (
+                    <View key={i} style={{ flex: 1, aspectRatio: 1, borderRadius: 6, backgroundColor: p < 0 ? 'rgba(255,255,255,.1)' : p >= 80 ? '#34d399' : p >= 50 ? 'rgba(52,211,153,.6)' : p >= 25 ? 'rgba(52,211,153,.35)' : 'rgba(52,211,153,.18)', borderWidth: i === 29 ? 1.5 : 0, borderColor: '#fff' }} />
+                  ); })}
+                </View>
               ))}
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 }}>

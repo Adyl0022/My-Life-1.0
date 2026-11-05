@@ -38,8 +38,6 @@ function Spin({ children, ms = 60000, style }: { children: React.ReactNode; ms?:
 
 const BARS = [34, 52, 40, 70, 58, 86, 64, 96, 78, 110, 92, 130];
 export function StatsBg() {
-  const pulse = useRef(new Animated.Value(0)).current;
-  useEffect(() => { const l = loop(pulse, 2600); return () => l.stop(); }, []);
   return (
     <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
       <Drift style={{ right: -90, top: -40 }}><Blob size={300} color="rgba(124,156,255,.32)" style={{ position: 'relative' }} /></Drift>
@@ -59,8 +57,6 @@ export function StatsBg() {
         </G>
         <Path d="M0 150 L32 140 L64 150 L96 120 L128 130 L160 96 L192 112 L224 70 L256 86 L288 50 L320 66 L352 30 L390 20" fill="none" stroke="url(#sl)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
-      <Animated.View style={{ position: 'absolute', right: 34, bottom: 168, width: 9, height: 9, borderRadius: 5, backgroundColor: '#fff', opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.5] }) }], shadowColor: '#b794ff', shadowOpacity: 1, shadowRadius: 8, shadowOffset: { width: 0, height: 0 } }} />
-      <Star x={12} y={30} s={1} i={0} /><Star x={84} y={44} s={2} i={2} c="#8fe9e2" /><Star x={30} y={62} s={1} i={4} /><Star x={70} y={78} s={1} i={1} c="#b794ff" />
     </View>
   );
 }
@@ -86,7 +82,6 @@ export function InsightsBg() {
           <Circle cx={14} cy={190} r={4} fill="#ffc46b" opacity={0.8} />
         </Svg>
       </Spin>
-      <Star x={10} y={12} s={2} i={0} /><Star x={44} y={6} s={1} i={3} /><Star x={90} y={34} s={2} i={5} c="#8fe9e2" /><Star x={18} y={48} s={1} i={2} /><Star x={78} y={60} s={1} i={4} c="#ff8fab" /><Star x={52} y={86} s={2} i={6} /><Star x={92} y={90} s={1} i={1} />
     </View>
   );
 }

@@ -270,14 +270,13 @@ export default function Puasa() {
                   const d = addDays(today, i - 34); const v = at(d); const ram = ramadanState(p, d).phase === 'during'; const bad = isHaram(d, off);
                   const mt = d.getDay() === 1 || d.getDay() === 4; const isT = i === 34;
                   return (
-                    <Pressable key={i} disabled={bad || ram} onPress={() => toggleLog(d)} style={{ width: '12.4%', aspectRatio: 1, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: v === 's' ? G : v === 'q' ? '#ffc46b' : v === 'r' ? 'rgba(52,211,153,.5)' : 'rgba(255,255,255,.1)', opacity: bad || ram ? 0.3 : 1, borderWidth: isT ? 1.5 : 0, borderColor: '#fff' }}>
-                      <Text style={{ color: v ? '#06281c' : W, fontSize: 12, fontWeight: '800', marginTop: mt && !v ? -3 : 0 }}>{d.getDate()}</Text>
-                      {mt && !v ? <View style={{ position: 'absolute', bottom: 5, width: 4, height: 4, borderRadius: 2, backgroundColor: G }} /> : null}
+                    <Pressable key={i} disabled={bad || ram} onPress={() => toggleLog(d)} style={{ width: '12.4%', aspectRatio: 1, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: v === 's' ? G : v === 'q' ? '#ffc46b' : v === 'r' ? 'rgba(52,211,153,.5)' : mt ? 'rgba(52,211,153,.22)' : 'rgba(255,255,255,.1)', opacity: bad || ram ? 0.3 : 1, borderWidth: isT ? 1.5 : 0, borderColor: '#fff' }}>
+                      <Text style={{ color: v ? '#06281c' : W, fontSize: 12, lineHeight: 16, fontWeight: '800', textAlign: 'center', includeFontPadding: false }}>{d.getDate()}</Text>
                     </Pressable>
                   );
                 })}
               </View>
-              <Text style={{ color: dim, fontSize: 11, marginTop: 8 }}>Green dot is Monday or Thursday. Faded days are Eid or Ramadan.</Text>
+              <Text style={{ color: dim, fontSize: 11, marginTop: 8 }}>Light green days are Monday or Thursday. Faded days are Eid or Ramadan.</Text>
             </Card></Rise>
 
             <Rise i={2}><Card>

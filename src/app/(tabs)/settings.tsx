@@ -337,9 +337,18 @@ export default function Settings() {
           <Overlay onClose={close}><ScrollView style={{ flexGrow: 0, maxHeight: '88%' }} contentContainerStyle={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
             <Text style={{ color: W, fontSize: 18, fontWeight: '800' }}>Backup and restore</Text>
             <Text style={{ color: DIM, fontSize: 13, lineHeight: 19, marginTop: 6 }}>Save a copy of your data as a file, or bring it back from a file you saved before. This is how you move to a new phone until accounts arrive.</Text>
-            <View style={{ marginTop: 12, padding: 12, borderRadius: 16, backgroundColor: 'rgba(94,231,223,.10)', borderWidth: 1, borderColor: 'rgba(94,231,223,.25)' }}>
-              <Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '800', marginBottom: 6 }}>Tips for restoring</Text>
-              {['Choose a Backup (JSON) file. It is named like my-life-backup-2026-11-06-1642.json.', 'Only the JSON backup can be restored. Excel, PDF and CSV files are for reading and sharing.', 'Keep your backup somewhere safe, such as Google Drive or Files, so you can find it on a new phone.', 'Restoring replaces the parts found in the file. Receipt photos are not included.'].map((t) => (
+            <View style={{ marginTop: 12, padding: 12, borderRadius: 16, backgroundColor: 'rgba(124,156,255,.12)', borderWidth: 1, borderColor: 'rgba(124,156,255,.28)' }}>
+              <Text style={{ color: '#b9c8ff', fontSize: 12.5, fontWeight: '800', marginBottom: 6 }}>How to back up and restore</Text>
+              {['Open Export all my data, choose Backup (JSON) and tap Export. The backup file is created and shared from your phone.', 'Save that file somewhere safe, such as Google Drive or Files. This is the file you upload later.', 'On the new phone, open Backup and restore, tap Restore from a file and choose the same Backup (JSON) file.', 'Check what is in the backup, then tap Restore to bring your data back.'].map((t, n) => (
+                <View key={t} style={{ flexDirection: 'row', gap: 8, marginTop: 5 }}>
+                  <View style={{ width: 20, height: 20, borderRadius: 7, backgroundColor: 'rgba(124,156,255,.45)', alignItems: 'center', justifyContent: 'center', marginTop: 1 }}><Text style={{ color: W, fontSize: 11.5, fontWeight: '800' }}>{n + 1}</Text></View>
+                  <Text style={{ flex: 1, color: 'rgba(255,255,255,.86)', fontSize: 12.5, lineHeight: 18 }}>{t}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={{ marginTop: 10, padding: 12, borderRadius: 16, backgroundColor: 'rgba(94,231,223,.10)', borderWidth: 1, borderColor: 'rgba(94,231,223,.25)' }}>
+              <Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '800', marginBottom: 6 }}>Good to know</Text>
+              {['Only the Backup (JSON) file can be restored. Excel, PDF and CSV files are for reading and sharing.', 'The file is named like my-life-backup-2026-11-06-1642.json.', 'Restoring replaces the parts found in the file. Receipt photos are not included.'].map((t) => (
                 <View key={t} style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}><Text style={{ color: '#8fe9e2', fontSize: 12.5 }}>✓</Text><Text style={{ flex: 1, color: 'rgba(255,255,255,.82)', fontSize: 12.5, lineHeight: 18 }}>{t}</Text></View>
               ))}
             </View>

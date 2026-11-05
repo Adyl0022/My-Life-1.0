@@ -88,6 +88,7 @@ export default function IslamicHub() {
             ))}
           </>)}
           {tab === 2 && (<>
+            <Item ic="moon" t="Puasa" s="Ramadan, qadha and sunnah fasts" c="rgba(52,211,153,.4)" onPress={() => go('/puasa')} />
             <Item ic="beads" t="Tasbih Counter" s="Count your zikir" c="rgba(255,196,107,.4)" onPress={() => go('/tasbih')} />
             <Item ic="scroll" t="Tahlil Arwah" s="Standard reading · 26 parts" c="rgba(124,156,255,.4)" onPress={() => go('/tahlil')} />
             <Item ic="sun" t="Al-Ma'thurat" s="Sughra · 31 parts" c="rgba(255,143,171,.4)" onPress={() => go('/mathurat')} />

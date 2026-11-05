@@ -1,4 +1,5 @@
 import { useStored } from './store';
+import { PUASA_EMPTY, PuasaData, ramadanState, qadhaOwed, sunatToday, isHaram } from './fasting';
 import { DEBT_EMPTY, DebtData, remaining, isActive, ymOf, dueDay, amountDue, debtSummary, monthsLeft, yearsMonths, payoffLabel } from './debts';
 import { HEMPTY, HData, getDay, cupsGoal, goalPctOf, keyOfDate, dateOf, MOODS, WD, bestStreakAll } from './habit';
 
@@ -8,7 +9,7 @@ export type Tk = { name: string; due: string; status: string };
 export type Ev = { name: string; date: string; done: boolean };
 export type Pl = { events: Ev[]; tasks: Tk[] };
 export type Veh = { readings?: { date: string; odo: number }[]; fuel?: { date: string; liters: number; amt: number; odo: number }[]; parts?: { name: string; odo: number; life: number }[]; renew?: { roadtax?: string; insurance?: string; licence?: string } };
-export type Core = { hd: HData; fin: Fin; pl: Pl; rec: { data: Record<string, Veh> }; tas: { day: string; total: number }; debts: DebtData; off: Record<string, string>; setOff: (v: Record<string, string>) => void };
+export type Core = { hd: HData; fin: Fin; pl: Pl; rec: { data: Record<string, Veh> }; tas: { day: string; total: number }; debts: DebtData; puasa: PuasaData; off: Record<string, string>; setOff: (v: Record<string, string>) => void };
 export type Part = { k: string; label: string; pct: number; detail: string; c: string };
 export type Tip = { id: string; title: string; sub: string; why: string; go: string; k: string; pri: number };
 
@@ -19,8 +20,9 @@ export const useCore = (): Core => {
   const [rec] = useStored<{ data: Record<string, Veh> }>('ml_record', { data: {} } as any);
   const [tas] = useStored<{ day: string; total: number }>('ml_tasbih', { day: '', total: 0 });
   const [debts] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
+  const [puasa] = useStored<PuasaData>('ml_puasa', PUASA_EMPTY);
   const [off, setOff] = useStored<Record<string, string>>('ml_tips_off', {});
-  return { hd, fin, pl, rec, tas, debts, off, setOff };
+  return { hd, fin, pl, rec, tas, debts, puasa, off, setOff };
 };
 
 const tk = (o: number) => keyOfDate(dateOf(o));
@@ -123,6 +125,18 @@ export function tips(c: Core, week: boolean): Tip[] {
   const tomorrow = (dow + 1) % 7;
   if ((dow === 1 || dow === 4) && !ht.fast && hr < 11) add({ id: 'fast', title: 'Today is a sunnah fasting day', sub: dow === 1 ? 'Monday is a recommended day to fast.' : 'Thursday is a recommended day to fast.', why: 'You can log your fast in Habit & Health.', go: '/habit', k: 'streak', pri: 45 });
   else if ((tomorrow === 1 || tomorrow === 4) && hr >= 17) add({ id: 'fastnext', title: 'Tomorrow is a sunnah fasting day', sub: tomorrow === 1 ? 'Monday is a recommended day to fast.' : 'Thursday is a recommended day to fast.', why: 'A gentle reminder the evening before, so you can plan suhoor.', go: '/habit', k: 'streak', pri: 42 });
+  // Puasa module
+  try {
+    const now = new Date(), pz = c.puasa || PUASA_EMPTY, rs = ramadanState(pz, now), ow = qadhaOwed(pz, now), po = pz.off || 0;
+    if (rs.phase === 'during') {
+      if (!(rs.todayDone as string | undefined)) add({ id: 'ramtoday', title: 'Mark today\'s Ramadan fast', sub: 'Day ' + rs.day + ' of ' + rs.r.len + '. Tap to record it.', why: 'Marking each day keeps your Ramadan count and qadha correct.', go: '/puasa', k: 'streak', pri: 80 });
+    } else {
+      if (ow > 0) add({ id: 'qadha', title: ow + (ow === 1 ? ' qadha day' : ' qadha days') + ' to make up', sub: rs.phase === 'before' ? 'Ramadan is ' + rs.daysTo + ' days away.' : 'Try to finish before next Ramadan.', why: 'Missed Ramadan days are owed. Mondays and Thursdays are a good time to make them up.', go: '/puasa', k: 'streak', pri: rs.phase === 'before' && rs.daysTo < ow * 7 ? 72 : 52 });
+      if (rs.phase === 'before' && rs.daysTo <= 30) add({ id: 'ramsoon', title: 'Ramadan in ' + rs.daysTo + ' days', sub: 'A good time to settle your qadha and plan your routine.', why: 'The date is a calendar estimate. Confirm with the official announcement.', go: '/puasa', k: 'insight', pri: 55 });
+      const st = sunatToday(now, po);
+      if (st && !isHaram(now, po) && !(pz.days || {})[tk(0)] && st !== 'Monday sunnah fast' && st !== 'Thursday sunnah fast') add({ id: 'sunat', title: 'Today: ' + st, sub: 'A recommended day to fast.', why: 'Open Puasa to log it and see your yearly count.', go: '/puasa', k: 'streak', pri: 56 });
+    }
+  } catch (e) {}
   // Islamic
   if (dow === 5) add({ id: 'kahfi', title: 'Read Surah Al-Kahfi today', sub: 'It is Friday. Verses 1 to 10 and 101 to 110 are ready to read.', why: 'Reading Al-Kahfi on Friday is a well known sunnah.', go: '/surah/kahfi10', k: 'link', pri: 80 });
   add(hr < 12 ? { id: 'zikir', title: 'Read morning Al-Ma\'thurat', sub: 'Best read after Subuh. It takes about 10 minutes.', why: 'Morning zikir is read after Subuh until the sun is well up.', go: '/mathurat', k: 'link', pri: 35 } : { id: 'zikir', title: 'Read evening Al-Ma\'thurat', sub: 'Best read after Asar. It takes about 10 minutes.', why: 'Evening zikir is read after Asar until Maghrib.', go: '/mathurat', k: 'link', pri: 35 });
@@ -223,7 +237,7 @@ export function records(c: Core) {
 
 export const tipCat = (id: string): string => {
   if (/^(water|steps|sleeplog|sleeplow|mood|wlog|debt)$/.test(id)) return 'Health';
-  if (/^(fast|fastnext|kahfi|zikir|tasbih)$/.test(id)) return 'Faith';
+  if (/^(fast|fastnext|kahfi|zikir|tasbih|ramtoday|qadha|ramsoon|sunat)$/.test(id)) return 'Faith';
   if (/^(overdue|duetoday|event)$/.test(id)) return 'Tasks';
   if (/^(part-|ren-|cpk-|odo)/.test(id)) return 'Vehicle';
   return 'Money';

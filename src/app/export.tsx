@@ -12,7 +12,7 @@ import { TOP } from '../lib/layout';
 const W = '#fff';
 const MODS = [
   { k: 'planner', name: 'Planner and Notes', sub: 'Events, tasks and notes', c: 'rgba(124,156,255,.4)', keys: ['ml_planner', 'ml_notes'] },
-  { k: 'islamic', name: 'Islamic Hub', sub: 'Prayers, zikir, bookmarks, reading progress and Tasbih counts', c: 'rgba(94,231,181,.35)', keys: ['ml_islamic', 'ml_tasbih'] },
+  { k: 'islamic', name: 'Islamic Hub', sub: 'Prayers, zikir, bookmarks, reading progress and Tasbih counts', c: 'rgba(94,231,181,.35)', keys: ['ml_islamic', 'ml_tasbih', 'ml_puasa'] },
   { k: 'finance', name: 'My Finance', sub: 'Income, spending and categories', c: 'rgba(255,196,107,.4)', keys: ['ml_finance'] },
   { k: 'record', name: 'My Record', sub: 'Motorcycle mileage and services', c: 'rgba(255,143,171,.4)', keys: ['ml_record'] },
   { k: 'habit', name: 'Habit and Health', sub: 'Mood, sleep, water and steps', c: 'rgba(183,148,255,.4)', keys: ['ml_habit'] },

@@ -10,7 +10,7 @@ export const MODS: { k: string; name: string; c: string }[] = [
 ];
 export const modOf = (path: string): string => {
   if (path.startsWith('/planner') || path.startsWith('/notes')) return 'planner';
-  if (['/islamic', '/prayer', '/mathurat', '/tasbih', '/tahlil', '/surah'].some((p) => path.startsWith(p))) return 'islamic';
+  if (['/islamic', '/prayer', '/mathurat', '/tasbih', '/puasa', '/tahlil', '/surah'].some((p) => path.startsWith(p))) return 'islamic';
   if (path.startsWith('/finance')) return 'finance';
   if (path.startsWith('/record')) return 'record';
   if (path.startsWith('/habit')) return 'habit';

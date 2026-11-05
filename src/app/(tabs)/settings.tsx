@@ -233,17 +233,17 @@ export default function Settings() {
                 <Pressable onPress={() => setChecked(!checked)} style={{ marginTop: 12, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, backgroundColor: checked ? 'rgba(94,231,181,.25)' : 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{checked ? "You're up to date" : 'Check for updates'}</Text></Pressable>
               </View>
               <Glass style={{ paddingHorizontal: 16 }}>
-                {[['Version', '1.0'], ['Build', '1'], ['Developed', 'November 2026'], ['Developer', 'Adli Syahmi']].map(([a, b], i) => <Row key={a} t={a} last={i === 3} right={<Text style={{ color: DIM, fontSize: 13 }}>{b}</Text>} />)}
+                {[['Version', '1.1'], ['Build', '2'], ['Developed', 'November 2026'], ['Developer', 'Adli Syahmi']].map(([a, b], i) => <Row key={a} t={a} last={i === 3} right={<Text style={{ color: DIM, fontSize: 13 }}>{b}</Text>} />)}
               </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
-                <Row t="What's new in 1.0" onPress={() => setDlg('new')} right={<Chev />} />
+                <Row t="What's new in 1.1" onPress={() => setDlg('new')} right={<Chev />} />
                 <Row t="Privacy Policy" onPress={() => setDlg('privacy')} right={<Chev />} />
                 <Row t="Terms of Use" onPress={() => setDlg('terms')} right={<Chev />} />
                 <Row t="Open-source licences" last onPress={() => setDlg('lic')} right={<Chev />} />
               </Glass>
               <Glass style={{ padding: 16 }}>
                 <Ttl t="Privacy at a glance" />
-                {['Your data stays yours. It is stored on your device and synced only to your own account.', 'Encrypted before it leaves your device.', 'No ads, no tracking, never sold or shared.'].map((t) => (
+                {['Your data stays yours. It is stored only on your phone.', 'Encrypted on your phone, with an optional PIN or fingerprint lock.', 'No ads, no tracking, never sold or shared.'].map((t) => (
                   <View key={t} style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}><Text style={{ color: '#5ee7df', fontSize: 13 }}>✓</Text><Text style={{ flex: 1, color: 'rgba(255,255,255,.82)', fontSize: 12.5, lineHeight: 18 }}>{t}</Text></View>
                 ))}
               </Glass>
@@ -258,7 +258,7 @@ export default function Settings() {
         {lkd === 'change' && <PinDialog mode="new" onClose={() => setLkd('')} onOk={async (pin) => { await setPin(pin!, lk.bio); setLkd(''); say('PIN changed'); }} />}
         {dlg === 'privacy' && <Doc title="Privacy Policy" secs={PRIVACY} onClose={close} />}
         {dlg === 'terms' && <Doc title="Terms of Use" secs={TERMS} onClose={close} />}
-        {dlg === 'new' && <Doc title="What's new in 1.0" secs={WHATS_NEW} onClose={close} />}
+        {dlg === 'new' && <Doc title="What's new in 1.1" secs={WHATS_NEW} onClose={close} />}
         {dlg === 'lic' && <Doc title="Open-source licences" secs={LICENCES} onClose={close} />}
         {dlg === 'backup' && <Doc title="Encrypted backup & restore" secs={[{ h: 'Coming with sync', p: 'Backups will be encrypted and tied to your account. For now you can save a full copy with Export, using the Backup (JSON) format.' }]} onClose={close} />}
         {dlg === 'log' && <Doc title="Security activity log" secs={[{ h: 'Last 30 days', p: 'Sign-ins, password changes and device removals will be listed here once your account is connected.' }]} onClose={close} />}

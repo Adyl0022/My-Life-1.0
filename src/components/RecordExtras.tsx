@@ -3,6 +3,8 @@ import { View, Pressable, Image, Modal, Platform } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Glass } from './Glass';
+import { buildRecordHtml } from '../lib/recordPdf';
+import { useName } from '../lib/store';
 import { Inp, DateField, todayStr, W } from './Ui';
 
 export type Fu = { id: number; date: string; liters: number; amt: number; odo: number };
@@ -263,27 +265,13 @@ export function DocsCard({ d, upd }: P<Ext>) {
 
 // 6. PDF export -----------------------------------------------------------------
 const esc = (s: string) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-export function buildHtml(name: string, d: any, latest: number): string {
-  const rd: { date: string; odo: number }[] = (d.readings || []).concat(d.yreadings || []).sort((a: any, b: any) => (a.date < b.date ? -1 : 1));
-  const tbl = (head: string[], rows: string[][]) => rows.length ? '<table><tr>' + head.map((h) => '<th>' + h + '</th>').join('') + '</tr>' + rows.map((r) => '<tr>' + r.map((c) => '<td>' + esc(c) + '</td>').join('') + '</tr>').join('') + '</table>' : '<p class="m">No records.</p>';
-  const exps = (d.exps || []).slice().sort((a: any, b: any) => (a.date < b.date ? 1 : -1));
-  const fuel = (d.fuel || []).slice().sort((a: any, b: any) => (a.date < b.date ? 1 : -1));
-  const ren: Ren = d.renew || {};
-  return '<html><head><meta charset="utf-8"><style>body{font-family:Helvetica,Arial,sans-serif;color:#222;padding:24px}h1{margin:0;font-size:22px}h2{font-size:15px;margin:20px 0 6px;border-bottom:2px solid #b794ff;padding-bottom:3px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:5px 6px;border-bottom:1px solid #ddd}th{background:#f3eefc}.m{color:#888;font-size:12px}.s{color:#666;font-size:12px}</style></head><body>'
-    + '<h1>My Record · ' + esc(name) + '</h1><div class="s">' + esc((d.profile && d.profile.model) || '') + (d.profile && d.profile.plate ? ' · ' + esc(d.profile.plate) : '') + '<br>Generated ' + fd(todayStr()) + (latest > 0 ? ' · Latest odometer ' + num(latest) + ' km' : '') + '</div>'
-    + '<h2>Renewals</h2>' + tbl(['Item', 'Expires'], RK.map(([k, l]) => [l, ren[k] ? fd(ren[k] as string) : 'Not set']))
-    + '<h2>Odometer readings</h2>' + tbl(['Date', 'Odometer'], rd.map((r) => [fd(r.date), num(r.odo) + ' km']))
-    + '<h2>Maintenance spending (total RM ' + dec(exps.reduce((s: number, e: any) => s + e.amt, 0)) + ')</h2>' + tbl(['Date', 'Item', 'Amount'], exps.map((e: any) => [fd(e.date), e.name, 'RM ' + dec(e.amt)]))
-    + '<h2>Parts</h2>' + tbl(['Part', 'Changed', 'Odometer', 'Lasts'], (d.parts || []).map((p: any) => [p.name, fd(p.date), num(p.odo) + ' km', num(p.life) + ' km']))
-    + '<h2>Fuel (total RM ' + dec(fuel.reduce((s: number, e: any) => s + e.amt, 0)) + ')</h2>' + tbl(['Date', 'Litres', 'Amount', 'Odometer'], fuel.map((e: any) => [fd(e.date), dec(e.liters, 1) + ' L', 'RM ' + dec(e.amt), e.odo > 0 ? num(e.odo) + ' km' : '-']))
-    + '<p class="m" style="margin-top:20px">Created with My Life 1.0</p></body></html>';
-}
+export function buildHtml(name: string, d: any, latest: number, owner = ''): string { return buildRecordHtml(name, d, latest, owner); }
 export function ExportCard({ name, d, latest }: { name: string; d: any; latest: number }) {
-  const [busy, setBusy] = useState(false); const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false); const [msg, setMsg] = useState(''); const owner = useName();
   const go = async () => {
     setBusy(true); setMsg('');
     try {
-      const html = buildHtml(name, d, latest); const Print = await import('expo-print');
+      const html = buildHtml(name, d, latest, owner); const Print = await import('expo-print');
       if (Platform.OS === 'web') await Print.printAsync({ html });
       else { const r = await Print.printToFileAsync({ html }); const Sh = await import('expo-sharing'); if (await Sh.isAvailableAsync()) await Sh.shareAsync(r.uri, { mimeType: 'application/pdf', dialogTitle: 'My Record · ' + name }); else setMsg('PDF saved.'); }
     } catch (e) { setMsg('Could not create the PDF. Please try again.'); }

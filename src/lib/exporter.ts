@@ -174,21 +174,23 @@ function svgDonut(c: Chart) {
 }
 const chartSvg = (c: Chart) => (c.kind === 'bars' ? svgBars(c) : c.kind === 'hbars' ? svgHBars(c) : c.kind === 'line' ? svgLine(c) : svgDonut(c));
 
+export const PDF_CSS = '*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:14mm}body{font-family:Helvetica,Arial,sans-serif;color:#1b2140;margin:0}'
+  + '.ban{background:linear-gradient(120deg,#3b4ea8,#7a50e6 60%,#2fa8c9);color:#fff;border-radius:18px;padding:22px 24px}.ban h1{margin:0 0 12px;font-size:30px;letter-spacing:-.5px}.ban .s{font-size:13px;opacity:.9;margin-bottom:14px}'
+  + '.pill{display:inline-block;background:rgba(255,255,255,.2);border-radius:999px;padding:5px 12px;font-size:11.5px;margin:0 6px 4px 0}'
+  + 'h2{margin:0 0 8px;color:#3b4ea8;font-size:15px}h3{margin:0 0 6px;font-size:12px;color:#1b2140}h3 small{color:#889;font-weight:400}.sec{margin:26px 0 10px;font-size:17px;font-weight:700}.m{color:#667;font-size:11px}'
+  + '.g{display:flex;flex-wrap:wrap;gap:10px}.t{border-radius:14px;padding:10px 14px;min-width:120px;flex:1 1 28%}.t b{display:block;font-size:19px}.t span{font-size:11px;color:#556}'
+  + '.cs{display:flex;flex-wrap:wrap;gap:12px}.c{box-sizing:border-box;width:calc(50% - 6px);border:1px solid #e3e6f5;border-radius:14px;padding:12px 14px;page-break-inside:avoid}'
+  + '.blk{margin-top:22px;page-break-inside:avoid}table{border-collapse:collapse;width:100%;font-size:11px}th{background:#3b4ea8;color:#fff;text-align:left;padding:6px 7px}th:first-child{border-radius:8px 0 0 0}th:last-child{border-radius:0 8px 0 0}td{padding:5px 7px;border-bottom:1px solid #e6e9f5}tr:nth-child(even) td{background:#f6f7fd}'
+  + '.f{margin-top:30px;border-top:1px solid #e3e6f5;padding-top:10px;color:#889;font-size:10.5px;text-align:center}';
+export { esc as escHtml, PAL, fmtN, chartSvg };
 export function toHtml(r: Report) {
   const tcol = ['#eef1ff', '#e9fbf4', '#fff4e3', '#ffeef3', '#f3edff', '#e8fbfa'];
   const tiles = r.totals.map(([a, b], i) => '<div class="t" style="background:' + tcol[i % tcol.length] + '"><b>' + esc(b) + '</b><span>' + esc(a) + '</span></div>').join('');
   const cards = r.charts.map((c) => '<div class="c"><h3>' + esc(c.title) + (c.unit ? ' <small>(' + esc(c.unit) + ')</small>' : '') + '</h3>' + chartSvg(c) + '</div>').join('');
   const tabs = r.sheets.map((s) => '<div class="blk"><h2>' + esc(s.name) + '</h2><table><tr>' + s.head.map((h) => '<th>' + esc(h) + '</th>').join('') + '</tr>' +
     s.rows.slice(0, 600).map((x) => '<tr>' + x.map((c, ci) => '<td>' + esc(typeof c === 'number' ? (/\(RM\)/.test(s.head[ci]) ? c.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : fmtN(c)) : c) + '</td>').join('') + '</tr>').join('') + '</table>' + (s.rows.length > 600 ? '<p class="m">Showing the first 600 of ' + s.rows.length + ' rows. Use Excel for everything.</p>' : '') + '</div>').join('');
-  const css = '*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:14mm}body{font-family:Helvetica,Arial,sans-serif;color:#1b2140;margin:0}'
-    + '.ban{background:linear-gradient(120deg,#3b4ea8,#7a50e6 60%,#2fa8c9);color:#fff;border-radius:18px;padding:22px 24px}.ban h1{margin:0 0 12px;font-size:30px;letter-spacing:-.5px}.ban .s{font-size:13px;opacity:.9;margin-bottom:14px}'
-    + '.pill{display:inline-block;background:rgba(255,255,255,.2);border-radius:999px;padding:5px 12px;font-size:11.5px;margin:0 6px 4px 0}'
-    + 'h2{margin:0 0 8px;color:#3b4ea8;font-size:15px}h3{margin:0 0 6px;font-size:12px;color:#1b2140}h3 small{color:#889;font-weight:400}.sec{margin:26px 0 10px;font-size:17px;font-weight:700}.m{color:#667;font-size:11px}'
-    + '.g{display:flex;flex-wrap:wrap;gap:10px}.t{border-radius:14px;padding:10px 14px;min-width:120px;flex:1 1 28%}.t b{display:block;font-size:19px}.t span{font-size:11px;color:#556}'
-    + '.cs{display:flex;flex-wrap:wrap;gap:12px}.c{box-sizing:border-box;width:calc(50% - 6px);border:1px solid #e3e6f5;border-radius:14px;padding:12px 14px;page-break-inside:avoid}'
-    + '.blk{margin-top:22px;page-break-inside:avoid}table{border-collapse:collapse;width:100%;font-size:11px}th{background:#3b4ea8;color:#fff;text-align:left;padding:6px 7px}th:first-child{border-radius:8px 0 0 0}th:last-child{border-radius:0 8px 0 0}td{padding:5px 7px;border-bottom:1px solid #e6e9f5}tr:nth-child(even) td{background:#f6f7fd}'
-    + '.f{margin-top:30px;border-top:1px solid #e3e6f5;padding-top:10px;color:#889;font-size:10.5px;text-align:center}';
-  return '<html><head><meta charset="utf-8"><style>' + css + '</style></head><body><div class="ban"><h1>My Life 1.0</h1><div class="s">' + (r.name ? 'Personal report for ' + esc(r.name) : 'Personal report') + '</div><span class="pill">Period: ' + esc(r.period) + '</span><span class="pill">Created: ' + esc(r.created) + '</span></div>'
+
+  return '<html><head><meta charset="utf-8"><style>' + PDF_CSS + '</style></head><body><div class="ban"><h1>My Life 1.0</h1><div class="s">' + (r.name ? 'Personal report for ' + esc(r.name) : 'Personal report') + '</div><span class="pill">Period: ' + esc(r.period) + '</span><span class="pill">Created: ' + esc(r.created) + '</span></div>'
     + '<div class="sec">Summary</div><div class="g">' + tiles + '</div>' + (cards ? '<div class="sec">Charts</div><div class="cs">' + cards + '</div>' : '') + (tabs ? '<div class="sec">Details</div>' + tabs : '<p>No data saved yet for this period.</p>')
     + '<div class="f">Created on your phone by My Life 1.0. Your data stays with you.</div></body></html>';
 }

@@ -1,40 +1,96 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PageIn } from '../../components/PageIn';
+import { Rise, FillBar, GrowBar, useReplay } from '../../components/Anim';
+import { HeadIcon } from '../../components/HabitIcons';
 import { navScroll } from '../../lib/navbar';
-import { View, ScrollView, Pressable } from 'react-native';
+import { View, ScrollView, Pressable, Animated } from 'react-native';
 import { Text } from '../../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Defs, LinearGradient as SvgGrad, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Path, LinearGradient as SvgGrad, Stop } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { Glass } from '../../components/Glass';
-import { Blob } from '../../components/Bg';
-import { ROUTES } from '../../lib/routes';
+import { useStored } from '../../lib/store';
+import { HEMPTY, getDay, cupsGoal, goalPctOf, keyOfDate, dateOf } from '../../lib/habit';
 import { TOP } from '../../lib/layout';
 
-const TIPS = [
-  { title: 'Drink 2 more glasses of water', sub: 'You are at 3 of 8. Log it in Habit Tracker.', href: 'Habit.dc.html', c: ['#5ee7df', '#7c9cff'] },
-  { title: "Read evening Al-Ma'thurat", sub: 'Best read after Asar. It takes about 10 minutes.', href: 'Mathurat.dc.html', c: ['#ffc46b', '#ff8f5a'] },
-  { title: "Add this month's odometer reading", sub: 'Keep your mileage and suggestions in My Record up to date.', href: 'Record.dc.html', c: ['#ff8fab', '#b794ff'] },
-];
+const ACirc: any = Animated.createAnimatedComponent(Circle);
+type Sp = { amt: number; date: string };
+const Wallet = ({ s = 30 }: { s?: number }) => (
+  <View style={{ width: s, height: s, borderRadius: s * 0.32, backgroundColor: '#ffc46b', alignItems: 'center', justifyContent: 'center' }}>
+    <Svg width={s * 0.62} height={s * 0.62} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><Path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18v3M3 7.5V17a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1H5.5A2.5 2.5 0 0 1 3 7.5zM16 13.5h2" /></Svg>
+  </View>
+);
 
 export default function Insights() {
   const router = useRouter();
   const [week, setWeek] = useState(false);
-  const [toast, setToast] = useState('');
-  const score = week ? 74 : 82;
-  const R = 54, C = 2 * Math.PI * R;
-  const metrics = week
-    ? [['Steps', '44,100 this week', 79, '#34d399'], ['Water goal', '5 of 7 days', 71, '#5ee7df'], ['Spending', 'RM 310', 52, '#ffc46b'], ['Habit streak', '4 days', 57, '#ff8fab']]
-    : [['Steps', '4,200 of 8,000', 53, '#34d399'], ['Water', '3 of 8 glasses', 38, '#5ee7df'], ['Spending', 'RM 18', 30, '#ffc46b'], ['Habit streak', '4 days', 57, '#ff8fab']];
-  const src = week ? [64, 72, 58, 80, 76, 70, 82] : [66, 71, 74, 78];
-  const lab = week ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'] : ['W1', 'W2', 'W3', 'W4'];
+  const [hd] = useStored('ml_habit', HEMPTY);
+  const [fin] = useStored<{ spends: Sp[] }>('ml_finance', { spends: [] } as any);
+  const cg = cupsGoal(hd), goal = hd.goal || 8000;
+  const has = (o: number) => { const x = getDay(hd, o); return x.cups > 0 || x.sleep > 0 || x.steps > 0; };
+  const dayPct = (o: number) => goalPctOf(getDay(hd, o), goal, cg);
+  const avgPct = (from: number, to: number) => { let n = 0, t = 0; for (let o = from; o <= to; o++) if (has(o)) { n++; t += dayPct(o); } return n ? Math.round(t / n) : 0; };
+  const spends = (fin && fin.spends) || [];
+  const spendOn = (o: number) => { const k = keyOfDate(dateOf(o)); return spends.filter((x) => x.date === k).reduce((a, b) => a + (b.amt || 0), 0); };
+  const spendSum = (from: number, to: number) => { let t = 0; for (let o = from; o <= to; o++) t += spendOn(o); return t; };
+  const ht = getDay(hd, 0);
+  const anyData = has(0) || (week && [-6, -5, -4, -3, -2, -1].some(has));
+  const score = week ? avgPct(-6, 0) : has(0) ? dayPct(0) : 0;
+  const rm = (n: number) => 'RM ' + (Math.round(n * 100) / 100).toLocaleString('en-MY', { maximumFractionDigits: 2 });
+  let metrics: { l: string; v: string; p: number; c: string; ic: React.ReactNode }[];
+  if (week) {
+    let st = 0, sl = 0, sn = 0, wd = 0;
+    for (let o = -6; o <= 0; o++) { const x = getDay(hd, o); st += x.steps; if (x.sleep > 0) { sl += x.sleep; sn++; } if (x.cups >= cg) wd++; }
+    const sp = spendSum(-6, 0), pv = spendSum(-13, -7);
+    const stA = Math.round(st / 7), slA = sn ? Math.round((sl / sn) * 10) / 10 : 0;
+    metrics = [
+      { l: 'Steps', v: stA.toLocaleString() + ' a day', p: (stA / goal) * 100, c: '#34d399', ic: <HeadIcon k="steps" size={26} /> },
+      { l: 'Water goal', v: wd + ' of 7 days', p: (wd / 7) * 100, c: '#5ee7df', ic: <HeadIcon k="water" size={26} /> },
+      { l: 'Sleep', v: slA + ' h avg', p: (slA / 7) * 100, c: '#b794ff', ic: <HeadIcon k="sleep" size={26} /> },
+      { l: 'Spending', v: rm(sp), p: pv > 0 ? (sp / pv) * 50 : sp > 0 ? 50 : 0, c: '#ffc46b', ic: <Wallet s={26} /> },
+    ];
+  } else {
+    const sp = spendOn(0); let m = 0, md = 0; for (let o = -29; o <= 0; o++) { const v = spendOn(o); if (v > 0) { m += v; md++; } }
+    const av = md ? m / md : 0;
+    metrics = [
+      { l: 'Steps', v: ht.steps.toLocaleString() + ' of ' + goal.toLocaleString(), p: (ht.steps / goal) * 100, c: '#34d399', ic: <HeadIcon k="steps" size={26} /> },
+      { l: 'Water', v: ht.cups + ' of ' + cg + ' glasses', p: (ht.cups / cg) * 100, c: '#5ee7df', ic: <HeadIcon k="water" size={26} /> },
+      { l: 'Sleep', v: (ht.sleep || 0) + ' h', p: (ht.sleep / 7) * 100, c: '#b794ff', ic: <HeadIcon k="sleep" size={26} /> },
+      { l: 'Spending', v: rm(sp), p: av > 0 ? (sp / av) * 50 : sp > 0 ? 50 : 0, c: '#ffc46b', ic: <Wallet s={26} /> },
+    ];
+  }
+  const src = week ? [-6, -5, -4, -3, -2, -1, 0].map((o) => (has(o) ? dayPct(o) : 0)) : [-27, -20, -13, -6].map((o) => avgPct(o, o + 6));
+  const lab = week ? [-6, -5, -4, -3, -2, -1, 0].map((o) => ['S', 'M', 'T', 'W', 'T', 'F', 'S'][dateOf(o).getDay()]) : ['W1', 'W2', 'W3', 'W4'];
+  const habitPct = metrics.slice(0, 3).map((m) => Math.min(100, m.p));
+  const low = habitPct.indexOf(Math.min(...habitPct));
+  const title = !anyData ? 'Nothing logged yet' : score >= 80 ? (week ? 'A great week' : 'You are doing great today') : score >= 50 ? (week ? 'A steady week' : 'You are doing well today') : (week ? 'A quiet week' : 'A slow start today');
+  const hint = !anyData ? 'Log steps, water or sleep in Habit & Health and your score will appear here.' : (['Steps are the part to lift next.', 'A little more water would lift your score.', 'More sleep would lift your score.'])[low];
 
-  const go = (href: string) => {
-    const r = ROUTES[href];
-    if (r) router.push(r as any);
-    else { setToast('This screen is being built.'); setTimeout(() => setToast(''), 1800); }
-  };
+  const tips: { title: string; sub: string; go: string; k: string }[] = [];
+  const hr = new Date().getHours();
+  if (!week) {
+    if (ht.cups < cg) tips.push({ title: 'Drink ' + Math.min(2, cg - ht.cups) + ' more ' + (Math.min(2, cg - ht.cups) === 1 ? 'glass' : 'glasses') + ' of water', sub: 'You are at ' + ht.cups + ' of ' + cg + '. Log it in Habit & Health.', go: '/habit', k: 'water' });
+    if (ht.steps < goal) tips.push({ title: 'Walk ' + (goal - ht.steps).toLocaleString() + ' more steps', sub: 'Your goal today is ' + goal.toLocaleString() + ' steps.', go: '/habit', k: 'steps' });
+    if (!(ht.sleep > 0)) tips.push({ title: 'Log last night\'s sleep', sub: 'Sleep is a third of your daily score.', go: '/habit', k: 'sleep' });
+    else if (ht.sleep < 6) tips.push({ title: 'Aim for 7 hours tonight', sub: 'You slept ' + ht.sleep + ' h. A little more rest lifts your score.', go: '/habit', k: 'sleep' });
+    if (ht.mood < 0) tips.push({ title: 'Log how you feel today', sub: 'Tracking mood shows patterns over time.', go: '/habit', k: 'mood' });
+  } else {
+    const wl = [-6, -5, -4, -3, -2, -1, 0].filter((o) => has(o)).length;
+    if (wl < 5) tips.push({ title: 'Log more days this week', sub: 'You logged ' + wl + ' of 7 days. A fuller week gives a truer score.', go: '/habit', k: 'week' });
+    if (metrics[1].p < 70) tips.push({ title: 'Hit your water goal more often', sub: metrics[1].v + ' this week.', go: '/habit', k: 'water' });
+    if (metrics[0].p < 70) tips.push({ title: 'Nudge your daily steps up', sub: 'Averaging ' + metrics[0].v + ' against a goal of ' + goal.toLocaleString() + '.', go: '/habit', k: 'steps' });
+  }
+  tips.push(hr < 12 ? { title: 'Read morning Al-Ma\'thurat', sub: 'Best read after Subuh. It takes about 10 minutes.', go: '/mathurat', k: 'link' } : { title: 'Read evening Al-Ma\'thurat', sub: 'Best read after Asar. It takes about 10 minutes.', go: '/mathurat', k: 'link' });
+  tips.push({ title: "Add this month's odometer reading", sub: 'Keep your mileage and suggestions in My Record up to date.', go: '/record', k: 'insight' });
+  const shown = tips.slice(0, 3);
+
+  const R = 54, C = 2 * Math.PI * R;
+  const t = useReplay(String(score) + String(week), 0, 1200, false);
+  const [num, setNum] = useState(0);
+  useEffect(() => { const id = t.addListener(({ value }) => setNum(Math.round(score * value))); return () => t.removeListener(id); }, [score, week]);
+  const off = t.interpolate({ inputRange: [0, 1], outputRange: [C, C - (C * score) / 100] });
+  const mx = Math.max(...src, 1);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
@@ -55,6 +111,7 @@ export default function Insights() {
             </View>
           </View>
 
+          <Rise i={0}>
           <Glass radius={28} style={{ marginTop: 14, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 18 }}>
             <LinearGradient colors={['rgba(124,156,255,.3)', 'rgba(183,148,255,.18)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: -1 }} />
             <View style={{ width: 124, height: 124 }}>
@@ -62,75 +119,76 @@ export default function Insights() {
                 <Svg width={124} height={124} viewBox="0 0 124 124">
                   <Defs><SvgGrad id="rg" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#8fe9e2" /><Stop offset="1" stopColor="#7c9cff" /></SvgGrad></Defs>
                   <Circle cx={62} cy={62} r={R} stroke="rgba(255,255,255,.14)" strokeWidth={10} fill="none" />
-                  <Circle cx={62} cy={62} r={R} stroke="url(#rg)" strokeWidth={10} fill="none" strokeLinecap="round" strokeDasharray={`${C}`} strokeDashoffset={C - (C * score) / 100} />
+                  <ACirc cx={62} cy={62} r={R} stroke="url(#rg)" strokeWidth={10} fill="none" strokeLinecap="round" strokeDasharray={`${C}`} strokeDashoffset={off} />
                 </Svg>
               </View>
               <View style={{ position: 'absolute', left: 0, top: 0, width: 124, height: 124, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: '#fff', fontSize: 34, fontWeight: '800', lineHeight: 36 }}>{score}</Text>
+                <Text style={{ color: '#fff', fontSize: 34, fontWeight: '800', lineHeight: 36 }}>{num}</Text>
                 <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11, marginTop: 2 }}>out of 100</Text>
               </View>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>LIFE SCORE</Text>
-              <Text style={{ color: '#fff', fontSize: 17, fontWeight: '800', marginTop: 4, lineHeight: 21 }}>{week ? 'A steady week' : 'You are doing well today'}</Text>
-              <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, lineHeight: 17, marginTop: 6 }}>{week ? 'Steps are on track. Water intake dipped midweek.' : 'Your steps are on track. A little more water would lift your score.'}</Text>
+              <Text style={{ color: '#fff', fontSize: 17, fontWeight: '800', marginTop: 4, lineHeight: 21 }}>{title}</Text>
+              <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, lineHeight: 17, marginTop: 6 }}>{hint}</Text>
             </View>
           </Glass>
+          </Rise>
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
-            {metrics.map(([l, v, p, c]) => (
-              <Glass key={l as string} radius={22} style={{ width: '47.8%', flexGrow: 1, paddingVertical: 13, paddingHorizontal: 14 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12, fontWeight: '600' }}>{l}</Text>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c as string }} />
-                </View>
-                <Text style={{ color: '#fff', fontSize: 17, fontWeight: '800', marginTop: 4 }}>{v}</Text>
-                <View style={{ height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,.14)', marginTop: 8, overflow: 'hidden' }}>
-                  <View style={{ width: `${p}%`, height: 6, borderRadius: 3, backgroundColor: c as string }} />
-                </View>
-              </Glass>
+            {metrics.map((m, i) => (
+              <Rise key={m.l} i={i + 1} style={{ width: '47.8%', flexGrow: 1 }}>
+                <Glass radius={22} style={{ paddingVertical: 13, paddingHorizontal: 14 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12, fontWeight: '600' }}>{m.l}</Text>
+                    {m.ic}
+                  </View>
+                  <Text style={{ color: '#fff', fontSize: 17, fontWeight: '800', marginTop: 4 }}>{m.v}</Text>
+                  <View style={{ marginTop: 8 }}><FillBar p={m.p} color={m.c} delay={i * 80} dep={String(week) + m.v} /></View>
+                </Glass>
+              </Rise>
             ))}
           </View>
 
+          <Rise i={5}>
           <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{week ? 'Score this week' : 'Score this month'}</Text>
-              <Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 11.5 }}>Sample</Text>
+              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{week ? 'Score this week' : 'Score by week'}</Text>
+              <Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 11.5 }}>{week ? 'Last 7 days' : 'Last 4 weeks'}</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: week ? 8 : 16, height: 84, marginTop: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: week ? 8 : 16, height: 96, marginTop: 12 }}>
               {src.map((v, i) => (
                 <View key={i} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: '100%', gap: 5 }}>
-                  <LinearGradient colors={i === src.length - 1 ? ['#8fe9e2', '#7c9cff'] : ['rgba(255,255,255,.4)', 'rgba(255,255,255,.14)']} style={{ width: '100%', height: Math.round(v * 0.74) * 0.75, borderTopLeftRadius: 7, borderTopRightRadius: 7, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 }} />
+                  <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 10, fontWeight: '700' }}>{v > 0 ? v : ''}</Text>
+                  <GrowBar h={Math.max(5, Math.round((v / Math.max(mx, 100)) * 58))} delay={i * 70} dep={String(week) + src.join()} style={{ width: '100%' }}>
+                    <LinearGradient colors={i === src.length - 1 ? ['#8fe9e2', '#7c9cff'] : ['rgba(255,255,255,.4)', 'rgba(255,255,255,.14)']} style={{ flex: 1, borderTopLeftRadius: 7, borderTopRightRadius: 7, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 }} />
+                  </GrowBar>
                   <Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 10 }}>{lab[i]}</Text>
                 </View>
               ))}
             </View>
           </Glass>
+          </Rise>
 
           <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', marginTop: 16, marginBottom: 8, marginHorizontal: 4 }}>Smart suggestions</Text>
           <View style={{ gap: 10 }}>
-            {TIPS.map((t) => (
-              <Pressable key={t.title} onPress={() => go(t.href)}>
-                <Glass radius={22} style={{ paddingVertical: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <LinearGradient colors={t.c as [string, string]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
-                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff' }} />
-                  </LinearGradient>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '700' }}>{t.title}</Text>
-                    <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, marginTop: 2, lineHeight: 15 }}>{t.sub}</Text>
-                  </View>
-                  <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 20 }}>›</Text>
-                </Glass>
-              </Pressable>
+            {shown.map((tp, i) => (
+              <Rise key={tp.title} i={6 + i}>
+                <Pressable onPress={() => router.push(tp.go as any)}>
+                  <Glass radius={22} style={{ paddingVertical: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <HeadIcon k={tp.k} size={40} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '700' }}>{tp.title}</Text>
+                      <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, marginTop: 2, lineHeight: 15 }}>{tp.sub}</Text>
+                    </View>
+                    <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 20 }}>›</Text>
+                  </Glass>
+                </Pressable>
+              </Rise>
             ))}
           </View>
-          <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, lineHeight: 17, marginTop: 14, marginHorizontal: 4 }}>Preview only. In the real app, Insights will be calculated from your own steps, water, sleep, spending and records.</Text>
+          <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, lineHeight: 17, marginTop: 14, marginHorizontal: 4 }}>Calculated from your own steps, water, sleep and spending on this device.</Text>
         </ScrollView>
-        {toast ? (
-          <View pointerEvents="none" style={{ position: 'absolute', bottom: 110, alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.7)' }}>
-            <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '600' }}>{toast}</Text>
-          </View>
-        ) : null}
       </SafeAreaView>
       </PageIn>
     </View>

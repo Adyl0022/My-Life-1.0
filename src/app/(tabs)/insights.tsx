@@ -11,8 +11,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, Path, LinearGradient as SvgGrad, Stop } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { Glass } from '../../components/Glass';
-import { useStored } from '../../lib/store';
-import { HEMPTY, getDay, cupsGoal, goalPctOf, keyOfDate, dateOf } from '../../lib/habit';
+import { getDay, cupsGoal, goalPctOf, keyOfDate, dateOf } from '../../lib/habit';
+import { useCore, scoreParts, lifeScore, tips, weekly, patterns, hideTip } from '../../lib/insights';
 import { TOP } from '../../lib/layout';
 
 const ACirc: any = Animated.createAnimatedComponent(Circle);
@@ -26,8 +26,10 @@ const Wallet = ({ s = 30 }: { s?: number }) => (
 export default function Insights() {
   const router = useRouter();
   const [week, setWeek] = useState(false);
-  const [hd] = useStored('ml_habit', HEMPTY);
-  const [fin] = useStored<{ spends: Sp[] }>('ml_finance', { spends: [] } as any);
+  const core0 = useCore();
+  const [showAll, setShowAll] = useState(false);
+  const [why, setWhy] = useState('');
+  const hd = core0.hd, fin = core0.fin;
   const cg = cupsGoal(hd), goal = hd.goal || 8000;
   const has = (o: number) => { const x = getDay(hd, o); return x.cups > 0 || x.sleep > 0 || x.steps > 0; };
   const dayPct = (o: number) => goalPctOf(getDay(hd, o), goal, cg);
@@ -36,8 +38,9 @@ export default function Insights() {
   const spendOn = (o: number) => { const k = keyOfDate(dateOf(o)); return spends.filter((x) => x.date === k).reduce((a, b) => a + (b.amt || 0), 0); };
   const spendSum = (from: number, to: number) => { let t = 0; for (let o = from; o <= to; o++) t += spendOn(o); return t; };
   const ht = getDay(hd, 0);
-  const anyData = has(0) || (week && [-6, -5, -4, -3, -2, -1].some(has));
-  const score = week ? avgPct(-6, 0) : has(0) ? dayPct(0) : 0;
+  const anyData = scoreParts(core0, week).length > 0;
+  const parts = scoreParts(core0, week);
+  const score = lifeScore(parts);
   const rm = (n: number) => 'RM ' + (Math.round(n * 100) / 100).toLocaleString('en-MY', { maximumFractionDigits: 2 });
   let metrics: { l: string; v: string; p: number; c: string; ic: React.ReactNode }[];
   if (week) {
@@ -68,23 +71,11 @@ export default function Insights() {
   const title = !anyData ? 'Nothing logged yet' : score >= 80 ? (week ? 'A great week' : 'You are doing great today') : score >= 50 ? (week ? 'A steady week' : 'You are doing well today') : (week ? 'A quiet week' : 'A slow start today');
   const hint = !anyData ? 'Log steps, water or sleep in Habit & Health and your score will appear here.' : (['Steps are the part to lift next.', 'A little more water would lift your score.', 'More sleep would lift your score.'])[low];
 
-  const tips: { title: string; sub: string; go: string; k: string }[] = [];
-  const hr = new Date().getHours();
-  if (!week) {
-    if (ht.cups < cg) tips.push({ title: 'Drink ' + Math.min(2, cg - ht.cups) + ' more ' + (Math.min(2, cg - ht.cups) === 1 ? 'glass' : 'glasses') + ' of water', sub: 'You are at ' + ht.cups + ' of ' + cg + '. Log it in Habit & Health.', go: '/habit', k: 'water' });
-    if (ht.steps < goal) tips.push({ title: 'Walk ' + (goal - ht.steps).toLocaleString() + ' more steps', sub: 'Your goal today is ' + goal.toLocaleString() + ' steps.', go: '/habit', k: 'steps' });
-    if (!(ht.sleep > 0)) tips.push({ title: 'Log last night\'s sleep', sub: 'Sleep is a third of your daily score.', go: '/habit', k: 'sleep' });
-    else if (ht.sleep < 6) tips.push({ title: 'Aim for 7 hours tonight', sub: 'You slept ' + ht.sleep + ' h. A little more rest lifts your score.', go: '/habit', k: 'sleep' });
-    if (ht.mood < 0) tips.push({ title: 'Log how you feel today', sub: 'Tracking mood shows patterns over time.', go: '/habit', k: 'mood' });
-  } else {
-    const wl = [-6, -5, -4, -3, -2, -1, 0].filter((o) => has(o)).length;
-    if (wl < 5) tips.push({ title: 'Log more days this week', sub: 'You logged ' + wl + ' of 7 days. A fuller week gives a truer score.', go: '/habit', k: 'week' });
-    if (metrics[1].p < 70) tips.push({ title: 'Hit your water goal more often', sub: metrics[1].v + ' this week.', go: '/habit', k: 'water' });
-    if (metrics[0].p < 70) tips.push({ title: 'Nudge your daily steps up', sub: 'Averaging ' + metrics[0].v + ' against a goal of ' + goal.toLocaleString() + '.', go: '/habit', k: 'steps' });
-  }
-  tips.push(hr < 12 ? { title: 'Read morning Al-Ma\'thurat', sub: 'Best read after Subuh. It takes about 10 minutes.', go: '/mathurat', k: 'link' } : { title: 'Read evening Al-Ma\'thurat', sub: 'Best read after Asar. It takes about 10 minutes.', go: '/mathurat', k: 'link' });
-  tips.push({ title: "Add this month's odometer reading", sub: 'Keep your mileage and suggestions in My Record up to date.', go: '/record', k: 'insight' });
-  const shown = tips.slice(0, 3);
+  const core = core0;
+  const allTips = tips(core, week);
+  const shown = showAll ? allTips : allTips.slice(0, 3);
+  const wk = weekly(core);
+  const pats = patterns(core);
 
   const R = 54, C = 2 * Math.PI * R;
   const t = useReplay(String(score) + String(week), 0, 1200, false);
@@ -132,7 +123,7 @@ export default function Insights() {
             <View style={{ flex: 1 }}>
               <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>LIFE SCORE</Text>
               <Text style={{ color: '#fff', fontSize: 17, fontWeight: '800', marginTop: 4, lineHeight: 21 }}>{title}</Text>
-              <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, lineHeight: 17, marginTop: 6 }}>{hint}</Text>
+              <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, lineHeight: 17, marginTop: 6 }}>{parts.length > 1 ? 'Built from ' + parts.length + ' parts of your life, shown below.' : hint}</Text>
             </View>
           </Glass>
           </Rise>
@@ -151,6 +142,64 @@ export default function Insights() {
               </Rise>
             ))}
           </View>
+
+          {parts.length > 1 && (
+            <Rise i={4}>
+              <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>What makes up your score</Text>
+                {parts.map((pt, i) => (
+                  <View key={pt.k} style={{ marginTop: 11 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '700' }}>{pt.label}</Text>
+                      <Text style={{ color: pt.c, fontSize: 12.5, fontWeight: '800' }}>{pt.pct}</Text>
+                    </View>
+                    <View style={{ marginTop: 5 }}><FillBar p={pt.pct} color={pt.c} delay={i * 80} dep={String(week) + pt.pct} /></View>
+                    <Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 11, marginTop: 4 }}>{pt.detail}</Text>
+                  </View>
+                ))}
+              </Glass>
+            </Rise>
+          )}
+
+          {week && (
+            <Rise i={4}>
+              <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+                <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>WEEKLY REVIEW</Text>
+                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '800', marginTop: 4 }}>{wk.head}</Text>
+                {wk.rows.map((r) => (
+                  <View key={r.l} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '600' }}>{r.l}</Text>
+                      <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 11, marginTop: 1 }}>Last week {r.prev}</Text>
+                    </View>
+                    <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>{r.now}</Text>
+                    <View style={{ minWidth: 54, alignItems: 'flex-end' }}>
+                      <Text style={{ color: r.d === null || r.d === 0 ? 'rgba(255,255,255,.6)' : r.good ? '#7df0c6' : '#ff8fab', fontSize: 12, fontWeight: '800' }}>{r.d === null ? 'new' : (r.d > 0 ? '+' : '') + r.d + '%'}</Text>
+                    </View>
+                  </View>
+                ))}
+                {(wk.best || wk.worst) && (
+                  <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, marginTop: 12, lineHeight: 16 }}>
+                    {wk.best ? 'Best day: ' + wk.best.day + ' (' + wk.best.pct + ').' : ''}{wk.worst ? ' Quietest: ' + wk.worst.day + ' (' + wk.worst.pct + ').' : ''}
+                  </Text>
+                )}
+              </Glass>
+            </Rise>
+          )}
+
+          {pats.length > 0 && (
+            <Rise i={5}>
+              <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Patterns we noticed</Text>
+                {pats.map((t2, i) => (
+                  <View key={i} style={{ flexDirection: 'row', gap: 9, marginTop: 9 }}>
+                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#b794ff', marginTop: 6 }} />
+                    <Text style={{ flex: 1, color: 'rgba(255,255,255,.88)', fontSize: 12.5, lineHeight: 18 }}>{t2}</Text>
+                  </View>
+                ))}
+              </Glass>
+            </Rise>
+          )}
 
           <Rise i={5}>
           <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
@@ -174,22 +223,38 @@ export default function Insights() {
 
           <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', marginTop: 16, marginBottom: 8, marginHorizontal: 4 }}>Smart suggestions</Text>
           <View style={{ gap: 10 }}>
+            {shown.length === 0 && (
+              <Glass radius={22} style={{ paddingVertical: 16, paddingHorizontal: 16 }}>
+                <Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '700' }}>All caught up</Text>
+                <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, marginTop: 2 }}>No suggestions right now. Hidden tips return after 7 days.</Text>
+              </Glass>
+            )}
             {shown.map((tp, i) => (
-              <Rise key={tp.title} i={6 + i}>
-                <Pressable onPress={() => router.push(tp.go as any)}>
-                  <Glass radius={22} style={{ paddingVertical: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Rise key={tp.id} i={6 + i}>
+                <Glass radius={22} style={{ paddingVertical: 12, paddingHorizontal: 14 }}>
+                  <Pressable onPress={() => router.push(tp.go as any)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                     <HeadIcon k={tp.k} size={40} />
                     <View style={{ flex: 1 }}>
                       <Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '700' }}>{tp.title}</Text>
                       <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, marginTop: 2, lineHeight: 15 }}>{tp.sub}</Text>
                     </View>
                     <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 20 }}>›</Text>
-                  </Glass>
-                </Pressable>
+                  </Pressable>
+                  <View style={{ flexDirection: 'row', gap: 18, marginTop: 9, marginLeft: 52 }}>
+                    <Pressable hitSlop={8} onPress={() => setWhy(why === tp.id ? '' : tp.id)}><Text style={{ color: '#8fe9e2', fontSize: 11.5, fontWeight: '700' }}>{why === tp.id ? 'Hide reason' : 'Why this?'}</Text></Pressable>
+                    <Pressable hitSlop={8} onPress={() => hideTip(core, tp.id)}><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, fontWeight: '600' }}>Hide for 7 days</Text></Pressable>
+                  </View>
+                  {why === tp.id && <Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 11.5, lineHeight: 16, marginTop: 7, marginLeft: 52 }}>{tp.why}</Text>}
+                </Glass>
               </Rise>
             ))}
+            {allTips.length > 3 && (
+              <Pressable onPress={() => setShowAll(!showAll)} style={{ alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 14 }}>
+                <Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '700' }}>{showAll ? 'Show fewer' : 'Show all ' + allTips.length}</Text>
+              </Pressable>
+            )}
           </View>
-          <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, lineHeight: 17, marginTop: 14, marginHorizontal: 4 }}>Calculated from your own steps, water, sleep and spending on this device.</Text>
+          <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, lineHeight: 17, marginTop: 14, marginHorizontal: 4 }}>Calculated from your own habits, tasks, spending, records and zikir on this device.</Text>
         </ScrollView>
       </SafeAreaView>
       </PageIn>

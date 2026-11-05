@@ -14,7 +14,8 @@ import { HeadIcon } from '../../components/HabitIcons';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useStored } from '../../lib/store';
 import { MODS, ModCount } from '../../lib/modules';
-import { HEMPTY, getDay, cupsGoal, dateOf, keyOfDate } from '../../lib/habit';
+import { HEMPTY, getDay, cupsGoal, dateOf, keyOfDate, MOODS } from '../../lib/habit';
+import { useCore, weekly, records, hasData as hasHab, dayPct } from '../../lib/insights';
 import { TOP } from '../../lib/layout';
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -54,6 +55,17 @@ export default function Stats() {
   const [fin] = useStored<{ spends: { amt: number; date: string }[] }>('ml_finance', { spends: [] } as any);
   const [mc] = useStored<ModCount>('ml_modules', {});
   const cg = cupsGoal(hd);
+  const core = useCore();
+  const wk = weekly(core);
+  const rc = records(core);
+  const [hrs] = useStored<number[]>('ml_hours', new Array(24).fill(0));
+  const hh = Array.isArray(hrs) && hrs.length === 24 ? hrs : new Array(24).fill(0);
+  const bk = [['Night', [0, 1, 2, 3, 4, 5]], ['Morning', [6, 7, 8, 9, 10, 11]], ['Afternoon', [12, 13, 14, 15, 16, 17]], ['Evening', [18, 19, 20, 21, 22, 23]]] as [string, number[]][];
+  const bt = bk.map(([n, l]) => ({ n, v: l.reduce((a, h) => a + (hh[h] || 0), 0) }));
+  const bmax = Math.max(...bt.map((b) => b.v), 1);
+  const btop = bt.slice().sort((a, b) => b.v - a.v)[0];
+  const heat = Array.from({ length: 30 }, (_, i) => { const o = i - 29; return hasHab(core, o) ? dayPct(core, o) : -1; });
+  const fd = (k: string) => { if (!k) return ''; const [y, m, d] = k.split('-'); return Number(d) + ' ' + MON[Number(m) - 1]; };
   const last7 = [-6, -5, -4, -3, -2, -1, 0];
   const wd = last7.map((o) => ['S', 'M', 'T', 'W', 'T', 'F', 'S'][dateOf(o).getDay()]);
   const spendOn = (o: number) => ((fin && fin.spends) || []).filter((x) => x.date === keyOfDate(dateOf(o))).reduce((a, b) => a + (b.amt || 0), 0);
@@ -152,6 +164,89 @@ export default function Stats() {
                       </View>
                       <FillBar p={(m.n / topN) * 100} color={m.c} delay={i * 90} dep={m.n} />
                     </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </Glass>
+          </Rise>
+
+          <Rise i={4}>
+          <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>When you use the app</Text>
+            {bt.every((b) => b.v === 0) ? (
+              <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12.5, lineHeight: 19, marginTop: 8 }}>This fills in as you open modules during the day.</Text>
+            ) : (
+              <>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, height: 84, marginTop: 12 }}>
+                  {bt.map((b, i) => (
+                    <View key={b.n} style={{ flex: 1, height: 84, justifyContent: 'flex-end' }}>
+                      <GrowBar h={Math.max(5, Math.round((b.v / bmax) * 84))} delay={i * 70} dep={bt.map((x) => x.v).join()} style={{ width: '100%' }}>
+                        <LinearGradient colors={b.n === btop.n ? ['#8fe9e2', '#7c9cff'] : ['rgba(255,255,255,.4)', 'rgba(255,255,255,.14)']} style={{ flex: 1, borderTopLeftRadius: 8, borderTopRightRadius: 8, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 }} />
+                      </GrowBar>
+                    </View>
+                  ))}
+                </View>
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 5 }}>
+                  {bt.map((b) => <Text key={b.n} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.65)', fontSize: 10.5 }}>{b.n}</Text>)}
+                </View>
+                <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, marginTop: 10 }}>You open modules most in the {btop.n.toLowerCase()}.</Text>
+              </>
+            )}
+          </Glass>
+          </Rise>
+
+          <Rise i={4}>
+          <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Habit calendar</Text>
+              <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11 }}>Last 30 days</Text>
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+              {heat.map((p, i) => (
+                <View key={i} style={{ width: '8.9%', aspectRatio: 1, borderRadius: 6, backgroundColor: p < 0 ? 'rgba(255,255,255,.08)' : p >= 80 ? '#34d399' : p >= 50 ? 'rgba(52,211,153,.6)' : p >= 25 ? 'rgba(52,211,153,.35)' : 'rgba(52,211,153,.18)', borderWidth: i === 29 ? 1.5 : 0, borderColor: '#fff' }} />
+              ))}
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 }}>
+              <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 10.5 }}>Less</Text>
+              {['rgba(255,255,255,.08)', 'rgba(52,211,153,.18)', 'rgba(52,211,153,.35)', 'rgba(52,211,153,.6)', '#34d399'].map((c) => <View key={c} style={{ width: 14, height: 14, borderRadius: 4, backgroundColor: c }} />)}
+              <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 10.5 }}>More</Text>
+            </View>
+          </Glass>
+          </Rise>
+
+          <Rise i={4}>
+          <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>This week and last week</Text>
+            {wk.rows.map((r) => (
+              <View key={r.l} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 11 }}>
+                <Text style={{ flex: 1, color: '#fff', fontSize: 12.5, fontWeight: '600' }}>{r.l}</Text>
+                <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginRight: 10 }}>{r.prev}</Text>
+                <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>{r.now}</Text>
+                <Text style={{ minWidth: 52, textAlign: 'right', color: r.d === null || r.d === 0 ? 'rgba(255,255,255,.6)' : r.good ? '#7df0c6' : '#ff8fab', fontSize: 12, fontWeight: '800' }}>{r.d === null ? 'new' : (r.d > 0 ? '+' : '') + r.d + '%'}</Text>
+              </View>
+            ))}
+          </Glass>
+          </Rise>
+
+          <Rise i={4}>
+          <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Personal records</Text>
+            {rc.steps + rc.water + rc.streak === 0 ? (
+              <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12.5, lineHeight: 19, marginTop: 8 }}>Log steps, water and sleep to set your first records.</Text>
+            ) : (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 12 }}>
+                {[
+                  ['Best step day', rc.steps.toLocaleString(), fd(rc.stepsDate), 'steps'],
+                  ['Most water', rc.water + ' glasses', fd(rc.waterDate), 'water'],
+                  ['Best score', rc.score + ' / 100', fd(rc.scoreDate), 'insight'],
+                  ['Longest streak', rc.streak + (rc.streak === 1 ? ' day' : ' days'), 'Goal at 70 or more', 'streak'],
+                ].map(([a, b, c, k]) => (
+                  <View key={a} style={{ width: '47.5%', flexGrow: 1, borderRadius: 16, padding: 11, backgroundColor: 'rgba(255,255,255,.08)' }}>
+                    <HeadIcon k={k} size={26} />
+                    <Text style={{ color: '#fff', fontSize: 15, fontWeight: '800', marginTop: 6 }}>{b}</Text>
+                    <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11, marginTop: 1 }}>{a}</Text>
+                    {!!c && <Text style={{ color: 'rgba(255,255,255,.5)', fontSize: 10.5, marginTop: 1 }}>{c}</Text>}
                   </View>
                 ))}
               </View>

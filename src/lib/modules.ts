@@ -29,4 +29,8 @@ export async function trackModule(path: string) {
   const cut = new Date(); cut.setDate(cut.getDate() - 31);
   Object.keys(all).forEach((x) => { if (x < dk(cut)) delete all[x]; });
   await setItem('ml_modules', all);
+  const hrs = await getItem<number[]>('ml_hours', new Array(24).fill(0));
+  const hh = Array.isArray(hrs) && hrs.length === 24 ? hrs : new Array(24).fill(0);
+  hh[new Date().getHours()] += 1;
+  await setItem('ml_hours', hh);
 }

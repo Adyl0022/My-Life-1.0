@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Pressable, Modal } from 'react-native';
+import { View, Pressable, Modal, Animated, Easing } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
 import { usePathname } from 'expo-router';
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import { Blob } from './Bg';
 import { useName } from '../lib/store';
 import { useLock, checkPin, unlock, bioAuth, bioReady, wipeEverything, setPin, SENSITIVE } from '../lib/lock';
@@ -95,6 +95,7 @@ export function LockScreen() {
       <Blob size={380} color="rgba(106,77,240,0.55)" style={{ left: -140, top: -90 }} />
       <Blob size={320} color="rgba(94,231,223,0.3)" style={{ right: -130, top: 260 }} />
       <Blob size={300} color="rgba(255,143,224,0.25)" style={{ left: -120, bottom: -60 }} />
+      <LockArt />
       <Header forgot={forgot} />
       {forgot === 'menu' ? (
         <View style={{ width: 300, gap: 10 }}>
@@ -149,6 +150,58 @@ function Tile() {
       <View style={{ position: 'absolute', right: -6, bottom: -6, width: 28, height: 28, borderRadius: 14, backgroundColor: '#0f1550', borderWidth: 1.5, borderColor: 'rgba(255,255,255,.35)', alignItems: 'center', justifyContent: 'center' }}>
         <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#8fe9e2" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><Rect x={5} y={11} width={14} height={9} rx={2.5} /><Path d="M8 11V8a4 4 0 0 1 8 0v3" /></Svg>
       </View>
+    </View>
+  );
+}
+
+// Little floating glass tiles, one for each part of the app, so the lock screen feels like My Life and not a blank wall.
+type Art = { x: number | string; y: number | string; s: number; r: number; c: [string, string]; d: number; icon: 'moon' | 'cal' | 'wallet' | 'note' | 'heart' | 'bike' | 'star' };
+const ARTS: Art[] = [
+  { x: 22, y: 58, s: 52, r: -10, c: ['#34d399', '#5ee7df'], d: 0, icon: 'moon' },
+  { x: '78%', y: 86, s: 46, r: 12, c: ['#7c9cff', '#b794ff'], d: 500, icon: 'cal' },
+  { x: 8, y: '36%', s: 40, r: 8, c: ['#ffc46b', '#ff8fab'], d: 900, icon: 'wallet' },
+  { x: '88%', y: '40%', s: 38, r: -8, c: ['#ff8fe0', '#b794ff'], d: 300, icon: 'note' },
+  { x: 14, y: '86%', s: 42, r: -12, c: ['#ff8fab', '#ffb36b'], d: 700, icon: 'heart' },
+  { x: '82%', y: '88%', s: 44, r: 10, c: ['#5ee7df', '#7c9cff'], d: 1100, icon: 'bike' },
+];
+function Icon({ k }: { k: Art['icon'] }) {
+  const p = { fill: 'none', stroke: '#fff', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  return (
+    <Svg width="58%" height="58%" viewBox="0 0 24 24">
+      {k === 'moon' && <><Path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 6.8 6.8 0 0 0 20 14.5z" {...p} /><Path d="M17 4v3M15.5 5.5h3" {...p} /></>}
+      {k === 'cal' && <><Rect x={3.5} y={5} width={17} height={15} rx={3} {...p} /><Path d="M8 3v4M16 3v4M3.5 10h17M9 15l2 2 4-4" {...p} /></>}
+      {k === 'wallet' && <><Path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3" {...p} /><Rect x={3.5} y={8} width={17} height={12} rx={3} {...p} /><Circle cx={16} cy={14} r={1.2} fill="#fff" /></>}
+      {k === 'note' && <><Path d="M6 3.5h9l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V5A1.5 1.5 0 0 1 6 3.5z" {...p} /><Path d="M8.5 12h7M8.5 16h5" {...p} /></>}
+      {k === 'heart' && <Path d="M12 20s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7.6 4.2 4.2 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z" {...p} />}
+      {k === 'bike' && <><Circle cx={6} cy={16} r={3.5} {...p} /><Circle cx={18} cy={16} r={3.5} {...p} /><Path d="M6 16l3-7h5l4 7M9 9H7M14 9l-2 7" {...p} /></>}
+    </Svg>
+  );
+}
+function Tile3({ a }: { a: Art }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const t = setTimeout(() => { Animated.loop(Animated.sequence([
+      Animated.timing(v, { toValue: 1, duration: 3200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(v, { toValue: 0, duration: 3200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ])).start(); }, a.d);
+    return () => clearTimeout(t);
+  }, [v]);
+  return (
+    <Animated.View style={{ position: 'absolute', left: a.x as any, top: a.y as any, width: a.s, height: a.s, borderRadius: a.s * 0.32, backgroundColor: '#24207a', opacity: 0.9,
+      shadowColor: a.c[0], shadowOpacity: 0.5, shadowRadius: 14, shadowOffset: { width: 0, height: 6 },
+      transform: [{ rotate: a.r + 'deg' }, { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [3, -7] }) }] }}>
+      <LinearGradient colors={a.c} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, borderRadius: a.s * 0.32, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)', opacity: 0.78 }}>
+        <Icon k={a.icon} />
+      </LinearGradient>
+    </Animated.View>
+  );
+}
+function LockArt() {
+  const stars = [[60, 170, 3], [300, 60, 2.5], [340, 250, 2], [30, 520, 2.5], [350, 600, 3], [110, 40, 2], [250, 740, 2]];
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
+      {stars.map(([x, y, r], i) => <View key={i} style={{ position: 'absolute', left: x, top: y, width: r * 2, height: r * 2, borderRadius: r, backgroundColor: '#fff', opacity: 0.55 }} />)}
+      {ARTS.map((a, i) => <Tile3 key={i} a={a} />)}
     </View>
   );
 }

@@ -4,11 +4,15 @@ let last = 0;
 let col = false;
 export function subscribeNav(f: L) { ls.add(f); return () => { ls.delete(f); }; }
 export function setNavCollapsed(c: boolean) { if (c !== col) { col = c; ls.forEach((f) => f(c)); } }
+// Collapse after a real downward push and expand after a real upward one, so small wobbles never flip it.
+let acc = 0;
 export function navScroll(e: any) {
   const y = e?.nativeEvent?.contentOffset?.y ?? 0;
   const dy = y - last;
   last = y;
-  if (y < 30) setNavCollapsed(false);
-  else if (dy > 8) setNavCollapsed(true);
-  else if (dy < -8) setNavCollapsed(false);
+  if (y < 30) { acc = 0; setNavCollapsed(false); return; }
+  if (dy === 0) return;
+  acc = (acc > 0) === (dy > 0) ? acc + dy : dy;
+  if (acc > 36) setNavCollapsed(true);
+  else if (acc < -28) setNavCollapsed(false);
 }

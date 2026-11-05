@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Pressable, Animated, Easing, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import RA, { useSharedValue, useAnimatedStyle, withTiming, interpolate, Easing as REasing } from 'react-native-reanimated';
 import { subscribeNav, setNavCollapsed } from '../../lib/navbar';
 import { Text } from '../../components/Txt';
 import { Tabs, useRouter } from 'expo-router';
@@ -53,7 +54,7 @@ function Bar({ state }: any) {
   const sx = useRef(new Animated.Value(1)).current;
   const sheen = useRef(new Animated.Value(0)).current;
   const rip = useRef(new Animated.Value(1)).current;
-  const col = useRef(new Animated.Value(0)).current;
+  const col = useSharedValue(0);
   const ia = useRef(ITEMS.map(() => new Animated.Value(1))).current;
   const pops = useRef(ITEMS.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))).current;
   const lastIdx = useRef(-1);
@@ -87,24 +88,23 @@ function Bar({ state }: any) {
     ]));
     loop.start();
 
-    const un = subscribeNav((c) => Animated.timing(col, { toValue: c ? 1 : 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start());
+    const un = subscribeNav((c) => { col.value = withTiming(c ? 1 : 0, { duration: 300, easing: REasing.out(REasing.cubic) }); });
     return () => { loop.stop(); un(); };
   }, []);
   const press = (r: any, i: number) => {
     if (Platform.OS !== 'web') { try { Haptics.selectionAsync(); } catch {} }
     if (i !== idx) router.navigate((r.name === 'index' ? '/' : '/' + r.name) as any);
   };
-  const side = col.interpolate({ inputRange: [0, 1], outputRange: [20, 48] });
-  const lblH = col.interpolate({ inputRange: [0, 1], outputRange: [13, 0] });
-  const lblO = col.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
-  const padV = col.interpolate({ inputRange: [0, 1], outputRange: [10, 9] });
+  // Everything runs on the UI thread and the bar's width never changes, so nothing is re-measured while it shrinks.
+  const barSt = useAnimatedStyle(() => ({ transform: [{ translateY: interpolate(col.value, [0, 1], [0, 8]) }, { scale: interpolate(col.value, [0, 1], [1, 0.88]) }] }));
+  const lblSt = useAnimatedStyle(() => ({ height: interpolate(col.value, [0, 1], [13, 0]), opacity: interpolate(col.value, [0, 0.7], [1, 0], 'clamp') }));
   const gc = PGLOW[period];
   return (
     <>
     <LinearGradient pointerEvents="none" colors={home ? ['rgba(10,15,44,0)', tint(.35), tint(.6)] : ['rgba(10,15,44,0)', 'rgba(10,15,44,.92)', 'rgba(10,15,44,.98)']} locations={[0, 0.55, 1]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 104 }} />
-    <Animated.View style={{ position: 'absolute', left: side, right: side, bottom: 18 }}>
+    <RA.View style={[{ position: 'absolute', left: 20, right: 20, bottom: 18, transformOrigin: '50% 100%' } as any, barSt]}>
       <Glass radius={28} style={{ padding: 8, backgroundColor: home ? 'rgba(255,255,255,.2)' : 'rgba(24,28,72,.78)' }}>
-        <View style={{ flexDirection: 'row' }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+        <View style={{ flexDirection: 'row' }} onLayout={(e) => { const w = Math.round(e.nativeEvent.layout.width); setW((o) => (Math.abs(o - w) > 1 ? w : o)); }}>
           {W > 0 && (
             <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: -5, bottom: -5, width: bw, borderRadius: 27, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,.45)', transform: [{ translateX: tx }, { scaleX: sx }] }}>
               <LinearGradient colors={['rgba(255,255,255,.26)', 'rgba(255,255,255,.1)']} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
@@ -128,20 +128,20 @@ function Bar({ state }: any) {
             const pop = pops[ITEMS.findIndex((x) => x.name === r.name)];
             return (
               <Pressable key={r.key} onPress={() => press(r, i)} accessibilityLabel={item.label} style={{ flex: 1, borderRadius: 22 }}>
-                <Animated.View style={{ alignItems: 'center', paddingVertical: padV }}>
+                <View style={{ alignItems: 'center', paddingVertical: 10 }}>
                   <Animated.View style={{ transform: [{ translateY: pop.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.16] }) }] }}>
                     <Animated.View style={iconAnim(r.name, ia[ITEMS.findIndex((x) => x.name === r.name)])}><Icon name={r.name} color={on ? '#fff' : 'rgba(255,255,255,.65)'} /></Animated.View>
                   </Animated.View>
-                  <Animated.View style={{ height: lblH, opacity: lblO, overflow: 'hidden', marginTop: 2 }}>
+                  <RA.View style={[{ overflow: 'hidden', marginTop: 2 }, lblSt]}>
                     <Text style={{ fontSize: 10.5, fontWeight: '700', color: on ? '#fff' : 'rgba(255,255,255,.65)' }}>{item.label}</Text>
-                  </Animated.View>
-                </Animated.View>
+                  </RA.View>
+                </View>
               </Pressable>
             );
           })}
         </View>
       </Glass>
-    </Animated.View>
+    </RA.View>
     </>
   );
 }

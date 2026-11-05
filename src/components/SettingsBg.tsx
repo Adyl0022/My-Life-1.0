@@ -70,6 +70,18 @@ function Tile({ ic, size = 54, c = '#9db4ff', style, ...r }: any) {
   );
 }
 
+function Mini({ ic, x, y, size = 18, c = '#9db4ff', i = 0 }: any) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => { const l = lp(v, 2600 + i * 400, i * 350); return () => l.stop(); }, []);
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: (x + '%') as any, top: (y + '%') as any,
+      opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.18, 0.5] }),
+      transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-5, 5] }) }, { scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.1] }) }] }}>
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{ICONS[ic]}</Svg>
+    </Animated.View>
+  );
+}
+
 export function SettingsBg({ tab = 0 }: { tab?: number }) {
   return (
     <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
@@ -85,26 +97,18 @@ export function SettingsBg({ tab = 0 }: { tab?: number }) {
 
       {tab === 0 && <>
         <Ring x={82} y={22} size={120} c="rgba(157,180,255,.6)" />
-        <Ring x={82} y={22} size={120} c="rgba(157,180,255,.6)" delay={1800} />
-        <Tile ic="bell" style={{ right: 24, top: 14 }} rot={10} />
-        <Tile ic="moon" size={46} c="#ffd98a" style={{ right: 92, top: 30 }} dx={6} dy={10} ms={5600} delay={500} rot={-8} />
-        <Tile ic="cloud" size={50} c="#8fe9e2" style={{ right: 40, bottom: 118 }} ms={6200} delay={900} />
-        <Tile ic="heart" size={40} c="#ff9db4" style={{ left: 40, bottom: 128 }} dx={6} dy={12} ms={4800} delay={300} />
+        <Mini ic="bell" x={90} y={7} c="#9db4ff" i={0} /><Mini ic="moon" x={80} y={10} size={15} c="#ffd98a" i={2} />
+        <Mini ic="cloud" x={3} y={72} c="#8fe9e2" i={1} /><Mini ic="heart" x={92} y={76} size={15} c="#ff9db4" i={3} />
       </>}
       {tab === 1 && <>
         <Ring x={80} y={26} size={130} c="rgba(94,231,223,.6)" />
-        <Ring x={80} y={26} size={130} c="rgba(94,231,223,.6)" delay={1800} />
-        <Tile ic="shield" size={60} c="#8fe9e2" style={{ right: 20, top: 8 }} rot={6} />
-        <Tile ic="lock" size={46} c="#b794ff" style={{ right: 96, top: 30 }} dx={6} dy={10} ms={5600} delay={500} />
-        <Tile ic="finger" size={50} c="#9db4ff" style={{ right: 40, bottom: 118 }} ms={6200} delay={900} />
-        <Tile ic="key" size={40} c="#ffd98a" style={{ left: 40, bottom: 128 }} dx={6} dy={12} ms={4800} delay={300} rot={10} />
+        <Mini ic="shield" x={90} y={7} c="#8fe9e2" i={0} /><Mini ic="lock" x={80} y={10} size={15} c="#b794ff" i={2} />
+        <Mini ic="finger" x={3} y={72} c="#9db4ff" i={1} /><Mini ic="key" x={92} y={76} size={15} c="#ffd98a" i={3} />
       </>}
       {tab === 2 && <>
         <Ring x={80} y={24} size={120} c="rgba(183,148,255,.6)" />
-        <Tile ic="info" size={52} c="#9db4ff" style={{ right: 24, top: 14 }} rot={8} />
-        <Tile ic="star" size={46} c="#ffd98a" style={{ right: 92, top: 30 }} dx={6} dy={10} ms={5600} delay={500} rot={-12} />
-        <Tile ic="doc" size={48} c="#8fe9e2" style={{ right: 40, bottom: 118 }} ms={6200} delay={900} />
-        <Tile ic="heart" size={40} c="#ff9db4" style={{ left: 40, bottom: 128 }} dx={6} dy={12} ms={4800} delay={300} />
+        <Mini ic="info" x={90} y={7} c="#9db4ff" i={0} /><Mini ic="star" x={80} y={10} size={15} c="#ffd98a" i={2} />
+        <Mini ic="doc" x={3} y={72} c="#8fe9e2" i={1} /><Mini ic="heart" x={92} y={76} size={15} c="#ff9db4" i={3} />
       </>}
 
       <Star x={10} y={14} s={1} i={0} /><Star x={46} y={9} s={2} i={2} c="#8fe9e2" /><Star x={88} y={44} s={1} i={4} /><Star x={22} y={50} s={1} i={1} c="#b794ff" />

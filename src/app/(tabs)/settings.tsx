@@ -103,8 +103,8 @@ function Doc({ title, secs, onClose }: { title: string; secs: Sec[]; onClose: ()
   return (
     <Overlay onClose={onClose}>
       <View style={{ maxHeight: '82%', padding: 18, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
-        <Text style={{ color: W, fontSize: 18, fontWeight: '800', marginBottom: 8 }}>{title}</Text>
-        <ScrollView>{secs.map((s) => (<View key={s.h} style={{ marginBottom: 12 }}><Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '700' }}>{s.h}</Text><Text style={{ color: '#fff', fontSize: 13.5, lineHeight: 20, marginTop: 3 }}>{s.p}</Text></View>))}</ScrollView>
+        <Text style={{ color: W, fontSize: 18, fontWeight: '800', marginBottom: 18 }}>{title}</Text>
+        <ScrollView>{secs.map((s) => (<View key={s.h} style={{ marginBottom: 16 }}><Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '700' }}>{s.h}</Text><Text style={{ color: '#fff', fontSize: 13.5, lineHeight: 20, marginTop: 3 }}>{s.p}</Text></View>))}</ScrollView>
         <View style={{ flexDirection: 'row', marginTop: 8 }}><Btn t="Close" onPress={onClose} /></View>
       </View>
     </Overlay>
@@ -302,14 +302,14 @@ export default function Settings() {
         {dlg === 'log' && <Doc title="Security activity log" secs={[{ h: 'Last 30 days', p: 'Sign-ins, password changes and device removals will be listed here once your account is connected.' }]} onClose={close} />}
 
         {dlg === 'out' && (
-          <Overlay onClose={close}><Glass radius={26} style={{ padding: 20 }}>
+          <Overlay onClose={close}><View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
             <Text style={{ color: W, fontSize: 17, fontWeight: '800' }}>Log out of My Life?</Text>
             <Text style={{ color: DIM, fontSize: 13, lineHeight: 19, marginTop: 6 }}>You will need your email and password to sign back in on this device.</Text>
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}><Btn t="Cancel" onPress={close} /><Btn t="Log out" kind="danger" onPress={() => { close(); say('Sign-in screens are being built'); }} /></View>
-          </Glass></Overlay>
+          </View></Overlay>
         )}
         {dlg === 'pw' && (
-          <Overlay onClose={close}><Glass radius={26} style={{ padding: 20 }}>
+          <Overlay onClose={close}><View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
             <Text style={{ color: W, fontSize: 17, fontWeight: '800' }}>Change password</Text>
             <View style={{ gap: 8, marginTop: 12 }}>
               <Inp secureTextEntry placeholder="Current password" value={p1} onChangeText={setP1} />
@@ -318,10 +318,10 @@ export default function Settings() {
             </View>
             {pwErr ? <Text style={{ color: '#ffb3bf', fontSize: 12, marginTop: 8 }}>{pwErr}</Text> : null}
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}><Btn t="Cancel" onPress={close} /><Btn t="Update" kind="primary" onPress={savePw} /></View>
-          </Glass></Overlay>
+          </View></Overlay>
         )}
         {(dlg === 'reset' || dlg === 'delete') && (
-          <Overlay onClose={close}><Glass radius={26} style={{ padding: 20 }}>
+          <Overlay onClose={close}><View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
             <Text style={{ color: W, fontSize: 17, fontWeight: '800' }}>{isDel ? 'Delete your account?' : 'Reset all your data?'}</Text>
             <Text style={{ color: DIM, fontSize: 12.5, lineHeight: 18, marginTop: 6 }}>{isDel ? 'This permanently deletes your account and everything in it: planner, notes, finance, records and habits, on all your devices. This cannot be undone. Export your data first if you want a copy.' : 'This erases ALL your data: planner, notes, finance, records and habits. Your account and login stay. This cannot be undone. Export your data first if you want a copy.'}</Text>
             <Text style={{ color: W, fontSize: 12.5, fontWeight: '700', marginTop: 12, marginBottom: 6 }}>{isDel ? 'Type DELETE to confirm' : 'Type RESET to confirm'}</Text>
@@ -332,7 +332,7 @@ export default function Settings() {
               {canGo ? <Btn t={isDel ? 'Delete forever' : 'Reset everything'} kind="danger" onPress={async () => { await clearMine(!isDel); close(); say(isDel ? 'Account data deleted' : 'All data has been reset'); }} />
                 : <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: 'rgba(255,255,255,.45)', fontSize: 12.5 }}>{isDel ? 'Fill both fields' : 'Type RESET'}</Text></View>}
             </View>
-          </Glass></Overlay>
+          </View></Overlay>
         )}
         {toast ? <View pointerEvents="none" style={{ position: 'absolute', bottom: 110, alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.75)' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '600' }}>{toast}</Text></View> : null}
       </SafeAreaView>

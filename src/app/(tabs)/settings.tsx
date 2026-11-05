@@ -334,19 +334,25 @@ export default function Settings() {
           </View></Overlay>
         )}
         {dlg === 'restore' && (
-          <Overlay onClose={close}><View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
+          <Overlay onClose={close}><ScrollView style={{ flexGrow: 0, maxHeight: '88%' }} contentContainerStyle={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
             <Text style={{ color: W, fontSize: 18, fontWeight: '800' }}>Backup and restore</Text>
             <Text style={{ color: DIM, fontSize: 13, lineHeight: 19, marginTop: 6 }}>Save a copy of your data as a file, or bring it back from a file you saved before. This is how you move to a new phone until accounts arrive.</Text>
+            <View style={{ marginTop: 12, padding: 12, borderRadius: 16, backgroundColor: 'rgba(94,231,223,.10)', borderWidth: 1, borderColor: 'rgba(94,231,223,.25)' }}>
+              <Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '800', marginBottom: 6 }}>Tips for restoring</Text>
+              {['Choose a Backup (JSON) file. It is named like my-life-backup-2026-11-06-1642.json.', 'Only the JSON backup can be restored. Excel, PDF and CSV files are for reading and sharing.', 'Keep your backup somewhere safe, such as Google Drive or Files, so you can find it on a new phone.', 'Restoring replaces the parts found in the file. Receipt photos are not included.'].map((t) => (
+                <View key={t} style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}><Text style={{ color: '#8fe9e2', fontSize: 12.5 }}>✓</Text><Text style={{ flex: 1, color: 'rgba(255,255,255,.82)', fontSize: 12.5, lineHeight: 18 }}>{t}</Text></View>
+              ))}
+            </View>
             {bkErr ? <Text style={{ color: '#ffb3bf', fontSize: 12.5, marginTop: 10 }}>{bkErr}</Text> : null}
             <View style={{ gap: 8, marginTop: 14 }}>
               <View style={{ flexDirection: 'row' }}><Btn t="Save a backup" kind="primary" onPress={() => { close(); router.push('/export' as any); }} /></View>
               <View style={{ flexDirection: 'row' }}><Btn t="Restore from a file" onPress={async () => {
-                try { const t = await pickText(); if (t == null) return; const b = parseBackup(t); if (!b) return setBkErr('That file is not a My Life backup. Choose a Backup (JSON) file from Export.'); setBk(b); setDlg('confirm'); }
+                try { const t = await pickText(); if (t == null) return; const b = parseBackup(t); if (!b) return setBkErr('That file is not a My Life backup. Choose the Backup (JSON) file you saved from Export. Excel, PDF and CSV files cannot be restored.'); setBk(b); setDlg('confirm'); }
                 catch (e) { setBkErr('Could not open that file.'); }
               }} /></View>
               <View style={{ flexDirection: 'row' }}><Btn t="Cancel" onPress={close} /></View>
             </View>
-          </View></Overlay>
+          </ScrollView></Overlay>
         )}
         {dlg === 'confirm' && bk && (
           <Overlay onClose={close}><View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>

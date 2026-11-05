@@ -14,6 +14,7 @@ import { TOP } from '../lib/layout';
 import { WeightGoal, DailyNeeds, HealthSpend } from '../components/BodyCards';
 import { PUASA_EMPTY, PuasaData, ramadanState, qadhaOwed, keyD } from '../lib/fasting';
 import { HData, HEMPTY, MOODS, WD, MON, GLASS, dateOf, getDay, keyOfDate, goalPctOf, HDay, BLANK as BLANKD, cupsGoal, latestKg, hoursBetween, bestStreakAll, avgOf } from '../lib/habit';
+import { withNavBar } from '../lib/permNav';
 
 const T = '#5ee7df';
 const Lbl = ({ t }: { t: string }) => <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12, fontWeight: '600' }}>{t}</Text>;
@@ -88,7 +89,7 @@ export default function Habit() {
       try {
         const { Pedometer } = require('expo-sensors');
         if (!(await Pedometer.isAvailableAsync())) { setAutoMsg(why + ' This phone has no step sensor.'); return; }
-        const perm = await Pedometer.requestPermissionsAsync();
+        const perm: any = await withNavBar(() => Pedometer.requestPermissionsAsync());
         if (!perm.granted) { setAutoMsg('Allow Physical activity permission in phone settings to count steps.'); setH({ ...hRef.current, auto: false }); return; }
         setAutoMsg(why);
         sub = Pedometer.watchStepCount((r: { steps: number }) => { if (!alive) return; const d = r.steps - last; last = r.steps; if (d > 0) saveToday((td) => ({ ...td, steps: td.steps + d })); });
@@ -101,7 +102,7 @@ export default function Habit() {
         if (st !== HC.SdkAvailabilityStatus.SDK_AVAILABLE) { await startSensor(st === HC.SdkAvailabilityStatus.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED ? 'Update Health Connect in Play Store for all-day counting. For now steps count while this app is open.' : 'Health Connect is not on this phone, so steps count while this app is open.'); return; }
         await HC.initialize();
         let g = await HC.getGrantedPermissions();
-        if (!g.some((x: any) => x.recordType === 'Steps')) g = await HC.requestPermission([{ accessType: 'read', recordType: 'Steps' }]);
+        if (!g.some((x: any) => x.recordType === 'Steps')) g = await withNavBar(() => HC.requestPermission([{ accessType: 'read', recordType: 'Steps' }]));
         if (!g.some((x: any) => x.recordType === 'Steps')) { await startSensor('Health Connect access was not allowed, so steps count while this app is open.'); return; }
         const read = async () => {
           const s0 = new Date(); s0.setHours(0, 0, 0, 0);

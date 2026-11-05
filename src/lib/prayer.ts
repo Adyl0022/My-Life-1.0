@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStored } from './store';
 import { syncPrayerAlerts, clearPrayerAlerts, Alert } from './adhan';
 import { Platform, AppState } from 'react-native';
+import { withNavBar } from './permNav';
 
 export const ZONES: { code: string; name: string; lat: number; lon: number }[] = [
   { code: 'WLY01', name: 'Kuala Lumpur & Putrajaya', lat: 3.139, lon: 101.687 },
@@ -77,7 +78,7 @@ async function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
   return v;
 }
 async function whereAmI(fresh = false): Promise<{ lat: number; lon: number }> {
-  const perm = await Location.requestForegroundPermissionsAsync();
+  const perm = await withNavBar(() => Location.requestForegroundPermissionsAsync());
   if (perm.status !== 'granted') throw new Error('denied');
   const last = fresh ? null : await Location.getLastKnownPositionAsync({ maxAge: 10 * 60 * 1000 }).catch(() => null);
   const pos = last || (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));

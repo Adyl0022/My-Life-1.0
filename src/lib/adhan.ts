@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import { withNavBar } from './permNav';
 
 export type Alert = { key: string; name: string; at: Date };
 let ready = false;
@@ -12,7 +13,7 @@ export async function setup(): Promise<boolean> {
       ready = true;
     }
     let p = await Notifications.getPermissionsAsync();
-    if (p.status !== 'granted' && p.canAskAgain) p = await Notifications.requestPermissionsAsync();
+    if (p.status !== 'granted' && p.canAskAgain) p = await withNavBar(() => Notifications.requestPermissionsAsync());
     return p.status === 'granted';
   } catch (e) { return false; }
 }

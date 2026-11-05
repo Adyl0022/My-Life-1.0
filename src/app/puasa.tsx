@@ -63,7 +63,7 @@ export default function Puasa() {
   const [p, setP] = useStored<PuasaData>('ml_puasa', PUASA_EMPTY);
   const [hd, setHd] = useStored<HData>('ml_habit', HEMPTY);
   const [tab, setTab] = useState(0);
-  const [logAs, setLogAs] = useState<'s' | 'q'>('s');
+  const [logAs, setLogAs] = useState<'s' | 'q'>('s'); const [wkOff, setWkOff] = useState(0);
   const [qIn, setQIn] = useState(''); const [qEd, setQEd] = useState(false); const [adj, setAdj] = useState(false);
   const today = new Date(); const tk = keyD(today); const off = p.off || 0;
   const st = ramadanState(p, today); const owed = qadhaOwed(p, today);
@@ -265,26 +265,44 @@ export default function Puasa() {
                 <Btn t="Sunat" on={logAs === 's'} onPress={() => setLogAs('s')} style={{ flex: 1 }} />
                 <Btn t="Qadha" on={logAs === 'q'} c="#ffc46b" onPress={() => setLogAs('q')} style={{ flex: 1 }} />
               </View>
-              <View style={{ marginTop: 10 }}>
-                {Array.from({ length: 14 }).map((_, k) => {
-                  const d = addDays(today, -k); const v = at(d); const ram = ramadanState(p, d).phase === 'during'; const bad = isHaram(d, off);
-                  const mt = d.getDay() === 1 || d.getDay() === 4; const blocked = bad || ram;
-                  const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                  const st = v === 's' ? 'Sunat fast' : v === 'q' ? 'Qadha fast' : v === 'r' ? 'Ramadan' : bad ? 'Eid, no fasting' : ram ? 'Ramadan' : mt ? 'Recommended day' : '';
-                  const col = v === 's' ? G : v === 'q' ? '#ffc46b' : v === 'r' ? '#34d399' : 'transparent';
-                  return (
-                    <Pressable key={k} disabled={blocked} onPress={() => toggleLog(d)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 9, borderTopWidth: k ? 1 : 0, borderTopColor: 'rgba(255,255,255,.1)', opacity: blocked ? 0.45 : 1 }}>
-                      <View style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 2, borderColor: v ? col : 'rgba(255,255,255,.4)', backgroundColor: col, alignItems: 'center', justifyContent: 'center' }}>{v ? <Text style={{ color: '#06281c', fontSize: 14, fontWeight: '900' }}>✓</Text> : null}</View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>{k === 0 ? 'Today' : k === 1 ? 'Yesterday' : WD[d.getDay()] + ', ' + d.getDate() + ' ' + MN[d.getMonth()]}</Text>
-                        {k > 1 ? null : <Text style={{ color: dim, fontSize: 11.5 }}>{WD[d.getDay()] + ', ' + d.getDate() + ' ' + MN[d.getMonth()]}</Text>}
-                      </View>
-                      {st ? <Text style={{ color: v ? col : mt ? '#8fe9e2' : dim, fontSize: 12, fontWeight: '700' }}>{st}</Text> : null}
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <Text style={{ color: dim, fontSize: 11, marginTop: 6 }}>Shows the last 14 days. Tap a day to mark or clear it.</Text>
+              {(() => {
+                const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const dow = (today.getDay() + 6) % 7; const mon = addDays(today, -dow + wkOff * 7); const days = Array.from({ length: 7 }, (_, k) => addDays(mon, k));
+                const a = days[0], z = days[6]; const label = a.getDate() + (a.getMonth() === z.getMonth() ? '' : ' ' + MN[a.getMonth()]) + ' – ' + z.getDate() + ' ' + MN[z.getMonth()] + (a.getFullYear() !== today.getFullYear() ? ' ' + z.getFullYear() : '');
+                const nav = (t: string, on: boolean, f: () => void) => <Pressable disabled={!on} onPress={f} hitSlop={8} style={{ width: 38, height: 34, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center', opacity: on ? 1 : 0.35 }}><Text style={{ color: W, fontSize: 18, fontWeight: '800', marginTop: -2 }}>{t}</Text></Pressable>;
+                return (
+                  <View style={{ marginTop: 12 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      {nav('‹', wkOff > -52, () => setWkOff(wkOff - 1))}
+                      <View style={{ alignItems: 'center' }}><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>{label}</Text>{wkOff !== 0 ? <Pressable hitSlop={8} onPress={() => setWkOff(0)}><Text style={{ color: '#8fe9e2', fontSize: 11.5, fontWeight: '800', marginTop: 2 }}>Back to this week</Text></Pressable> : <Text style={{ color: dim, fontSize: 11.5, marginTop: 2 }}>This week</Text>}</View>
+                      {nav('›', wkOff < 0, () => setWkOff(wkOff + 1))}
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 12 }}>
+                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((n) => <Text key={n} style={{ flex: 1, textAlign: 'center', color: dim, fontSize: 10.5, fontWeight: '700' }}>{n}</Text>)}
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 5 }}>
+                      {days.map((d, k) => {
+                        const v = at(d); const fut = d.getTime() > today.getTime() && keyD(d) !== keyD(today); const ram = ramadanState(p, d).phase === 'during'; const bad = isHaram(d, off);
+                        const mt = d.getDay() === 1 || d.getDay() === 4; const blocked = fut || bad || ram; const isT = keyD(d) === keyD(today);
+                        return (
+                          <Pressable key={k} disabled={blocked} onPress={() => toggleLog(d)} style={{ flex: 1, aspectRatio: 0.8, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: isT ? '#fff' : 'transparent', backgroundColor: v === 's' ? G : v === 'q' ? '#ffc46b' : v === 'r' ? 'rgba(52,211,153,.5)' : mt ? 'rgba(52,211,153,.22)' : 'rgba(255,255,255,.1)', opacity: blocked ? 0.35 : 1 }}>
+                            <Text style={{ color: v ? '#06281c' : W, fontSize: 15, fontWeight: '800', textAlign: 'center' }}>{d.getDate()}</Text>
+                            {v ? <Text style={{ color: '#06281c', fontSize: 11, fontWeight: '900', marginTop: 2 }}>✓</Text> : null}
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                    <View style={{ marginTop: 14, padding: 12, borderRadius: 14, backgroundColor: 'rgba(0,0,0,.2)', gap: 5 }}>
+                      <Text style={{ color: W, fontSize: 12.5, fontWeight: '800' }}>How to use this</Text>
+                      <Text style={{ color: dim, fontSize: 12, lineHeight: 17 }}>1. Choose Sunat or Qadha above.</Text>
+                      <Text style={{ color: dim, fontSize: 12, lineHeight: 17 }}>2. Tap a day you fasted. It turns solid green (Sunat) or orange (Qadha) with a tick.</Text>
+                      <Text style={{ color: dim, fontSize: 12, lineHeight: 17 }}>3. Tap it again to clear it.</Text>
+                      <Text style={{ color: dim, fontSize: 12, lineHeight: 17 }}>4. Use the arrows to go to earlier weeks.</Text>
+                      <Text style={{ color: dim, fontSize: 12, lineHeight: 17, marginTop: 3 }}>Light green is Monday or Thursday, the recommended days. Faded days are Eid, Ramadan or still to come.</Text>
+                    </View>
+                  </View>
+                );
+              })()}
             </Card></Rise>
 
             <Rise i={2}><Card>

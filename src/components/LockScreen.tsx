@@ -45,12 +45,14 @@ function PinDot({ on }: { on: boolean }) {
 
 // Six-dot PIN entry with a keypad. 4 to 6 digits; it submits itself at 6 or when OK is pressed.
 // Bump `shake` to make the dots wobble after a wrong PIN.
-export function PinPad({ title, sub, err, onDone, onBio, extra, shake = 0 }: { title: string; sub?: string; err?: string; onDone: (pin: string) => void; onBio?: () => void; extra?: React.ReactNode; shake?: number }) {
+export function PinPad({ title, sub, err, onDone, onBio, extra, shake = 0 }: { title: string; sub?: string; err?: string; onDone: (pin: string) => void | Promise<void>; onBio?: () => void; extra?: React.ReactNode; shake?: number }) {
   const [pin, setP] = useState('');
   const sx = useRef(new Animated.Value(0)).current;
   useEffect(() => { if (shake) Animated.sequence([-12, 12, -9, 9, -5, 5, 0].map((t) => Animated.timing(sx, { toValue: t, duration: 50, useNativeDriver: true }))).start(); }, [shake]);
-  const go = (v: string) => { setP(''); onDone(v); };
-  const add = (d: string) => { const n = (pin + d).slice(0, 6); setP(n); if (n.length === 6) go(n); };
+  const [busy, setBusy] = useState(false);
+  // The last dot stays filled while the PIN is being checked, so the keypad never looks frozen.
+  const go = async (v: string) => { setBusy(true); try { await onDone(v); } finally { setP(''); setBusy(false); } };
+  const add = (d: string) => { if (busy) return; const n = (pin + d).slice(0, 6); setP(n); if (n.length === 6) go(n); };
   const left = pin.length >= 4 ? 'ok' : onBio ? 'bio' : 'ok';
   const lab = (k: string) => (k === '<' ? '⌫' : k === 'ok' ? 'OK' : k === 'bio' ? 'Scan' : k);
   return (
@@ -64,7 +66,7 @@ export function PinPad({ title, sub, err, onDone, onBio, extra, shake = 0 }: { t
       <View style={{ marginTop: 10, width: 76 * 3 + 16 * 2 }}>
         {[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], [left, '0', '<']].map((r, i) => (
           <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: i ? 12 : 0 }}>
-            {r.map((k) => <Key key={k} k={k} label={lab(k)} ghost={k === 'ok' && pin.length < 4} onPress={() => (k === '<' ? setP(pin.slice(0, -1)) : k === 'ok' ? (pin.length >= 4 ? go(pin) : null) : k === 'bio' ? onBio && onBio() : add(k))} />)}
+            {r.map((k) => <Key key={k} k={k} label={lab(k)} ghost={k === 'ok' && pin.length < 4} onPress={() => busy ? null : (k === '<' ? setP(pin.slice(0, -1)) : k === 'ok' ? (pin.length >= 4 ? go(pin) : null) : k === 'bio' ? onBio && onBio() : add(k))} />)}
           </View>
         ))}
       </View>

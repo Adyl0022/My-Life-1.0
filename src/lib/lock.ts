@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Platform, AppState } from 'react-native';
 import * as LocalAuth from 'expo-local-authentication';
-import { pbkdf2 } from '@noble/hashes/pbkdf2.js';
+import { pbkdf2Async } from '@noble/hashes/pbkdf2.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 import { secGet, secSet, secDel, randHex } from './secure';
@@ -14,6 +14,7 @@ export type LockCfg = {
   scope: 'all' | 'sensitive';
   salt: string; hash: string;
   fails: number; until: number; // wrong-PIN counter and the time the pause ends
+  it?: number;           // rounds used to scramble the PIN (older saves used 20000)
 };
 export const LOCK_OFF: LockCfg = { on: false, bio: false, after: 60, scope: 'all', salt: '', hash: '', fails: 0, until: 0 };
 const KEY = 'ml_lock';
@@ -34,7 +35,9 @@ export async function loadLock() {
 }
 async function save(c: LockCfg) { cfg = c; await secSet(KEY, JSON.stringify(c)); emit(); }
 
-const hashPin = (pin: string, salt: string) => bytesToHex(pbkdf2(sha256, pin, salt, { c: 20000, dkLen: 32 }));
+const IT = 3000;
+// Done in small slices so the keypad never freezes while the PIN is being checked.
+const hashPin = async (pin: string, salt: string, c: number) => bytesToHex(await pbkdf2Async(sha256, pin, salt, { c, dkLen: 32, asyncTick: 8 }));
 
 export const bioReady = async () => {
   if (Platform.OS === 'web') return false;
@@ -46,7 +49,7 @@ export async function bioAuth(msg = 'Unlock My Life'): Promise<boolean> {
 
 export async function setPin(pin: string, bio: boolean, after = cfg.after, scope = cfg.scope) {
   const salt = randHex(16);
-  await save({ ...cfg, on: true, bio, after, scope, salt, hash: hashPin(pin, salt), fails: 0, until: 0 });
+  await save({ ...cfg, on: true, bio, after, scope, salt, hash: await hashPin(pin, salt, IT), it: IT, fails: 0, until: 0 });
   locked = false; emit();
 }
 export async function patchLock(p: Partial<LockCfg>) { await save({ ...cfg, ...p }); }
@@ -56,7 +59,12 @@ export async function disableLock() { await secDel(KEY); cfg = LOCK_OFF; locked 
 export async function checkPin(pin: string): Promise<{ r: 'ok' } | { r: 'bad'; left: number } | { r: 'wait'; secs: number }> {
   const now = Date.now();
   if (cfg.until > now) return { r: 'wait', secs: Math.ceil((cfg.until - now) / 1000) };
-  if (hashPin(pin, cfg.salt) === cfg.hash) { if (cfg.fails) await save({ ...cfg, fails: 0, until: 0 }); return { r: 'ok' }; }
+  if ((await hashPin(pin, cfg.salt, cfg.it || 20000)) === cfg.hash) {
+    // A PIN saved with the older, slower setting is quietly re-saved with the faster one.
+    if ((cfg.it || 20000) !== IT) { const salt = randHex(16); await save({ ...cfg, salt, hash: await hashPin(pin, salt, IT), it: IT, fails: 0, until: 0 }); }
+    else if (cfg.fails) await save({ ...cfg, fails: 0, until: 0 });
+    return { r: 'ok' };
+  }
   const fails = cfg.fails + 1;
   if (fails % 5 === 0) { await save({ ...cfg, fails, until: now + 30000 }); return { r: 'wait', secs: 30 }; }
   await save({ ...cfg, fails });

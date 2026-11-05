@@ -34,7 +34,7 @@ export default function IslamicHub() {
   const go = (p: string) => router.push(p as any);
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
-      <IslamicBg />
+      <IslamicBg deco />
       <SafeAreaView style={{ flex: 1 }}>
         <Header title="Islamic Hub" />
         <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)', marginHorizontal: 20, marginTop: 14 }}>

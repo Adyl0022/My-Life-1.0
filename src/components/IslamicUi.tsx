@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Pressable } from 'react-native';
+import { View, Pressable, Animated, Easing } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Glass } from './Glass';
 import { Blob } from './Bg';
 import { W } from './Ui';
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, Defs, Pattern, G } from 'react-native-svg';
 import { Verse, AR_SIZE, M_SIZE } from '../lib/islamic';
 
 export function Ic({ n, size = 22, color = '#fff' }: { n: string; size?: number; color?: string }) {
@@ -34,11 +34,53 @@ export function Ic({ n, size = 22, color = '#fff' }: { n: string; size?: number;
 }
 
 
-export const IslamicBg = ({ a = 'rgba(52,211,153,.4)', b = 'rgba(124,156,255,.35)' }: { a?: string; b?: string }) => (
+function Lantern() {
+  const sw = React.useRef(new Animated.Value(0)).current;
+  React.useEffect(() => {
+    const l = Animated.loop(Animated.sequence([
+      Animated.timing(sw, { toValue: 1, duration: 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(sw, { toValue: 0, duration: 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    l.start();
+    return () => l.stop();
+  }, []);
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', right: 14, top: 0, width: 28, height: 58, alignItems: 'center', transformOrigin: 'top center', transform: [{ rotate: sw.interpolate({ inputRange: [0, 1], outputRange: ['-3.5deg', '3.5deg'] }) }] }}>
+      <LinearGradient colors={['#ffd593', 'rgba(255,213,147,.2)']} style={{ width: 2, height: 14 }} />
+      <Svg width={27} height={40} viewBox="0 0 34 50">
+        <Path d="M17 0v6M9 10h16l3 8c0 9-5 14-11 14S6 27 6 18z" fill="#ffc46b" opacity={0.85} />
+        <Path d="M12 14c0 8 2 12 5 14M22 14c0 8-2 12-5 14" stroke="#fff3d6" strokeWidth={1.3} fill="none" opacity={0.7} />
+        <Path d="M13 34h8l-2 7h-4z" fill="#ffc46b" opacity={0.85} />
+        <Circle cx={17} cy={42} r={4} fill="#ffd593" />
+      </Svg>
+    </Animated.View>
+  );
+}
+export const IslamicBg = ({ a = 'rgba(52,211,153,.4)', b = 'rgba(124,156,255,.35)', deco = false }: { a?: string; b?: string; deco?: boolean }) => (
   <>
     <LinearGradient colors={['#0a0f2c', '#0f1f3d', '#0c3a3f']} locations={[0, 0.5, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
     <Blob size={320} color={a} style={{ right: -100, top: -40 }} />
     <Blob size={340} color={b} style={{ left: -120, bottom: 40 }} />
+    {deco && (
+      <>
+        <Svg pointerEvents="none" width="100%" height="100%" style={{ position: 'absolute', left: 0, top: 0 }}>
+          <Defs>
+            <Pattern id="geo" width={52} height={52} patternUnits="userSpaceOnUse">
+              <Path d="M26 4l5.5 11.5L43 10l-5.5 11.5L49 26l-11.5 4.5L43 42l-11.5-5.5L26 48l-5.5-11.5L9 42l5.5-11.5L3 26l11.5-4.5L9 10l11.5 5.5z" fill="none" stroke="#fff" strokeWidth={1} opacity={0.09} />
+            </Pattern>
+          </Defs>
+          <Rect width="100%" height="100%" fill="url(#geo)" />
+        </Svg>
+        <Svg pointerEvents="none" width="100%" height={164} viewBox="0 680 390 164" preserveAspectRatio="xMidYMax slice" style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}>
+          <G opacity={0.16} fill="#7df0c6">
+            <Path d="M0 844V760h30v-26l7-12 7 12v26h22v-40a52 52 0 0 1 104 0v40h20v-60l8-16 8 16v60h40v-30a30 30 0 0 1 60 0v30h24v-50l7-14 7 14v50h26V844z" />
+            <Rect x={0} y={800} width={390} height={44} opacity={0.5} />
+          </G>
+          <Path d="M232 690a9 9 0 1 0 6 13 7.5 7.5 0 1 1-6-13z" fill="#fff" opacity={0.35} />
+        </Svg>
+        <Lantern />
+      </>
+    )}
   </>
 );
 export function Header({ title, sub, right }: { title: string; sub?: string; right?: React.ReactNode }) {

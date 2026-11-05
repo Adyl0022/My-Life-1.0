@@ -1,4 +1,4 @@
-import { PDF_CSS, escHtml as esc, fmtN, chartSvg, stamp, Chart } from './exporter';
+import { PDF_CSS, pdfFooter, escHtml as esc, fmtN, chartSvg, stamp, Chart } from './exporter';
 
 const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const n0 = (x: any) => (typeof x === 'number' && isFinite(x) ? x : Number(x) || 0);
@@ -85,5 +85,5 @@ export function buildRecordHtml(vehicle: string, d: any, latest: number, owner =
     + tbl('Maintenance spending', ['Date', 'Item', 'Amount'], exps.map((e: any) => [fd(e.date), e.name || '-', rm(n0(e.amt))]), 'total ' + rm(mTot))
     + tbl('Parts', ['Part', 'Changed', 'Odometer', 'Lasts'], parts.map((p: any) => [p.name, fd(p.date), k(n0(p.odo)) + ' km', k(n0(p.life)) + ' km']))
     + tbl('Fuel', ['Date', 'Litres', 'Amount', 'Odometer'], fuel.map((e: any) => [fd(e.date), n0(e.liters).toFixed(1) + ' L', rm(n0(e.amt)), n0(e.odo) > 0 ? k(n0(e.odo)) + ' km' : '-']), 'total ' + rm(fTot) + ' · ' + lit.toFixed(1) + ' L')
-    + '<div class="f">Created on your phone by My Life 1.0. Your data stays with you.</div></body></html>';
+    + pdfFooter(owner) + '</body></html>';
 }

@@ -44,10 +44,21 @@ class Chat extends AssistantBase {
   render() {
     const v: any = this.renderVals();
     const { go } = this.props as any;
-    const ms = this.state.lang === 'ms';
+    const st: any = this.state;
+    const ms = st.lang === 'ms';
+    const empty = st.msgs.length === 0;
+    const more = !!st.more;
+    const pick = [0, 4, 5, 7].map((i) => v.starters[i]);
+    const pill = (on: boolean, t: string, f: any) => (
+      <Pressable key={t} onPress={f}>
+        {on ? (
+          <LinearGradient colors={['#7c9cff', '#b794ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999 }}><Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '800' }}>{t}</Text></LinearGradient>
+        ) : (<View style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)' }}><Text style={{ color: 'rgba(255,255,255,.8)', fontSize: 12.5, fontWeight: '600' }}>{t}</Text></View>)}
+      </Pressable>
+    );
     return (
       <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <LinearGradient colors={['rgba(11,15,46,0)', 'rgba(11,15,46,.96)', 'rgba(11,15,46,.96)']} locations={[0, 0.4, 1]} style={{ marginHorizontal: -20, marginTop: -28, paddingTop: 28, paddingHorizontal: 20, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,.08)' }}>
           <Pressable onPress={() => this.props.onBack()} accessibilityLabel="Back">
             <Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
               <View><Svg width={20} height={20} viewBox="0 0 24 24"><Path d="M15 5l-7 7 7 7" {...stroke} /></Svg></View>
@@ -69,26 +80,42 @@ class Chat extends AssistantBase {
               </Pressable>
             ))}
           </View>
-        </View>
+        </LinearGradient>
 
-        <View style={{ flex: 1, marginTop: 8 }}>
-        <ScrollView ref={(r) => { (this as any).scrollRef = r; }} style={{ flex: 1, marginHorizontal: -8 }} contentContainerStyle={{ gap: 14, paddingBottom: 16, paddingTop: 10 }} keyboardShouldPersistTaps="handled">
-          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
-            <OrbSvg size={32} uid="wl" />
-            <Glass radius={20} style={{ maxWidth: '84%', paddingVertical: 13, paddingHorizontal: 16, borderBottomLeftRadius: 6 }}><Text style={{ color: '#fff', fontSize: 14.5, lineHeight: 22 }}>{v.welcome}</Text></Glass>
-          </View>
-          {v.startDisp === 'grid' && (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 10 }}>
-              {v.starters.map((s: any) => (
-                <Pressable key={s.label} onPress={s.go} style={{ width: '47.5%' }}>
-                  <Glass radius={20} style={{ paddingVertical: 14, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <LinearGradient colors={gradOf(s.bg)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
-                      <Svg width={18} height={18} viewBox="0 0 24 24"><Path d={s.d} {...stroke} /></Svg>
-                    </LinearGradient>
-                    <Text style={{ flex: 1, color: '#fff', fontSize: 12.5, fontWeight: '700', lineHeight: 16 }}>{s.label}</Text>
-                  </Glass>
-                </Pressable>
-              ))}
+        <ScrollView ref={(r) => { (this as any).scrollRef = r; }} style={{ flex: 1 }} contentContainerStyle={{ gap: 14, paddingBottom: 16, paddingTop: 16 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {empty && (
+            <View style={{ alignItems: 'center', paddingTop: 18 }}>
+              <OrbSvg size={92} uid="hero" />
+              <Text style={{ color: '#fff', fontSize: 28, fontWeight: '800', letterSpacing: -0.5, marginTop: 18 }}>{ms ? 'Hai ' : 'Hi '}{this.fn()}</Text>
+              <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 15, marginTop: 6, textAlign: 'center' }}>{ms ? 'Apa awak nak tahu hari ini?' : 'What would you like to know today?'}</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 28, alignSelf: 'stretch' }}>
+                {pick.map((q: any) => (
+                  <Pressable key={q.label} onPress={q.go} style={{ width: '47.8%' }}>
+                    <Glass radius={22} style={{ padding: 14, minHeight: 104, justifyContent: 'space-between' }}>
+                      <LinearGradient colors={gradOf(q.bg)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }}>
+                        <Svg width={20} height={20} viewBox="0 0 24 24"><Path d={q.d} {...stroke} /></Svg>
+                      </LinearGradient>
+                      <Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '700', lineHeight: 18, marginTop: 12 }}>{q.label}</Text>
+                    </Glass>
+                  </Pressable>
+                ))}
+              </View>
+              <Pressable onPress={() => (this as any).setState({ more: !more })} style={{ marginTop: 20, paddingVertical: 9, paddingHorizontal: 16, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ color: 'rgba(255,255,255,.88)', fontSize: 12.5, fontWeight: '700' }}>{more ? (ms ? 'Tutup' : 'Show less') : (ms ? 'Lagi idea' : 'More ideas')}</Text>
+                <Svg width={14} height={14} viewBox="0 0 24 24"><Path d={more ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} {...stroke} strokeWidth={2.4} /></Svg>
+              </Pressable>
+              {more && (
+                <View style={{ alignSelf: 'stretch', marginTop: 16 }}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {v.cats.map((c: any) => pill(c.cls === 'cat on', c.name, c.go))}
+                  </View>
+                  <View style={{ gap: 8, marginTop: 14 }}>
+                    {v.chips.map((q: any) => (
+                      <Pressable key={q.label} onPress={q.go}><Glass radius={16} style={{ paddingVertical: 12, paddingHorizontal: 16 }}><Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '600' }}>{q.label}</Text></Glass></Pressable>
+                    ))}
+                  </View>
+                </View>
+              )}
             </View>
           )}
           {v.msgs.map((m: any, i: number) => {
@@ -134,25 +161,16 @@ class Chat extends AssistantBase {
             </View>
           )}
         </ScrollView>
-        <LinearGradient pointerEvents="none" colors={['rgba(10,15,44,1)', 'rgba(10,15,44,.85)', 'rgba(10,15,44,0)']} style={{ position: 'absolute', left: -20, right: -20, top: 0, height: 30 }} />
-        </View>
 
-        <View ref={(r: any) => { this.panelRef = r; }} collapsable={false} style={{ marginHorizontal: -20, paddingBottom: 16, paddingTop: 12, marginBottom: (this.state as any).kbLift || 0, backgroundColor: 'rgba(10,15,44,.94)' }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }} style={{ flexGrow: 0 }}>
-            {v.cats.map((c: any) => (
-              <Pressable key={c.name} onPress={c.go}>
-                {c.cls === 'cat on' ? (
-                  <LinearGradient colors={['#7c9cff', '#b794ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 7, paddingHorizontal: 13, borderRadius: 999 }}><Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>{c.name}</Text></LinearGradient>
-                ) : (<View style={{ paddingVertical: 7, paddingHorizontal: 13, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)' }}><Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, fontWeight: '600' }}>{c.name}</Text></View>)}
-              </Pressable>
-            ))}
-          </ScrollView>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }} style={{ flexGrow: 0, marginTop: 10 }}>
-            {v.chips.map((q: any) => (
-              <Pressable key={q.label} onPress={q.go}><Glass radius={16} style={{ paddingVertical: 9, paddingHorizontal: 14 }}><Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '600' }}>{q.label}</Text></Glass></Pressable>
-            ))}
-          </ScrollView>
-          <Glass radius={26} style={{ marginHorizontal: 20, marginTop: 12, height: 54, flexDirection: 'row', alignItems: 'center', paddingLeft: 18, paddingRight: 6, gap: 8 }}>
+        <View ref={(r: any) => { this.panelRef = r; }} collapsable={false} style={{ marginHorizontal: -20, paddingBottom: 16, paddingTop: 10, marginBottom: (this.state as any).kbLift || 0, backgroundColor: 'rgba(10,15,44,.94)' }}>
+          {!empty && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }} style={{ flexGrow: 0 }}>
+              {v.chips.map((q: any) => (
+                <Pressable key={q.label} onPress={q.go}><Glass radius={16} style={{ paddingVertical: 9, paddingHorizontal: 14 }}><Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '600' }}>{q.label}</Text></Glass></Pressable>
+              ))}
+            </ScrollView>
+          )}
+          <Glass radius={26} style={{ marginHorizontal: 20, marginTop: empty ? 0 : 12, height: 54, flexDirection: 'row', alignItems: 'center', paddingLeft: 18, paddingRight: 6, gap: 8 }}>
             <TextInput value={v.draft} onChangeText={(t) => this.setState({ draft: t })} onSubmitEditing={() => v.send()} placeholder={v.ph} placeholderTextColor="rgba(255,255,255,.5)" returnKeyType="send" style={{ flex: 1, minWidth: 0, height: 44, color: '#fff', fontSize: 14, fontWeight: '600', outlineStyle: 'none' } as any} />
             <Pressable onPress={v.send} accessibilityLabel="Send">
               <LinearGradient colors={['#7c9cff', '#b794ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>

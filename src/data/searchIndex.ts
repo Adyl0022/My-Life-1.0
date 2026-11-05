@@ -49,16 +49,16 @@ export const SEARCH_INDEX: SearchItem[] = [
   "k": "solat prayer waktu azan subuh zohor asar maghrib isyak kiblat qibla jakim zon zone alert"
  },
  {
-  "t": "Puasa",
-  "s": "Ramadan, qadha and sunnah fasting calendar",
+  "t": "Fasting",
+  "s": "Ramadan, make-up and sunnah fasting calendar",
   "m": "Islamic",
   "c": "#34d399",
   "h": "Puasa.dc.html",
   "k": "puasa fasting ramadan ramadhan qadha qada sunat sunnah isnin khamis ayyamul bidh syawal calendar kalendar"
  },
  {
-  "t": "Qadha and Ramadan log",
-  "s": "Mark each fasting day, see what is owed",
+  "t": "Make-up fasts and Ramadan log",
+  "s": "Mark each fasting day, see missed fasts to make up",
   "m": "Islamic",
   "c": "#34d399",
   "h": "Puasa.dc.html",

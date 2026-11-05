@@ -295,7 +295,7 @@ export default function Habit() {
               <View style={{ width: 24, height: 24, borderRadius: 8, borderWidth: 1.5, borderColor: t.fast ? T : 'rgba(255,255,255,.4)', backgroundColor: t.fast ? T : 'transparent', alignItems: 'center', justifyContent: 'center' }}>{t.fast && <Text style={{ color: '#0d1030', fontWeight: '800', fontSize: 14 }}>✓</Text>}</View>
               <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>Fasting today</Text><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5 }}>{inRam ? 'Ramadan day ' + rs.day + ' of ' + rs.r.len + '.' : sunnahDay ? 'Today is a sunnah fasting day (' + (dow === 1 ? 'Monday' : 'Thursday') + ').' : 'Sunnah fasts: Monday, Thursday and the white days.'}</Text></View>
             </Pressable>
-            <Pressable onPress={() => router.push('/puasa' as any)} style={{ marginTop: 10 }}><Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '700' }}>{(inRam ? rs.fasted + ' of ' + rs.r.len + ' days fasted' : owed > 0 ? owed + ' qadha days to make up' : 'Open Puasa') + ' ›'}</Text></Pressable>
+            <Pressable onPress={() => router.push('/puasa' as any)} style={{ marginTop: 10 }}><Text style={{ color: '#8fe9e2', fontSize: 12.5, fontWeight: '700' }}>{(inRam ? rs.fasted + ' of ' + rs.r.len + ' days fasted' : owed > 0 ? owed + (owed === 1 ? ' missed fast' : ' missed fasts') + ' to make up' : 'Open Fasting') + ' ›'}</Text></Pressable>
           </Glass>
           <View style={{ marginTop: 12 }}><HealthSpend /></View>
           </>)}

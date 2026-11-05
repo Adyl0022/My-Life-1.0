@@ -39,10 +39,10 @@ export default function IslamicHub() {
     const d = new Date(), rs = ramadanState(pz, d), ow = qadhaOwed(pz, d), po = pz.off || 0, marked = !!(pz.days || {})[keyD(d)];
     if (rs.phase === 'during') return { h: 'Ramadan day ' + rs.day + ' of ' + rs.r.len, b: marked ? 'Today is marked. ' + rs.fasted + ' days fasted so far.' : 'Mark today\'s fast. ' + rs.fasted + ' days fasted so far.' };
     const sn = sunatToday(d, po);
-    if (isHaram(d, po)) return { h: 'Puasa', b: 'No fasting today. It is a day of Eid.' };
-    if (sn && !marked) return { h: 'Today: ' + sn, b: ow > 0 ? 'You also have ' + ow + ' qadha ' + (ow === 1 ? 'day' : 'days') + ' to make up.' : 'A good day to fast.' };
-    if (ow > 0) return { h: ow + ' qadha ' + (ow === 1 ? 'day' : 'days') + ' to make up', b: rs.phase === 'before' ? 'Ramadan is ' + rs.daysTo + ' days away.' : 'Try to finish before next Ramadan.' };
-    return { h: 'Puasa', b: rs.phase === 'before' ? 'Ramadan in ' + rs.daysTo + ' days. Track qadha and sunnah fasts.' : 'Track Ramadan, qadha and sunnah fasts.' };
+    if (isHaram(d, po)) return { h: 'Fasting', b: 'No fasting today. It is a day of Eid.' };
+    if (sn && !marked) return { h: 'Today: ' + sn, b: ow > 0 ? 'You also have ' + ow + ' missed ' + (ow === 1 ? 'fast' : 'fasts') + ' to make up.' : 'A good day to fast.' };
+    if (ow > 0) return { h: ow + ' missed ' + (ow === 1 ? 'fast' : 'fasts') + ' to make up', b: rs.phase === 'before' ? 'Ramadan is ' + rs.daysTo + ' days away.' : 'Try to finish before next Ramadan.' };
+    return { h: 'Fasting', b: rs.phase === 'before' ? 'Ramadan in ' + rs.daysTo + ' days. Track make-up fasts and sunnah fasts.' : 'Track Ramadan, make-up fasts and sunnah fasts.' };
   })();
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
@@ -82,7 +82,7 @@ export default function IslamicHub() {
             </Glass></Pressable>
             <Pressable onPress={() => go('/puasa')}><Glass radius={22} style={{ padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: 'rgba(52,211,153,.4)', alignItems: 'center', justifyContent: 'center' }}><Ic n="moon" size={24} /></View>
-              <View style={{ flex: 1 }}><Text style={{ color: '#8fe9e2', fontSize: 10.5, fontWeight: '800', letterSpacing: 1.2 }}>PUASA</Text><Text style={{ color: W, fontSize: 14.5, fontWeight: '700', marginTop: 2 }}>{pst.h}</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 12, marginTop: 2 }}>{pst.b}</Text></View>
+              <View style={{ flex: 1 }}><Text style={{ color: '#8fe9e2', fontSize: 10.5, fontWeight: '800', letterSpacing: 1.2 }}>FASTING</Text><Text style={{ color: W, fontSize: 14.5, fontWeight: '700', marginTop: 2 }}>{pst.h}</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 12, marginTop: 2 }}>{pst.b}</Text></View>
               <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 20 }}>›</Text>
             </Glass></Pressable>
           </>)}

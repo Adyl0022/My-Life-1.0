@@ -55,7 +55,7 @@ const TIPS: [string, string, string][] = [
   ['fried', 'Go easy on fried and sugary food', 'Heavy, oily food makes you thirsty and sleepy the next day.'],
   ['sleep', 'Sleep enough', 'Short nights make fasting harder. If you work night shifts, a short nap before your shift helps.'],
   ['walk', 'Keep moving a little', 'A light walk after iftar helps digestion. Save hard exercise for after you have eaten.'],
-  ['calendar', 'Make up your missed days early', 'Do not leave qadha until the last minute. Aishah said she could only make up her fasts in Syaaban (Bukhari and Muslim).'],
+  ['calendar', 'Make up your missed days early', 'Do not leave your make-up fasts until the last minute. Aishah said she could only make up her fasts in Syaaban (Bukhari and Muslim).'],
   ['heart', 'If you cannot fast for a long time', 'If you have a long-term illness, ask an ustaz about fidyah.'],
 ];
 
@@ -106,7 +106,7 @@ export default function Puasa() {
   const advice = () => {
     if (st.phase === 'during') {
       const left = st.left, done = st.fasted;
-      if (st.unmarked > 0) return { tone: 'warn', t: st.unmarked + (st.unmarked === 1 ? ' day is' : ' days are') + ' not marked yet', b: 'Tick the days you fasted. If you missed any, they will be added to your qadha when Ramadan ends.' };
+      if (st.unmarked > 0) return { tone: 'warn', t: st.unmarked + (st.unmarked === 1 ? ' day is' : ' days are') + ' not marked yet', b: 'Tick the days you fasted. If you missed any, they will be added to your make-up when Ramadan ends.' };
       if (left <= 3 && done >= st.day - 1 - st.excused) return { tone: 'good', t: 'Almost there, only ' + (left + 1) + (left === 0 ? ' day' : ' days') + ' left', b: 'Finish strong. Keep your sahur, your prayers and your Quran reading steady until the last day.' };
       if (st.day > 20) return { tone: 'good', t: 'The last ten days', b: 'Look for Lailatul Qadr in the last ten nights, especially the odd nights. Give extra time to prayer, Quran and dua.' };
       if (st.day > 10) return { tone: 'good', t: 'You are past the first third', b: 'Keep your rhythm. Steady small deeds each day are better than big ones that you cannot keep.' };
@@ -121,9 +121,9 @@ export default function Puasa() {
       <IslamicBg />
       <PuasaSky />
       <SafeAreaView style={{ flex: 1 }}>
-        <Header title="Puasa" sub={hijriText(today, off)} />
+        <Header title="Fasting" sub={hijriText(today, off)} />
         <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)', marginHorizontal: 20, marginTop: 14 }}>
-          {['Ramadan', 'Sunat', 'Tips'].map((n, i) => (
+          {['Ramadan', 'Sunnah', 'Tips'].map((n, i) => (
             <Pressable key={n} onPress={() => setTab(i)} style={{ flex: 1 }}>
               {tab === i ? <LinearGradient colors={['#34d399', '#5ee7df']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 8, borderRadius: 999, alignItems: 'center' }}><Text style={{ color: '#06281c', fontSize: 13, fontWeight: '800' }}>{n}</Text></LinearGradient>
                 : <View style={{ paddingVertical: 8, alignItems: 'center' }}><Text style={{ color: W, fontSize: 13, fontWeight: '700' }}>{n}</Text></View>}
@@ -190,27 +190,27 @@ export default function Puasa() {
               <Card tint={['rgba(255,196,107,.28)', 'rgba(255,143,171,.12)']}>
                 <Text style={{ color: '#ffd593', fontSize: 11, fontWeight: '800', letterSpacing: 1.2 }}>MISSED DAYS</Text>
                 <Text style={{ color: W, fontSize: 15, fontWeight: '800', marginTop: 4 }}>You fasted {st.phase === 'before' ? st.fastedLast : st.fasted} of {st.phase === 'before' ? st.last.len : st.r.len} days last Ramadan</Text>
-                <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 12.5, lineHeight: 18, marginTop: 4 }}>The missed days are in your qadha count below. Start making them up soon, and try to finish before the next Ramadan.</Text>
+                <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 12.5, lineHeight: 18, marginTop: 4 }}>The missed days are in your make-up fasts count below. Start making them up soon, and try to finish before the next Ramadan.</Text>
               </Card>
             ) : null}
 
             <Card tint={owed > 0 ? ['rgba(255,143,171,.26)', 'rgba(255,196,107,.12)'] : undefined}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <H t="Qadha (make-up fasts)" s="Days of Ramadan you still owe" />
+                <H t="Make-up fasts (qadha)" s="Days of Ramadan you still owe" />
                 <Text style={{ color: owed > 0 ? '#ffd593' : '#7df0c6', fontSize: 30, fontWeight: '800' }}>{owed}</Text>
               </View>
               {owed > 0 ? (
                 <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 12.5, lineHeight: 18, marginTop: 8 }}>
-                  {st.phase === 'before' ? (() => { const wks = Math.max(1, Math.floor(st.daysTo / 7)); const per = owed / wks; return 'Ramadan is ' + st.daysTo + ' days away. To finish in time, fast about ' + (per <= 1 ? 'once a week.' : Math.ceil(per) + ' days a week. That is a lot, so start now and use Mondays and Thursdays.'); })() : 'Try to make these up before the next Ramadan. Mondays and Thursdays are a good time. Tick them on the Sunat tab and choose Qadha.'}
+                  {st.phase === 'before' ? (() => { const wks = Math.max(1, Math.floor(st.daysTo / 7)); const per = owed / wks; return 'Ramadan is ' + st.daysTo + ' days away. To finish in time, fast about ' + (per <= 1 ? 'once a week.' : Math.ceil(per) + ' days a week. That is a lot, so start now and use Mondays and Thursdays.'); })() : 'Try to make these up before the next Ramadan. Mondays and Thursdays are a good time. Tick them on the Sunnah tab and choose Make-up.'}
                 </Text>
-              ) : <Text style={{ color: dim, fontSize: 12.5, marginTop: 8 }}>You have no qadha to make up. Alhamdulillah.</Text>}
+              ) : <Text style={{ color: dim, fontSize: 12.5, marginTop: 8 }}>You have no missed fasts to make up. Alhamdulillah.</Text>}
               {qEd ? (
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'center' }}>
                   <Inp style={{ flex: 1 }} keyboardType="number-pad" value={qIn} onChangeText={setQIn} placeholder="Days you owe now" onSubmitEditing={saveQ} />
                   <Btn t="Save" on onPress={saveQ} />
                 </View>
               ) : <Pressable onPress={() => { setQEd(true); setQIn(String(owed)); }}><Text style={{ color: '#8fe9e2', fontSize: 12, fontWeight: '700', marginTop: 10 }}>Set how many days you owe from before ✎</Text></Pressable>}
-              {!isRam && owed > 0 ? <Btn t={todayVal === 'q' ? 'Qadha logged for today ✓' : 'I am making up a fast today'} on={todayVal === 'q'} style={{ marginTop: 10 }} onPress={() => { if (!isHaram(today, off)) mark(today, todayVal === 'q' ? null : 'q'); }} /> : null}
+              {!isRam && owed > 0 ? <Btn t={todayVal === 'q' ? 'Make-up logged for today ✓' : 'I am making up a fast today'} on={todayVal === 'q'} style={{ marginTop: 10 }} onPress={() => { if (!isHaram(today, off)) mark(today, todayVal === 'q' ? null : 'q'); }} /> : null}
             </Card>
 
             <Card>
@@ -253,8 +253,8 @@ export default function Puasa() {
                   <Text style={{ color: W, fontSize: 18, fontWeight: '800', marginTop: 4 }}>{sunToday || 'No special fast today'}</Text>
                   <Text style={{ color: dim, fontSize: 12.5, marginTop: 4 }}>{sunToday ? 'A recommended day to fast.' : 'You can still fast any day for extra reward.'}</Text>
                   <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-                    <Btn t={todayVal === 's' ? 'Sunat ✓' : 'Fasting (sunat)'} on={todayVal === 's'} style={{ flex: 1 }} onPress={() => mark(today, todayVal === 's' ? null : 's')} />
-                    {owed > 0 ? <Btn t={todayVal === 'q' ? 'Qadha ✓' : 'Fasting (qadha)'} on={todayVal === 'q'} c="#ffc46b" style={{ flex: 1 }} onPress={() => mark(today, todayVal === 'q' ? null : 'q')} /> : null}
+                    <Btn t={todayVal === 's' ? 'Sunnah ✓' : 'Fasting (sunnah)'} on={todayVal === 's'} style={{ flex: 1 }} onPress={() => mark(today, todayVal === 's' ? null : 's')} />
+                    {owed > 0 ? <Btn t={todayVal === 'q' ? 'Make-up ✓' : 'Fasting (make-up)'} on={todayVal === 'q'} c="#ffc46b" style={{ flex: 1 }} onPress={() => mark(today, todayVal === 'q' ? null : 'q')} /> : null}
                   </View>
                 </>
               )}
@@ -263,8 +263,8 @@ export default function Puasa() {
             <Rise i={1}><Card>
               <H t="Log past days" s="Tap a day to mark or clear it" />
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-                <Btn t="Sunat" on={logAs === 's'} onPress={() => setLogAs('s')} style={{ flex: 1 }} />
-                <Btn t="Qadha" on={logAs === 'q'} c="#ffc46b" onPress={() => setLogAs('q')} style={{ flex: 1 }} />
+                <Btn t="Sunnah" on={logAs === 's'} onPress={() => setLogAs('s')} style={{ flex: 1 }} />
+                <Btn t="Make-up" on={logAs === 'q'} c="#ffc46b" onPress={() => setLogAs('q')} style={{ flex: 1 }} />
               </View>
               {(() => {
                 const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -295,8 +295,8 @@ export default function Puasa() {
                     </View>
                     <View style={{ marginTop: 14, padding: 12, borderRadius: 14, backgroundColor: 'rgba(0,0,0,.2)', gap: 5 }}>
                       <Text style={{ color: W, fontSize: 12.5, fontWeight: '800' }}>How to use this</Text>
-                      <Text style={{ color: dim, fontSize: 12, lineHeight: 17 }}>1. Choose Sunat or Qadha above.</Text>
-                      <Text style={{ color: dim, fontSize: 12, lineHeight: 17 }}>2. Tap a day you fasted. It turns solid green (Sunat) or orange (Qadha) with a tick.</Text>
+                      <Text style={{ color: dim, fontSize: 12, lineHeight: 17 }}>1. Choose Sunnah or Make-up above.</Text>
+                      <Text style={{ color: dim, fontSize: 12, lineHeight: 17 }}>2. Tap a day you fasted. It turns solid green (Sunnah) or orange (Make-up) with a tick.</Text>
                       <Text style={{ color: dim, fontSize: 12, lineHeight: 17 }}>3. Tap it again to clear it.</Text>
                       <Text style={{ color: dim, fontSize: 12, lineHeight: 17 }}>4. Use the arrows to go to earlier weeks.</Text>
                       <Text style={{ color: dim, fontSize: 12, lineHeight: 17, marginTop: 3 }}>Light green is Monday or Thursday, the recommended days. Faded days are Eid, Ramadan or still to come.</Text>
@@ -309,8 +309,8 @@ export default function Puasa() {
             <Rise i={2}><Card>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}><H t="Your year" s="Last 12 months" /></View>
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-                <Stat l="Sunat fasts" v={String(yr.total)} c="#7df0c6" />
-                <Stat l="Qadha fasts" v={String(yr.qadha)} c="#ffd593" />
+                <Stat l="Sunnah fasts" v={String(yr.total)} c="#7df0c6" />
+                <Stat l="Make-up fasts" v={String(yr.qadha)} c="#ffd593" />
               </View>
               {Object.keys(yr.by).length ? (
                 <View style={{ gap: 10, marginTop: 14 }}>

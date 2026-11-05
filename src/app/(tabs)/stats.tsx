@@ -266,7 +266,7 @@ export default function Stats() {
               return (<>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}><Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Fasting</Text><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11 }}>Last 12 months</Text></View>
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-                  {[['Sunat fasts', String(yr.total), '#7df0c6'], ['Qadha done', String(yr.qadha), '#ffd593'], ['Qadha owed', String(ow), ow > 0 ? '#ff9db5' : '#7df0c6']].map(([a, b, c]) => (
+                  {[['Sunnah fasts', String(yr.total), '#7df0c6'], ['Make-up done', String(yr.qadha), '#ffd593'], ['Make-up owed', String(ow), ow > 0 ? '#ff9db5' : '#7df0c6']].map(([a, b, c]) => (
                     <View key={a} style={{ flex: 1, borderRadius: 14, paddingVertical: 8, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,.08)' }}><Text style={{ color: 'rgba(255,255,255,.68)', fontSize: 10.5 }}>{a}</Text><Text style={{ color: c, fontSize: 17, fontWeight: '800', marginTop: 2 }}>{b}</Text></View>
                   ))}
                 </View>

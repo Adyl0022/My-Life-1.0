@@ -22,7 +22,7 @@ const Sw = ({ on, set, label }: { on: boolean; set: (v: boolean) => void; label:
   </Pressable>
 );
 
-export function Commitments({ income, foodSpent }: { income: number; foodSpent: number }) {
+export function Commitments({ income }: { income: number }) {
   const [d, setD] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
   const [adding, setAdding] = useState(false); const [edit, setEdit] = useState(0);
   const [n, setN] = useState(''); const [bal, setBal] = useState(''); const [mo, setMo] = useState(''); const [day, setDay] = useState('');
@@ -33,14 +33,13 @@ export function Commitments({ income, foodSpent }: { income: number; foodSpent: 
   const done = list.filter((x) => !isActive(x, ym));
   const debtsOnly = list.filter((x) => !x.fixed);
   const food = d.food || 0;
-  const dim2 = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - today + 1;
   const commit = act.reduce((a, x) => a + amountDue(x, ym), 0);
   const paid = act.reduce((a, x) => a + ((x.paid || {})[ym] || 0), 0);
   const toPay = commit - paid;
   const totalLeft = debtsOnly.reduce((a, x) => a + remaining(x), 0);
   const worst = debtsOnly.filter((x) => remaining(x) > 0).reduce((a, x) => Math.max(a, monthsLeft(x)), 0);
   const allPaidNow = act.length > 0 && act.every((x) => (x.paid || {})[ym] > 0 || remaining(x) <= 0);
-  const after = income - commit;
+  const after = income - commit - food;
   const free = income - commit - food;
   const save = (nd: DebtData) => setD(nd);
   const reset = () => { setFixed(false); setAdding(false); setEdit(0); setN(''); setBal(''); setMo(''); setDay(''); };
@@ -69,7 +68,8 @@ export function Commitments({ income, foodSpent }: { income: number; foodSpent: 
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ flex: 1 }}>
           <Text style={{ color: '#ffd593', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>MONTHLY COMMITMENTS</Text>
-          <Text style={{ color: W, fontSize: 24, fontWeight: '800', marginTop: 3 }}>RM {money(commit)}</Text>
+          <Text style={{ color: W, fontSize: 24, fontWeight: '800', marginTop: 3 }}>RM {money(commit + food)}</Text>
+          {food > 0 ? <Text style={{ color: dim, fontSize: 11.5, marginTop: 1 }}>{'Includes RM ' + money(food) + ' set aside for food'}</Text> : null}
         </View>
         <Pressable onPress={() => { if (adding) reset(); else setAdding(true); }}><LinearGradient colors={WARM} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999 }}><Text style={{ color: '#2a1030', fontSize: 12, fontWeight: '800' }}>{adding ? 'Close' : '+ Add'}</Text></LinearGradient></Pressable>
       </View>
@@ -77,8 +77,8 @@ export function Commitments({ income, foodSpent }: { income: number; foodSpent: 
       {list.length > 0 ? (
         <>
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-            <Stat l="Paid this month" v={'RM ' + money(paid)} c="#7df0c6" />
-            <Stat l="Still to pay" v={'RM ' + money(toPay)} c={toPay > 0 ? '#ffd593' : '#7df0c6'} />
+            <Stat l="Bills paid" v={'RM ' + money(paid)} c="#7df0c6" />
+            <Stat l="Bills left to pay" v={'RM ' + money(toPay)} c={toPay > 0 ? '#ffd593' : '#7df0c6'} />
           </View>
           <View style={{ height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,.14)', overflow: 'hidden', marginTop: 10 }}>
             <View style={{ width: (commit > 0 ? Math.round((paid / commit) * 100) : 0) + '%', height: '100%', borderRadius: 4, backgroundColor: '#7df0c6' }} />
@@ -154,38 +154,25 @@ export function Commitments({ income, foodSpent }: { income: number; foodSpent: 
         <Text style={{ color: dim, fontSize: 11.5, marginTop: 6 }}>{done.length + (done.length === 1 ? ' debt' : ' debts') + ' cleared: ' + done.map((x) => x.name).join(', ')}</Text>
       ) : null}
 
-      <View style={{ marginTop: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,.1)' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ flex: 1, paddingRight: 10 }}>
-            <Text style={{ color: W, fontSize: 13, fontWeight: '700' }}>Food budget</Text>
-            <Text style={{ color: dim, fontSize: 11.5, marginTop: 1 }}>{food > 0 ? 'Set aside RM ' + money(food) + ' for food this month.' : 'Set aside money for food so it is not mixed with other spending.'}</Text>
-          </View>
-          <Pressable onPress={() => { setFe(!fe); setFb(food > 0 ? String(food) : ''); }} style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.12)' }}><Text style={{ color: '#ffd593', fontSize: 12, fontWeight: '800' }}>{fe ? 'Close' : food > 0 ? 'Edit' : 'Set'}</Text></Pressable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 11, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,.1)' }}>
+        <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,196,107,.28)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 14 }}>🍚</Text></View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Food</Text>
+          <Text style={{ color: dim, fontSize: 11.5, marginTop: 1 }}>{food > 0 ? 'RM ' + money(food) + ' set aside every month' : 'Set aside a fixed amount for food each month'}</Text>
         </View>
-        {fe ? (
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'center' }}>
-            <Inp style={{ flex: 1 }} keyboardType="decimal-pad" value={fb} onChangeText={setFb} placeholder="Monthly food budget (RM)" />
-            <Pressable onPress={() => { const v = parseFloat(fb.replace(',', '.')); save({ ...d, food: v > 0 ? v : 0 }); setFe(false); }}><LinearGradient colors={WARM} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 42, paddingHorizontal: 18, borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#2a1030', fontSize: 12, fontWeight: '800' }}>Save</Text></LinearGradient></Pressable>
-          </View>
-        ) : null}
-        {food > 0 ? (
-          <View style={{ marginTop: 10 }}>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <Stat l="Spent on food" v={'RM ' + money(foodSpent)} />
-              <Stat l={foodSpent > food ? 'Over budget' : 'Left for food'} v={'RM ' + money(Math.abs(food - foodSpent))} c={foodSpent > food ? '#ffb3a0' : '#7df0c6'} />
-            </View>
-            <View style={{ height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,.14)', overflow: 'hidden', marginTop: 10 }}>
-              <View style={{ width: Math.min(100, Math.round((foodSpent / food) * 100)) + '%', height: '100%', borderRadius: 4, backgroundColor: foodSpent > food ? '#ff8fab' : '#ffc46b' }} />
-            </View>
-            <Text style={{ color: dim, fontSize: 11.5, marginTop: 6 }}>{foodSpent < food ? 'About RM ' + money((food - foodSpent) / dim2) + ' a day for the last ' + dim2 + (dim2 === 1 ? ' day' : ' days') + ' of the month.' : 'You have passed your food budget this month.'} Counted from spending you add under Food.</Text>
-          </View>
-        ) : null}
+        <Pressable onPress={() => { setFe(!fe); setFb(food > 0 ? String(food) : ''); }} style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.12)' }}><Text style={{ color: '#ffd593', fontSize: 12, fontWeight: '800' }}>{fe ? 'Close' : food > 0 ? 'Edit' : 'Set'}</Text></Pressable>
       </View>
+      {fe ? (
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+          <Inp style={{ flex: 1 }} keyboardType="decimal-pad" value={fb} onChangeText={setFb} placeholder="Food each month (RM)" />
+          <Pressable onPress={() => { const v = parseFloat(fb.replace(',', '.')); save({ ...d, food: v > 0 ? v : 0 }); setFe(false); }}><LinearGradient colors={WARM} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 42, paddingHorizontal: 18, borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#2a1030', fontSize: 12, fontWeight: '800' }}>Save</Text></LinearGradient></Pressable>
+        </View>
+      ) : null}
 
       {income > 0 && (commit > 0 || food > 0) ? (
         <View style={{ marginTop: 12, borderRadius: 16, padding: 12, backgroundColor: 'rgba(0,0,0,.22)' }}>
           <Text style={{ color: '#ffd593', fontSize: 11, fontWeight: '700', letterSpacing: 1.2 }}>THIS MONTH'S PLAN</Text>
-          {[['Income', income, 1], ['Commitments', commit, -1], ['Food budget', food, -1]].map(([l, v, sg]) => (
+          {[['Income', income, 1], ['Bills and debts', commit, -1], ['Food', food, -1]].map(([l, v, sg]) => (
             (v as number) > 0 ? <View key={l as string} style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}><Text style={{ color: dim, fontSize: 12.5 }}>{l as string}</Text><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{(sg as number) < 0 ? '- ' : ''}RM {money(v as number)}</Text></View> : null
           ))}
           <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,.12)', marginTop: 8 }} />

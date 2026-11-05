@@ -109,7 +109,7 @@ export default function Finance() {
             <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>Track every ringgit</Text><Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, marginTop: 1 }}>Income and spending at a glance</Text></View>
           </Glass>
 
-          <Commitments income={sumOf(d.inc[curKey])} foodSpent={d.spends.filter((p) => (p.date || '').slice(0, 7) === curKey && p.cat === 'Food').reduce((a, p) => a + p.amt, 0)} />
+          <Commitments income={sumOf(d.inc[curKey])} />
 
           {/* Monthly income */}
           <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>

@@ -130,6 +130,7 @@ export function DailyNeeds({ h, setH }: { h: HData; setH: (v: HData) => void }) 
         <Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>Daily needs</Text>
         {ok ? <Pressable onPress={() => setEd(!ed)} style={{ paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12, fontWeight: '700' }}>{(sx === 'm' ? 'Male' : 'Female') + ', ' + a + ' ✎'}</Text></Pressable> : null}
       </View>
+      <Text style={{ color: dim, fontSize: 12, lineHeight: 17, marginTop: 4 }}>How much food energy and protein your body needs each day, so you can eat in line with your weight goal. Water is your daily drinking target.</Text>
       {ed ? (
         <View style={{ marginTop: 10, gap: 8 }}>
           <View style={{ flexDirection: 'row', padding: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.28)' }}>

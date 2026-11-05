@@ -11,28 +11,61 @@ import { useLock, checkPin, unlock, bioAuth, bioReady, wipeEverything, setPin, S
 const W = '#fff';
 const GP = ['#7c9cff', '#b794ff'] as [string, string];
 
-// Six-dot PIN entry with a keypad. 4 to 6 digits; it submits itself at 6 or when OK is pressed.
-export function PinPad({ title, sub, err, onDone, onBio, extra }: { title: string; sub?: string; err?: string; onDone: (pin: string) => void; onBio?: () => void; extra?: React.ReactNode }) {
-  const [pin, setP] = useState('');
-  const go = (v: string) => { setP(''); onDone(v); };
-  const add = (d: string) => { const n = (pin + d).slice(0, 6); setP(n); if (n.length === 6) go(n); };
-  const key = (k: string) => (
-    <Pressable key={k} onPress={() => (k === '<' ? setP(pin.slice(0, -1)) : k === 'ok' ? (pin.length >= 4 ? go(pin) : null) : k === 'bio' ? onBio && onBio() : add(k))}
-      style={({ pressed }) => ({ width: 76, height: 76, borderRadius: 38, alignItems: 'center', justifyContent: 'center', backgroundColor: k === 'bio' ? 'transparent' : k === 'ok' ? 'rgba(143,233,226,.22)' : pressed ? 'rgba(143,233,226,.3)' : 'rgba(255,255,255,.1)', borderWidth: k === 'bio' ? 0 : 1, borderColor: 'rgba(255,255,255,.18)' })}>
-      <Text style={{ color: W, fontSize: k === 'ok' || k === 'bio' ? 14 : 28, fontWeight: k === 'ok' || k === 'bio' ? '700' : '500', opacity: 1 }}>{k === '<' ? '⌫' : k === 'ok' ? 'OK' : k === 'bio' ? (onBio ? 'Scan' : '') : k}</Text>
+// One round key: shrinks and glows while the finger is down, then springs back, with a soft ripple ring.
+function Key({ k, label, ghost, onPress }: { k: string; label: string; ghost?: boolean; onPress: () => void }) {
+  const sc = useRef(new Animated.Value(1)).current;
+  const gl = useRef(new Animated.Value(0)).current;
+  const rp = useRef(new Animated.Value(1)).current;
+  const down = () => { Animated.parallel([Animated.timing(sc, { toValue: 0.86, duration: 70, useNativeDriver: true }), Animated.timing(gl, { toValue: 1, duration: 70, useNativeDriver: false })]).start(); };
+  const up = () => {
+    Animated.parallel([Animated.spring(sc, { toValue: 1, friction: 4, tension: 220, useNativeDriver: true }), Animated.timing(gl, { toValue: 0, duration: 380, useNativeDriver: false })]).start();
+    rp.setValue(0); Animated.timing(rp, { toValue: 1, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+  };
+  const plain = k === 'bio';
+  const isOk = k === 'ok';
+  return (
+    <Pressable onPressIn={down} onPressOut={up} onPress={onPress} disabled={ghost} style={{ width: 76, height: 76, alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', width: 76, height: 76, borderRadius: 38, borderWidth: 2, borderColor: '#8fe9e2', opacity: rp.interpolate({ inputRange: [0, 1], outputRange: [0.7, 0] }), transform: [{ scale: rp.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.5] }) }] }} />
+      <Animated.View style={{ opacity: ghost ? 0.3 : 1, transform: [{ scale: sc }] }}>
+      <Animated.View style={{ width: 76, height: 76, borderRadius: 38, alignItems: 'center', justifyContent: 'center', borderWidth: plain ? 0 : 1, borderColor: gl.interpolate({ inputRange: [0, 1], outputRange: ['rgba(255,255,255,.18)', 'rgba(143,233,226,.9)'] }) as any,
+        backgroundColor: plain ? 'transparent' : gl.interpolate({ inputRange: [0, 1], outputRange: [isOk ? 'rgba(143,233,226,.22)' : 'rgba(255,255,255,.1)', 'rgba(143,233,226,.42)'] }) as any,
+        }}>
+        <Text style={{ color: W, fontSize: isOk || plain ? 14 : 28, fontWeight: isOk || plain ? '700' : '500' }}>{label}</Text>
+      </Animated.View>
+      </Animated.View>
     </Pressable>
   );
+}
+// A PIN dot pops up when it is filled.
+function PinDot({ on }: { on: boolean }) {
+  const v = useRef(new Animated.Value(1)).current;
+  useEffect(() => { if (on) { v.setValue(0.4); Animated.spring(v, { toValue: 1, friction: 3, tension: 200, useNativeDriver: true }).start(); } }, [on]);
+  return <Animated.View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: on ? '#8fe9e2' : 'transparent', borderWidth: 1.5, borderColor: on ? '#8fe9e2' : 'rgba(255,255,255,.4)', shadowColor: '#5ee7df', shadowOpacity: on ? 0.9 : 0, shadowRadius: 8, shadowOffset: { width: 0, height: 0 }, transform: [{ scale: v }] }} />;
+}
+
+// Six-dot PIN entry with a keypad. 4 to 6 digits; it submits itself at 6 or when OK is pressed.
+// Bump `shake` to make the dots wobble after a wrong PIN.
+export function PinPad({ title, sub, err, onDone, onBio, extra, shake = 0 }: { title: string; sub?: string; err?: string; onDone: (pin: string) => void; onBio?: () => void; extra?: React.ReactNode; shake?: number }) {
+  const [pin, setP] = useState('');
+  const sx = useRef(new Animated.Value(0)).current;
+  useEffect(() => { if (shake) Animated.sequence([-12, 12, -9, 9, -5, 5, 0].map((t) => Animated.timing(sx, { toValue: t, duration: 50, useNativeDriver: true }))).start(); }, [shake]);
+  const go = (v: string) => { setP(''); onDone(v); };
+  const add = (d: string) => { const n = (pin + d).slice(0, 6); setP(n); if (n.length === 6) go(n); };
+  const left = pin.length >= 4 ? 'ok' : onBio ? 'bio' : 'ok';
+  const lab = (k: string) => (k === '<' ? '⌫' : k === 'ok' ? 'OK' : k === 'bio' ? 'Scan' : k);
   return (
     <View style={{ alignItems: 'center' }}>
       <Text style={{ color: W, fontSize: 20, fontWeight: '800' }}>{title}</Text>
       {sub ? <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 13, marginTop: 6, textAlign: 'center', lineHeight: 18, paddingHorizontal: 12 }}>{sub}</Text> : null}
-      <View style={{ flexDirection: 'row', gap: 12, marginTop: 20, height: 16 }}>
-        {[0, 1, 2, 3, 4, 5].map((i) => <View key={i} style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: i < pin.length ? '#8fe9e2' : 'transparent', borderWidth: 1.5, borderColor: i < pin.length ? '#8fe9e2' : 'rgba(255,255,255,.4)', shadowColor: '#5ee7df', shadowOpacity: i < pin.length ? 0.9 : 0, shadowRadius: 8, shadowOffset: { width: 0, height: 0 } }} />)}
-      </View>
+      <Animated.View style={{ flexDirection: 'row', gap: 12, marginTop: 20, height: 16, transform: [{ translateX: sx }] }}>
+        {[0, 1, 2, 3, 4, 5].map((i) => <PinDot key={i} on={i < pin.length} />)}
+      </Animated.View>
       <Text style={{ color: '#ffb3bf', fontSize: 12.5, marginTop: 12, minHeight: 18, textAlign: 'center' }}>{err || ' '}</Text>
-      <View style={{ gap: 14, marginTop: 10 }}>
-        {[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], [pin.length >= 4 ? 'ok' : onBio ? 'bio' : 'x', '0', '<']].map((r, i) => (
-          <View key={i} style={{ flexDirection: 'row', gap: 20 }}>{r.map((k) => (k === 'x' ? <View key={k} style={{ width: 76 }} /> : key(k)))}</View>
+      <View style={{ marginTop: 10, width: 76 * 3 + 16 * 2 }}>
+        {[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], [left, '0', '<']].map((r, i) => (
+          <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: i ? 12 : 0 }}>
+            {r.map((k) => <Key key={k} k={k} label={lab(k)} ghost={k === 'ok' && pin.length < 4} onPress={() => (k === '<' ? setP(pin.slice(0, -1)) : k === 'ok' ? (pin.length >= 4 ? go(pin) : null) : k === 'bio' ? onBio && onBio() : add(k))} />)}
+          </View>
         ))}
       </View>
       <View style={{ height: 14 }} />
@@ -43,7 +76,7 @@ export function PinPad({ title, sub, err, onDone, onBio, extra }: { title: strin
 
 // Used by Settings to set a new PIN (enter, then enter again) or to confirm the current one.
 export function PinDialog({ mode, onClose, onOk, bio }: { mode: 'new' | 'verify'; onClose: () => void; onOk: (pin?: string) => void; bio?: boolean }) {
-  const [first, setFirst] = useState<string | null>(null); const [err, setErr] = useState(''); const [wait, setWait] = useState(0);
+  const [first, setFirst] = useState<string | null>(null); const [err, setErr] = useState(''); const [shake, setShake] = useState(0);
   const bioTried = useRef(false);
   useEffect(() => { if (mode === 'verify' && bio && !bioTried.current) { bioTried.current = true; bioAuth('Confirm it is you').then((ok) => ok && onOk()); } }, []);
   const done = async (pin: string) => {
@@ -55,7 +88,7 @@ export function PinDialog({ mode, onClose, onOk, bio }: { mode: 'new' | 'verify'
     }
     const r = await checkPin(pin);
     if (r.r === 'ok') return onOk();
-    setErr(r.r === 'wait' ? 'Too many tries. Wait ' + r.secs + ' seconds.' : 'Wrong PIN. ' + r.left + ' tries left.');
+    setErr(r.r === 'wait' ? 'Too many tries. Wait ' + r.secs + ' seconds.' : 'Wrong PIN. ' + r.left + ' tries left.'); setShake((n) => n + 1);
   };
   return (
     <Modal transparent animationType="fade" onRequestClose={onClose}>
@@ -63,7 +96,7 @@ export function PinDialog({ mode, onClose, onOk, bio }: { mode: 'new' | 'verify'
         <View style={{ padding: 20, borderRadius: 28, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
           <PinPad key={String(first)} title={mode === 'verify' ? 'Enter your PIN' : first == null ? 'Create a PIN' : 'Repeat your PIN'}
             sub={mode === 'verify' ? 'Confirm it is you to continue.' : first == null ? 'Choose 4 to 6 digits.' : 'Enter the same PIN once more.'}
-            err={err} onDone={done} onBio={mode === 'verify' && bio ? () => bioAuth('Confirm it is you').then((ok) => ok && onOk()) : undefined}
+            err={err} shake={shake} onDone={done} onBio={mode === 'verify' && bio ? () => bioAuth('Confirm it is you').then((ok) => ok && onOk()) : undefined}
             extra={mode === 'new' && first == null ? <Text style={{ color: '#ffd593', fontSize: 12, lineHeight: 17, marginTop: 6, textAlign: 'center', paddingHorizontal: 8 }}>If you forget the PIN and cannot use your fingerprint, the only way back in is to erase the app data. Save a copy with Export first.</Text> : null} />
           <Pressable onPress={onClose} style={{ alignSelf: 'center', marginTop: 14 }}><Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 13.5, fontWeight: '700' }}>Cancel</Text></Pressable>
         </View>
@@ -76,7 +109,7 @@ export function PinDialog({ mode, onClose, onOk, bio }: { mode: 'new' | 'verify'
 export function LockScreen() {
   const { cfg, locked } = useLock();
   const path = usePathname();
-  const [err, setErr] = useState(''); const [forgot, setForgot] = useState<'' | 'menu' | 'erase' | 'newpin'>('');
+  const [err, setErr] = useState(''); const [shake, setShake] = useState(0); const [forgot, setForgot] = useState<'' | 'menu' | 'erase' | 'newpin'>('');
   const [bioOk, setBioOk] = useState(false); const tried = useRef(false);
   const guard = locked && (cfg.scope === 'all' || SENSITIVE.some((p) => path.startsWith(p)));
   useEffect(() => { bioReady().then((b) => setBioOk(b && cfg.bio)); }, [cfg.bio]);
@@ -87,7 +120,7 @@ export function LockScreen() {
   if (!guard) return null;
   const done = async (pin: string) => {
     const r = await checkPin(pin);
-    if (r.r === 'ok') { setErr(''); unlock(); } else setErr(r.r === 'wait' ? 'Too many tries. Wait ' + r.secs + ' seconds.' : 'Wrong PIN. ' + r.left + ' tries left.');
+    if (r.r === 'ok') { setErr(''); unlock(); } else { setErr(r.r === 'wait' ? 'Too many tries. Wait ' + r.secs + ' seconds.' : 'Wrong PIN. ' + r.left + ' tries left.'); setShake((n) => n + 1); }
   };
   return (
     <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: '#0a0f2c', alignItems: 'center', justifyContent: 'center', zIndex: 999, overflow: 'hidden' }}>
@@ -114,9 +147,9 @@ export function LockScreen() {
       ) : forgot === 'newpin' ? (
         <NewPin onDone={async (p) => { await setPin(p, cfg.bio); setForgot(''); }} />
       ) : (
-        <PinPad title="Enter your PIN" sub="My Life is locked" err={err} onDone={done}
+        <PinPad title="Enter your PIN" sub="My Life is locked" err={err} shake={shake} onDone={done}
           onBio={bioOk ? () => bioAuth().then((ok) => ok && unlock()) : undefined}
-          extra={<Pressable onPress={() => setForgot('menu')} style={{ marginTop: 10, padding: 8 }}><Text style={{ color: '#8fe9e2', fontSize: 13.5, fontWeight: '700' }}>Forgot PIN?</Text></Pressable>} />
+          extra={<Pressable onPress={() => setForgot('menu')} style={{ marginTop: 6, paddingVertical: 9, paddingHorizontal: 20, borderRadius: 999, backgroundColor: 'rgba(143,233,226,.12)', borderWidth: 1, borderColor: 'rgba(143,233,226,.35)' }}><Text style={{ color: '#8fe9e2', fontSize: 13.5, fontWeight: '700' }}>Forgot PIN?</Text></Pressable>} />
       )}
     </View>
   );
@@ -197,7 +230,7 @@ function Tile3({ a }: { a: Art }) {
   );
 }
 function LockArt() {
-  const stars = [[60, 170, 3], [300, 60, 2.5], [340, 250, 2], [30, 520, 2.5], [350, 600, 3], [110, 40, 2], [250, 740, 2]];
+  const stars = [[60, 170, 3], [300, 60, 2.5], [340, 250, 2], [30, 520, 2.5], [350, 600, 3], [110, 40, 2], [330, 770, 2]];
   return (
     <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
       {stars.map(([x, y, r], i) => <View key={i} style={{ position: 'absolute', left: x, top: y, width: r * 2, height: r * 2, borderRadius: r, backgroundColor: '#fff', opacity: 0.55 }} />)}

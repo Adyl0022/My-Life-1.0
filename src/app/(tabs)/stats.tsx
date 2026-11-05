@@ -18,6 +18,7 @@ import { HEMPTY, getDay, cupsGoal, dateOf, keyOfDate, MOODS } from '../../lib/ha
 import { useCore, weekly, records, hasData as hasHab, dayPct, incomeOf } from '../../lib/insights';
 import { debtSummary, remainingAt, amountDue, yearsMonths, payoffLabel } from '../../lib/debts';
 import { TOP } from '../../lib/layout';
+import { healthMonths } from '../../components/BodyCards';
 import { sunatYear, qadhaOwed, ramadanState } from '../../lib/fasting';
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -268,6 +269,24 @@ export default function Stats() {
                   {yr.months.map((n, i) => (<View key={i} style={{ flex: 1, height: 60, justifyContent: 'flex-end' }}><View style={{ height: Math.max(4, Math.round((n / mx) * 56)), borderRadius: 4, backgroundColor: i === 11 ? '#34d399' : 'rgba(255,255,255,.35)' }} /></View>))}
                 </View>
                 <View style={{ flexDirection: 'row', gap: 5, marginTop: 4 }}>{yr.months.map((_, i) => <Text key={i} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.55)', fontSize: 9 }}>{L[(now.getMonth() - 11 + i + 12) % 12]}</Text>)}</View>
+              </>);
+            })()}
+          </Glass>
+          </Rise>
+
+          <Rise i={4}>
+          <Glass style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
+            {(() => {
+              const hm = healthMonths((fin && (fin as any).spends) || []); const mx = Math.max(...hm.map((m) => m.v), 1); const tot = hm.reduce((a, m) => a + m.v, 0);
+              return (<>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}><Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Health spending</Text><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11 }}>Last 6 months</Text></View>
+                <Text style={{ color: '#ff9db5', fontSize: 20, fontWeight: '800', marginTop: 8 }}>RM {(Math.round(hm[hm.length - 1].v * 100) / 100).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 12, fontWeight: '500' }}>  this month</Text></Text>
+                {tot > 0 ? (<>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 60, marginTop: 12 }}>
+                    {hm.map((m, i) => <View key={m.ym} style={{ flex: 1, height: 60, justifyContent: 'flex-end' }}><View style={{ height: Math.max(4, Math.round((m.v / mx) * 56)), borderRadius: 5, backgroundColor: i === hm.length - 1 ? '#ff8fab' : 'rgba(255,255,255,.35)' }} /></View>)}
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>{hm.map((m) => <Text key={m.ym} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.55)', fontSize: 9.5 }}>{m.label}</Text>)}</View>
+                </>) : <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12.5, marginTop: 8 }}>Add a clinic visit or medicine in Habit & Health, or log it in My Finance under Health.</Text>}
               </>);
             })()}
           </Glass>

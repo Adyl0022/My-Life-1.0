@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Line } from 'react-native-svg';
 import { Glass } from './Glass';
 import { Inp } from './Ui';
+import { useStored } from '../lib/store';
 import { HData, GLASS, cupsGoal, latestKg, avgOf, keyOfDate, dateOf } from '../lib/habit';
 
 const W = '#fff'; const T = '#5ee7df';
@@ -144,6 +145,73 @@ export function DailyNeeds({ h, setH }: { h: HData; setH: (v: HData) => void }) 
       ) : null}
       {body}
       <Text style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, marginTop: 8, lineHeight: 15 }}>A rough estimate from a standard formula, not medical advice. Your age and sex stay on this device.</Text>
+    </Glass>
+  );
+}
+
+// Health spending: reads and writes the same list as My Finance, using the "Health" category.
+type FSp = { id: number; name: string; cat: string; amt: number; date: string };
+const MS3 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const ymKey = (d: Date) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+const rmh = (n: number) => 'RM ' + (Math.round(n * 100) / 100).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const HEALTH_CAT = 'Health';
+export function healthMonths(spends: { cat?: string; amt: number; date: string }[], n = 6, now = new Date()) {
+  const out: { ym: string; label: string; v: number }[] = [];
+  for (let i = n - 1; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1, 12); out.push({ ym: ymKey(d), label: MS3[d.getMonth()], v: 0 }); }
+  (spends || []).forEach((x) => { if (x.cat !== HEALTH_CAT) return; const m = out.find((o) => o.ym === (x.date || '').slice(0, 7)); if (m) m.v += x.amt || 0; });
+  return out;
+}
+export function HealthSpend() {
+  const [fin, setFin] = useStored<any>('ml_finance', { inc: {}, cnt: {}, spends: [], nextId: 1 });
+  const [amt, setAmt] = useState(''); const [nm, setNm] = useState(''); const [open, setOpen] = useState(false);
+  const spends: FSp[] = (fin && fin.spends) || [];
+  const mon = healthMonths(spends); const cur = mon[mon.length - 1].v, prev = mon[mon.length - 2].v; const mx = Math.max(...mon.map((m) => m.v), 1);
+  const list = spends.filter((x) => x.cat === HEALTH_CAT).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id)).slice(0, 5);
+  const add = () => {
+    const n = parseFloat(amt.replace(',', '.')); if (!(n > 0)) return;
+    const t = new Date(); const date = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+    const id = (fin && fin.nextId) || 1;
+    setFin({ ...fin, spends: [{ id, name: nm.trim() || 'Health', cat: HEALTH_CAT, amt: n, date }, ...spends], nextId: id + 1 });
+    setAmt(''); setNm(''); setOpen(false);
+  };
+  const del = (id: number) => setFin({ ...fin, spends: spends.filter((x) => x.id !== id) });
+  const diff = prev > 0 ? Math.round(((cur - prev) / prev) * 100) : null;
+  return (
+    <Glass radius={24} style={{ paddingVertical: 16, paddingHorizontal: 16 }}>
+      <LinearGradient colors={['rgba(255,143,171,.26)', 'rgba(94,231,181,.12)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: -1 }} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>Health spending</Text><Text style={{ color: dim, fontSize: 11.5, marginTop: 2 }}>Clinic, medicine, vitamins and gym. Also counted in My Finance.</Text></View>
+        <Pressable onPress={() => setOpen(!open)}><View style={{ paddingVertical: 7, paddingHorizontal: 13, borderRadius: 999, backgroundColor: open ? 'rgba(255,255,255,.14)' : '#ff8fab' }}><Text style={{ color: open ? W : '#2a1030', fontSize: 12.5, fontWeight: '800' }}>{open ? 'Close' : '+ Add'}</Text></View></Pressable>
+      </View>
+      {open ? (
+        <View style={{ marginTop: 12, gap: 8 }}>
+          <Inp value={nm} onChangeText={setNm} placeholder="What for? e.g. Clinic consultation" />
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+            <Inp style={{ flex: 1 }} keyboardType="decimal-pad" value={amt} onChangeText={setAmt} placeholder="Amount (RM)" onSubmitEditing={add} />
+            <Pressable onPress={add}><LinearGradient colors={['#ff8fab', '#ffc46b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 42, paddingHorizontal: 18, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#2a1030', fontSize: 13, fontWeight: '800' }}>Save</Text></LinearGradient></Pressable>
+          </View>
+        </View>
+      ) : null}
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
+        <Stat l="This month" v={rmh(cur)} c="#ff9db5" />
+        <Stat l="Last month" v={rmh(prev)} />
+      </View>
+      {diff !== null && cur > 0 ? <Text style={{ color: dim, fontSize: 12, marginTop: 8 }}>{diff === 0 ? 'Same as last month.' : (diff > 0 ? diff + '% more' : Math.abs(diff) + '% less') + ' than last month.'}</Text> : null}
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 64, marginTop: 14 }}>
+        {mon.map((m, i) => <View key={m.ym} style={{ flex: 1, height: 64, justifyContent: 'flex-end' }}><View style={{ height: Math.max(4, Math.round((m.v / mx) * 60)), borderRadius: 5, backgroundColor: i === mon.length - 1 ? '#ff8fab' : 'rgba(255,255,255,.35)' }} /></View>)}
+      </View>
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>{mon.map((m) => <Text key={m.ym} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.55)', fontSize: 9.5 }}>{m.label}</Text>)}</View>
+      {list.length ? (
+        <View style={{ marginTop: 12 }}>
+          {list.map((x, i) => (
+            <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,.1)' }}>
+              <View style={{ flex: 1 }}><Text numberOfLines={1} style={{ color: W, fontSize: 13.5, fontWeight: '600' }}>{x.name}</Text><Text style={{ color: dim, fontSize: 11 }}>{x.date}</Text></View>
+              <Text style={{ color: W, fontSize: 13.5, fontWeight: '800' }}>{rmh(x.amt)}</Text>
+              <Pressable accessibilityLabel="Delete" onPress={() => del(x.id)} hitSlop={6}><Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 15 }}>✕</Text></Pressable>
+            </View>
+          ))}
+        </View>
+      ) : <Text style={{ color: dim, fontSize: 12, marginTop: 12 }}>No health spending yet. Add a clinic visit or medicine, or log it in My Finance under Health.</Text>}
     </Glass>
   );
 }

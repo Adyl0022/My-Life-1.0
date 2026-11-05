@@ -11,7 +11,7 @@ import { Inp, W } from '../components/Ui';
 import { Face, GlassIcon, HeadIcon } from '../components/HabitIcons';
 import { useStored } from '../lib/store';
 import { TOP } from '../lib/layout';
-import { WeightGoal, DailyNeeds } from '../components/BodyCards';
+import { WeightGoal, DailyNeeds, HealthSpend } from '../components/BodyCards';
 import { PUASA_EMPTY, PuasaData, ramadanState, qadhaOwed, keyD } from '../lib/fasting';
 import { HData, HEMPTY, MOODS, WD, MON, GLASS, dateOf, getDay, keyOfDate, goalPctOf, HDay, BLANK as BLANKD, cupsGoal, latestKg, hoursBetween, bestStreakAll, avgOf } from '../lib/habit';
 
@@ -371,6 +371,7 @@ export default function Habit() {
           </Glass>
           <WeightGoal h={h} setH={setH} />
           <DailyNeeds h={h} setH={setH} />
+          <View style={{ marginTop: 12 }}><HealthSpend /></View>
           </>)}
           <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, textAlign: 'center', marginTop: 14 }}>Your habits are saved on this device.</Text>
         </ScrollView>

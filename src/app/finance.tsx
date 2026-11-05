@@ -18,11 +18,11 @@ const EMPTY: Data = { inc: {}, cnt: {}, spends: [], nextId: 1 };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DEFS: [string, string, string][] = [['salary', 'Basic salary', '#7c9cff'], ['overtime', 'Overtime', '#ffc46b'], ['claim', 'Claim', '#8fe9e2'], ['sunday', 'Sunday work', '#b794ff'], ['holiday', 'Public holiday work', '#ff8fab'], ['other', 'Other', '#5ee7b5']];
 const UN: Record<string, [string, string, string]> = { sunday: ['Days', 'day', 'Number of days worked'], holiday: ['Days', 'day', 'Number of days worked'], overtime: ['Hours', 'hour', 'Number of overtime hours'] };
-const CATS: [string, string][] = [['Food', '#ffc46b'], ['Petrol', '#7c9cff'], ['Bills', '#ff8fab'], ['Shopping', '#b794ff'], ['Other', '#8fe9e2']];
+const CATS: [string, string][] = [['Food', '#ffc46b'], ['Petrol', '#7c9cff'], ['Bills', '#ff8fab'], ['Shopping', '#b794ff'], ['Health', '#ff8fab'], ['Other', '#8fe9e2']];
 const money = (n: number) => n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const rnd = (n: number) => Math.round(n).toLocaleString('en-MY');
 const keyOf = (y: number, m: number) => y + '-' + String(m + 1).padStart(2, '0');
-const colorOf = (n: string) => (CATS.find((c) => c[0] === n) || CATS[4])[1];
+const colorOf = (n: string) => (CATS.find((c) => c[0] === n) || CATS[CATS.length - 1])[1];
 const WARM = ['#ffc46b', '#ff8fab'] as [string, string];
 
 const FinArt = () => (

@@ -125,6 +125,12 @@ export function tips(c: Core, week: boolean): Tip[] {
   // Shift worker: sleep debt over last 7 days
   let debt = 0, logged = 0; for (let o = -6; o <= 0; o++) { const s = getDay(c.hd, o).sleep; if (s > 0) { logged++; debt += Math.max(0, 7 - s); } }
   if (logged >= 3 && debt >= 5) add({ id: 'debt', title: 'Sleep debt: ' + (Math.round(debt * 10) / 10) + ' h this week', sub: 'Try an earlier bedtime or a short nap before your next shift.', why: 'Counted as hours below 7 h on the nights you logged. After night shifts, a 20 to 30 minute nap helps.', go: '/habit', k: 'sleep', pri: 75 });
+  // Health spending (Health category in My Finance)
+  { const ymC = ymOf(new Date()), d0 = new Date(); d0.setDate(1); d0.setMonth(d0.getMonth() - 1); const ymP = ymOf(d0);
+    const hs = (ym: string) => ((c.fin && c.fin.spends) || []).filter((x) => x.cat === 'Health' && (x.date || '').slice(0, 7) === ym).reduce((a, x) => a + (x.amt || 0), 0);
+    const hc = hs(ymC), hp = hs(ymP);
+    if (hc > 0 && hp > 0 && hc >= hp * 1.3) add({ id: 'hspend', title: 'Health spending is up', sub: rmf(hc) + ' this month, ' + rmf(hp) + ' last month.', why: 'Counted from entries under Health in My Finance. A short note on what each cost was for helps you see what changed.', go: '/habit', k: 'spend', pri: 44 });
+  }
   // Fasting sunnah
   const tomorrow = (dow + 1) % 7;
   const inRamNow = (() => { try { return ramadanState(c.puasa || PUASA_EMPTY, new Date()).phase === 'during'; } catch (e) { return false; } })();
@@ -246,7 +252,7 @@ export function records(c: Core) {
 }
 
 export const tipCat = (id: string): string => {
-  if (/^(water|steps|sleeplog|sleeplow|mood|wlog|debt|ramwater|ramsleep)$/.test(id)) return 'Health';
+  if (/^(water|steps|sleeplog|sleeplow|mood|wlog|debt|ramwater|ramsleep|hspend)$/.test(id)) return 'Health';
   if (/^(fast|fastnext|kahfi|zikir|tasbih|ramtoday|qadha|ramsoon|sunat|ramgap)$/.test(id)) return 'Faith';
   if (/^(overdue|duetoday|event)$/.test(id)) return 'Tasks';
   if (/^(part-|ren-|cpk-|odo)/.test(id)) return 'Vehicle';

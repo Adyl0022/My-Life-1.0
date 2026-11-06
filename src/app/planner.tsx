@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
 import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,7 +11,7 @@ import { PlannerArt } from '../components/PlannerArt';
 import { Inp, DateField, Pill, SBtn, Sheet, Toast, todayStr, W, GP } from '../components/Ui';
 import { useStored } from '../lib/store';
 import { TOP } from '../lib/layout';
-import { upcomingMy } from '../lib/myEvents';
+import { upcomingMy, fetchMy, EMPTY_CACHE, MyCache } from '../lib/myEvents';
 
 type Ev = { id: number; name: string; date: string; remind: string; done: boolean };
 type Tk = { id: number; name: string; note: string; prio: string; due: string; cat: string; status: 'todo' | 'doing' | 'done' };
@@ -134,7 +134,9 @@ export default function Planner() {
 
   const sorted = d.events.slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
   const upcoming = sorted.filter((x) => !x.done), completed = sorted.filter((x) => x.done);
-  const my = upcomingMy(today, 6);
+  const [mc, setMc, mcOk] = useStored<MyCache>('ml_myevents', EMPTY_CACHE);
+  useEffect(() => { if (!mcOk) return; fetchMy(mc, today).then((n) => { if (n) setMc(n); }); }, [mcOk, today]);
+  const my = upcomingMy(today, 6, mc);
   const rank: any = { High: 0, Medium: 1, Low: 2 };
   const inCat = d.tasks.filter((x) => (x.cat || 'Tasks') === curCat);
   const byP = (a: Tk, b: Tk) => rank[a.prio] - rank[b.prio];

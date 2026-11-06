@@ -35,10 +35,52 @@ function fixed(y: number): MyEv[] {
   ];
 }
 
-export function upcomingMy(today: string, n = 6): (MyEv & { days: number })[] {
+export type MyCache = { at: number; years: Record<string, MyEv[]> };
+export const EMPTY_CACHE: MyCache = { at: 0, years: {} };
+
+const kindOf = (n: string): MyEv['kind'] =>
+  /raya|aidil|haji|adha|muharram|maulid|ramadan|nuzul|isra|hijri|prophet/i.test(n) ? 'islam' : /new year's day|labour|national|merdeka|malaysia day|agong|yang di|king/i.test(n) ? 'national' : 'cultural';
+const MOON = /raya|aidil|haji|adha|muharram|maulid|ramadan|nuzul|deepavali|diwali|chinese|thaipusam|wesak|vesak/i;
+
+// Federal (nationwide) public holidays from a free public holiday service. Silent on any failure.
+export async function fetchMy(cache: MyCache, today: string, force = false): Promise<MyCache | null> {
+  const week = 7 * 86400000;
+  if (!force && Date.now() - cache.at < week) return null;
+  const y0 = +today.slice(0, 4); const years: Record<string, MyEv[]> = { ...cache.years }; let got = 0;
+  for (const y of [y0, y0 + 1]) {
+    try {
+      const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null; const tm = setTimeout(() => ctl && ctl.abort(), 8000);
+      const r = await fetch('https://date.nager.at/api/v3/PublicHolidays/' + y + '/MY', ctl ? { signal: ctl.signal } : undefined); clearTimeout(tm);
+      if (!r.ok) continue; const j: any[] = await r.json(); if (!Array.isArray(j)) continue;
+      const items: MyEv[] = [];
+      for (const h of j) {
+        const date = String(h.date || ''); const name = String(h.name || h.localName || '');
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !name) continue;
+        const wide = h.global === true || !h.counties || (Array.isArray(h.counties) && h.counties.length >= 10);
+        if (!wide) continue;
+        items.push({ date, name, kind: kindOf(name), moon: MOON.test(name) });
+      }
+      if (items.length >= 8) { years[String(y)] = items; got++; }
+    } catch (e) { /* offline: keep what we have */ }
+  }
+  return got ? { at: Date.now(), years } : null;
+}
+
+export function upcomingMy(today: string, n = 6, cache: MyCache = EMPTY_CACHE): (MyEv & { days: number })[] {
   const y0 = +today.slice(0, 4);
-  const all: MyEv[] = L.slice();
-  for (let y = 2028; y <= y0 + 2 || y <= 2028; y++) all.push(...fixed(y));
+  const byYear: Record<string, MyEv[]> = {};
+  for (const e of L) (byYear[e.date.slice(0, 4)] = byYear[e.date.slice(0, 4)] || []).push(e);
+  const all: MyEv[] = [];
+  const yrs = new Set<string>([...Object.keys(byYear), ...Object.keys(cache.years)]);
+  for (let y = y0; y <= Math.max(y0 + 2, 2028); y++) yrs.add(String(y));
+  for (const y of yrs) {
+    const online = cache.years[y];
+    if (byYear[y]) all.push(...byYear[y]); // checked by hand, kept as is
+    else if (online && online.length) all.push(...online);
+    else all.push(...fixed(+y));
+  }
+  const seen = new Set<string>(); const uniq = all.filter((e) => { const k = e.date + '|' + e.name; if (seen.has(k)) return false; seen.add(k); return true; });
+  all.length = 0; all.push(...uniq);
   const t = new Date(+today.slice(0, 4), +today.slice(5, 7) - 1, +today.slice(8, 10)).getTime();
   return all.filter((e) => e.date >= today).sort((a, b) => (a.date < b.date ? -1 : 1)).slice(0, n)
     .map((e) => ({ ...e, days: Math.round((new Date(+e.date.slice(0, 4), +e.date.slice(5, 7) - 1, +e.date.slice(8, 10)).getTime() - t) / 86400000) }));

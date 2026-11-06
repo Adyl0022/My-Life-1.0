@@ -376,7 +376,7 @@ export default function Stats() {
                   <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginTop: 8 }}>{best && best.ym !== cur.ym ? 'Your best month was ' + best.label + ' with ' + fm(best.left) + ' left. ' : ''}Red bars are months you went over budget. Months without income are grey.</Text>
                 </>) : <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12.5, marginTop: 8 }}>Add your income and spending in My Finance to see how much you keep each month.</Text>}
                 {any && cur.income > 0 ? (<View style={{ marginTop: 18, paddingTop: 18, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,.1)' }}>
-                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', marginBottom: 14 }}>Where this month's income goes</Text>
+                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', marginBottom: 24 }}>Where this month's income goes</Text>
                   <View style={{ flexDirection: 'row', height: 10, borderRadius: 5, overflow: 'hidden', marginBottom: 6, backgroundColor: 'rgba(255,255,255,.12)' }}>
                     {[[cur.commit, '#b794ff'], [cur.spent, '#ffc46b'], [cur.savings, '#7c9cff'], [Math.max(0, cur.left), '#5ee7b5']].map(([v, col], i) => <View key={i} style={{ flex: Math.max(0, v as number) / Math.max(cur.income, cur.commit + cur.spent + cur.savings), backgroundColor: col as string }} />)}
                   </View>

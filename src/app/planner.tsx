@@ -136,7 +136,7 @@ export default function Planner() {
   const upcoming = sorted.filter((x) => !x.done), completed = sorted.filter((x) => x.done);
   const [mc, setMc, mcOk] = useStored<MyCache>('ml_myevents', EMPTY_CACHE);
   useEffect(() => { if (!mcOk) return; fetchMy(mc, today).then((n) => { if (n) setMc(n); }); }, [mcOk, today]);
-  const my = upcomingMy(today, 6, mc);
+  const my = upcomingMy(today, 5, mc);
   const rank: any = { High: 0, Medium: 1, Low: 2 };
   const inCat = d.tasks.filter((x) => (x.cat || 'Tasks') === curCat);
   const byP = (a: Tk, b: Tk) => rank[a.prio] - rank[b.prio];

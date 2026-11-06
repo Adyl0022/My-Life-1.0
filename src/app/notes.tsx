@@ -176,7 +176,7 @@ export default function Notes() {
             <View pointerEvents="none" style={{ position: 'absolute', left: -110, bottom: 140, width: 260, height: 260, borderRadius: 130, backgroundColor: 'rgba(255,255,255,.10)' }} />
             <SafeAreaView style={{ flex: 1, paddingBottom: kb }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 12 }}>
-                <Pressable onPress={() => { closeEd(); }}><Glass radius={16} style={{ paddingHorizontal: 14, height: 44, justifyContent: 'center' }}><Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>‹ Notes</Text></Glass></Pressable>
+                <Pressable onPress={() => { closeEd(); }} accessibilityLabel="Back"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 24, marginTop: -3 }}>‹</Text></Glass></Pressable>
                 <View style={{ flex: 1 }} />
                 <Pressable onPress={() => upd({ pin: !draft.pin })} accessibilityLabel="Pin"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: draft.pin ? '#ffd593' : W, fontSize: 12, fontWeight: '800' }}>PIN</Text></Glass></Pressable>
                 {!isNew && <Pressable onPress={() => setConfirmDel(true)} accessibilityLabel="Delete"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ffb3bf', fontSize: 16 }}>✕</Text></Glass></Pressable>}

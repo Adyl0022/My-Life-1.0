@@ -53,7 +53,7 @@ export default function Notes() {
   const del = (id: number) => { setData({ ...data, notes: notes.filter((x) => x.id !== id) }); };
   const addLine = (pre: string) => { if (!draft) return; const ns = (draft.s && !/\n$/.test(draft.s) ? draft.s + '\n' : draft.s) + pre; upd({ s: ns }); setFo(ns.split('\n').length - 1); };
   const refs = useRef<any[]>([]);
-  const edScroll = useRef<any>(null); const focI = useRef(0); const lastLen = useRef(0);
+  const edScroll = useRef<any>(null); const focI = useRef(0); const selR = useRef<Record<number, number>>({}); const lastLen = useRef(0);
   const [kb, setKb] = useState(0);
   const [lh, setLh] = useState<Record<number, { t: string; h: number }>>({});
   useEffect(() => {
@@ -184,7 +184,7 @@ export default function Notes() {
                     return (
                       <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                         {ck ? <Pressable onPress={() => toggleLine(i)} hitSlop={8} accessibilityLabel="Toggle item" style={{ width: 30, height: 24, justifyContent: 'center' }}><Text style={{ color: on ? '#ffc46b' : W, fontSize: 20, lineHeight: 24 }}>{on ? '☑' : '☐'}</Text></Pressable> : null}
-                        <TextInput ref={(r) => { refs.current[i] = r; }} onFocus={() => { focI.current = i; }} onContentSizeChange={(e) => { const hh = Math.max(24, Math.ceil(e.nativeEvent.contentSize.height)); setLh((m) => (m[i] && m[i].t === rest && m[i].h === hh ? m : { ...m, [i]: { t: rest, h: hh } })); }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, height: lh[i] ? lh[i].h : 24, minHeight: 24, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
+                        <TextInput ref={(r) => { refs.current[i] = r; }} onFocus={() => { focI.current = i; }} onContentSizeChange={(e) => { const hh = Math.max(24, Math.ceil(e.nativeEvent.contentSize.height)); setLh((m) => (m[i] && m[i].t === rest && m[i].h === hh ? m : { ...m, [i]: { t: rest, h: hh } })); }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} submitBehavior="submit" onSelectionChange={(e: any) => { selR.current[i] = e.nativeEvent.selection.end; }} onSubmitEditing={() => { const c = Math.min(selR.current[i] ?? rest.length, rest.length); lineChange(i, pre, rest.slice(0, c) + '\n' + rest.slice(c)); }} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, height: lh[i] ? lh[i].h : 24, minHeight: 24, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
                       </View>
                     );
                   })}

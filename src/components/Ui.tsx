@@ -7,6 +7,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 export const W = '#fff';
 export const GP = ['#7c9cff', '#b794ff'] as [string, string];
 export const Inp = (p: any) => <TextInput placeholderTextColor="rgba(255,255,255,.4)" {...p} style={[{ minWidth: 0, color: W, fontSize: 14, paddingVertical: 10, paddingHorizontal: 13, borderRadius: 14, backgroundColor: 'rgba(0,0,0,.28)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', outlineStyle: 'none' } as any, p.style]} />;
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const nice = (v: string) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v); return m ? Number(m[3]) + ' ' + MON[Number(m[2]) - 1] + ' ' + m[1] : v; };
 export function DateField({ value, onChange, style }: { value: string; onChange: (v: string) => void; style?: any }) {
   if (Platform.OS === 'web') {
     return React.createElement('input', { type: 'date', value, onChange: (e: any) => onChange(e.target.value), style: { color: '#fff', colorScheme: 'dark', fontSize: 14, padding: '10px 12px', borderRadius: 14, background: 'rgba(0,0,0,.28)', border: '1px solid rgba(255,255,255,.14)', outline: 'none', fontFamily: 'inherit', minWidth: 0, ...(style || {}) } });
@@ -19,7 +21,13 @@ export function DateField({ value, onChange, style }: { value: string; onChange:
   }
   return (
     <Pressable style={[box, style]} onPress={() => DateTimePickerAndroid.open({ value: d, mode: 'date', onChange: (e: any, x?: Date) => { if (e.type === 'set' && x) onChange(fmt(x)); } })}>
-      <Text style={{ color: value ? '#fff' : 'rgba(255,255,255,.5)', fontSize: 14 }}>{value || 'Tap to pick date'}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <Text style={{ fontSize: 16 }}>📅</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: value ? '#fff' : 'rgba(255,255,255,.55)', fontSize: 15, fontWeight: '700' }}>{value ? nice(value) : 'Pick a date'}</Text>
+          <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11, marginTop: 1 }}>Tap to change the date</Text>
+        </View>
+      </View>
     </Pressable>
   );
 }

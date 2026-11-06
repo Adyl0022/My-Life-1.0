@@ -83,8 +83,8 @@ export default function Planner() {
       <Text style={{ color: '#8fe9e2', fontSize: 11.5, fontWeight: '700', letterSpacing: 1 }}>{kind === 'event' ? 'EDIT EVENT' : 'EDIT TASK'}</Text>
       <Inp value={edit.name} onChangeText={(v: string) => setEdit({ ...edit, name: v })} placeholder={kind === 'event' ? 'Event name' : 'Task name'} />
       {kind === 'task' && <Inp value={edit.note} onChangeText={(v: string) => setEdit({ ...edit, note: v })} placeholder="Note (optional)" />}
+      <DateField value={edit.date} onChange={(v) => setEdit({ ...edit, date: v })} />
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-        <DateField value={edit.date} onChange={(v) => setEdit({ ...edit, date: v })} style={{ flex: 1 }} />
         {kind === 'event' ? <Pill t={'Reminder: ' + edit.remind} onPress={() => setEdit({ ...edit, remind: cyc(REM, edit.remind) })} /> : <Pill t={'Priority: ' + edit.prio} onPress={() => setEdit({ ...edit, prio: cyc(PR, edit.prio) })} />}
       </View>
       <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -224,7 +224,7 @@ export default function Planner() {
                   <Pressable key={n} style={{ flex: 1 }} onPress={() => setAdd({ ...add, prio: n })}><View style={{ paddingVertical: 9, borderRadius: 12, alignItems: 'center', backgroundColor: add.prio === n ? PB[n] : 'rgba(255,255,255,.06)', borderWidth: 1, borderColor: add.prio === n ? PC[n] : 'rgba(255,255,255,.2)' }}><Text style={{ color: add.prio === n ? PC[n] : W, fontSize: 12.5, fontWeight: '700' }}>{n}</Text></View></Pressable>))}</View>
                 <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}><Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12.5 }}>Due</Text><DateField value={add.due} onChange={(v) => setAdd({ ...add, due: v })} style={{ flex: 1 }} /></View>
               </>) : (
-                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}><DateField value={add.date} onChange={(v) => setAdd({ ...add, date: v })} style={{ flex: 1 }} /><Pill t={'Reminder: ' + add.remind} onPress={() => setAdd({ ...add, remind: cyc(REM, add.remind) })} /></View>
+                <View style={{ gap: 8 }}><DateField value={add.date} onChange={(v) => setAdd({ ...add, date: v })} /><View style={{ flexDirection: 'row' }}><Pill t={'Reminder: ' + add.remind} onPress={() => setAdd({ ...add, remind: cyc(REM, add.remind) })} /></View></View>
               )}
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 4, opacity: add.name.trim() ? 1 : 0.5 }}><SBtn t="Cancel" onPress={() => setAdd(null)} /><SBtn t={add.kind === 'task' ? 'Add task' : 'Add event'} kind="primary" onPress={saveAdd} /></View>
             </View>

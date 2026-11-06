@@ -1,4 +1,4 @@
-import { SAV_EMPTY, SavData, goalSaved } from '../lib/savings';
+import { SAV_EMPTY, SavData, goalSaved, kindOf } from '../lib/savings';
 import { DEBT_EMPTY, DebtData } from '../lib/debts';
 import React, { useState } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
@@ -61,8 +61,8 @@ export default function Finance() {
   const [ym, setYm] = useState(curKey);
   const [editKey, setEditKey] = useState(''); const [editUnit, setEditUnit] = useState<'rm' | 'cnt'>('rm'); const [editVal, setEditVal] = useState('');
   const [limKey, setLimKey] = useState(''); const [limVal, setLimVal] = useState('');
-  const [fDate, setFDate] = useState(todayStr()); const [fName, setFName] = useState(''); const [fAmt, setFAmt] = useState(''); const [fCat, setFCat] = useState('Food'); const [fGoal, setFGoal] = useState(0);
-  const [sav] = useStored<SavData>('ml_savings', SAV_EMPTY); const [dbt] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
+  const [fDate, setFDate] = useState(todayStr()); const [fName, setFName] = useState(''); const [fAmt, setFAmt] = useState(''); const [fCat, setFCat] = useState('Food'); const [fGoal, setFGoal] = useState(0); const [fPre, setFPre] = useState('');
+  const [sav, setSav] = useStored<SavData>('ml_savings', SAV_EMPTY); const [dbt] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
 
   const selY = parseInt(ym.slice(0, 4), 10), selM = parseInt(ym.slice(5, 7), 10) - 1;
   const sumOf = (o?: Record<string, number>) => DEFS.reduce((a, x) => a + ((o || {})[x[0]] || 0), 0);
@@ -89,10 +89,21 @@ export default function Finance() {
     if (n > 0) lm[k] = n; else delete lm[k];
     setD({ ...d, limits: lm }); setLimKey(''); setLimVal('');
   };
+  // Goal choices for the Savings category: ready-made goals first, your own in the middle, Wedding last.
+  const PRE = ['motor', 'car', 'house', 'emergency', 'medical'];
+  const opts: { key: string; id: number; name: string; kind: string }[] = [];
+  PRE.forEach((k) => { const ex = sav.goals.filter((g) => g.kind === k); if (ex.length) ex.forEach((g) => opts.push({ key: 'g' + g.id, id: g.id, name: g.name, kind: k })); else opts.push({ key: 'p' + k, id: 0, name: kindOf(k).name, kind: k }); });
+  sav.goals.filter((g) => PRE.indexOf(g.kind) < 0 && g.kind !== 'wedding').forEach((g) => opts.push({ key: 'g' + g.id, id: g.id, name: g.name, kind: g.kind }));
+  { const ex = sav.goals.filter((g) => g.kind === 'wedding'); if (ex.length) ex.forEach((g) => opts.push({ key: 'g' + g.id, id: g.id, name: g.name, kind: 'wedding' })); else opts.push({ key: 'pwedding', id: 0, name: kindOf('wedding').name, kind: 'wedding' }); }
   const addSpend = () => {
     const n = parseFloat(fAmt.replace(',', '.')); if (!(n > 0)) return;
-    setD({ ...d, spends: [{ id: d.nextId, name: fName.trim() || (fCat === 'Savings' && fGoal ? ((sav.goals.find((g) => g.id === fGoal) || { name: fCat }).name) : fCat), cat: fCat, amt: n, date: fDate || todayStr(), ...(fCat === 'Savings' && fGoal ? { goal: fGoal } : {}) }, ...d.spends], nextId: d.nextId + 1 });
-    setFName(''); setFAmt(''); setFGoal(0);
+    let fGoal2 = fGoal;
+    if (fCat === 'Savings' && fPre) {
+      const k = fPre.slice(1); const g = { id: sav.nextId, name: kindOf(k).name, kind: k, target: 0, place: '', due: '', start: 0, out: [], made: todayStr() } as any;
+      setSav({ goals: [...sav.goals, g], nextId: sav.nextId + 1 }); fGoal2 = g.id;
+    }
+    setD({ ...d, spends: [{ id: d.nextId, name: fName.trim() || (fCat === 'Savings' ? (fPre ? kindOf(fPre.slice(1)).name : ((sav.goals.find((g) => g.id === fGoal) || { name: fCat }).name)) : fCat), cat: fCat, amt: n, date: fDate || todayStr(), ...(fCat === 'Savings' && fGoal2 ? { goal: fGoal2 } : {}) }, ...d.spends], nextId: d.nextId + 1 });
+    setFName(''); setFAmt(''); setFGoal(0); setFPre('');
   };
   const dateText = (s: string) => { const p = (s || '').split('-'); return p.length === 3 ? parseInt(p[2], 10) + ' ' + MON[parseInt(p[1], 10) - 1] : ''; };
   const diffTxt = gc === 0 && gp === 0 ? '-' : gd === 0 ? 'Same' : (gd > 0 ? '+' : '-') + 'RM ' + rnd(Math.abs(gd));
@@ -242,9 +253,9 @@ export default function Finance() {
             </View>
             {fCat === 'Savings' ? (
               <View style={{ marginTop: 10 }}>
-                <Text style={{ color: dim, fontSize: 11.5 }}>{sav.goals.length ? 'Which savings goal is this for?' : 'No savings goal yet. Create one in Savings Goals to track it there too.'}</Text>
+                <Text style={{ color: dim, fontSize: 11.5 }}>Which savings goal is this for?</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                  {sav.goals.map((g) => <Chip key={g.id} t={g.name} on={fGoal === g.id} c="#5ee7b5" onPress={() => setFGoal(fGoal === g.id ? 0 : g.id)} />)}
+                  {opts.map((o) => { const on = o.id ? fGoal === o.id && !fPre : fPre === o.key; return <Chip key={o.key} t={o.name} on={on} c="#5ee7b5" onPress={() => { if (on) { setFGoal(0); setFPre(''); } else if (o.id) { setFGoal(o.id); setFPre(''); } else { setFGoal(0); setFPre(o.key); } }} />; })}
                 </View>
               </View>
             ) : null}

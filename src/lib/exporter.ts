@@ -130,7 +130,7 @@ export async function buildReport(sel: string[], per: number): Promise<Report> {
       const odos = (v.readings || []).map((x: any) => num(x.odo)).filter((n: number) => n > 0); if (odos.length) km += Math.max(...odos) - Math.min(...odos);
     });
     const first = Object.keys((r && r.data) || {})[0]; const rd = first ? ((r.data[first].readings || []).filter((x: any) => inP(x.date)).slice().sort((a: any, b: any) => (a.date < b.date ? -1 : 1)).slice(-14)) : [];
-    if (rd.length > 1) charts.push({ title: 'Odometer (km)', kind: 'line', labels: rd.map((x: any) => dm(x.date)), values: rd.map((x: any) => num(x.odo)), color: '#e0518a' });
+    if (rd.length > 1) charts.push({ title: 'Odometer (km), latest readings', kind: 'line', labels: rd.slice(-12).map((x: any) => dm(x.date)), values: rd.slice(-12).map((x: any) => num(x.odo)), color: '#e0518a' });
     if (rows.length) sheets.push({ name: 'Record', head: ['Vehicle', 'Type', 'Date', 'Detail', 'Amount (RM)', 'Odometer (km)'], rows });
     totals.push(['Record entries', String(rows.length)]);
   }
@@ -194,14 +194,17 @@ function svgHBars(c: Chart) {
   return '<svg viewBox="0 0 300 ' + H + '" width="100%">' + rows + '</svg>';
 }
 function svgLine(c: Chart) {
-  const W = 300, H = 140, L = 10, B = 24, T = 14; const n = c.values.length; const mn = Math.min(...c.values), mx = Math.max(...c.values); const rg = mx - mn || 1; const col = c.color || PAL[0];
+  const n = c.values.length; const many = n > 7; const W = 300, H = many ? 170 : 150, L = 16, B = many ? 46 : 26, T = 22; const mn = Math.min(...c.values), mx = Math.max(...c.values); const rg = mx - mn || 1; const col = c.color || PAL[0];
   const pts = c.values.map((v, i) => [L + (i * (W - L * 2)) / Math.max(n - 1, 1), T + (H - B - T) * (1 - (v - mn) / rg)]);
   const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
   const area = d + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + (H - B) + ' L' + pts[0][0].toFixed(1) + ' ' + (H - B) + ' Z';
-  const dots = pts.map((p) => '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3" fill="#fff" stroke="' + col + '" stroke-width="2"/>').join('');
-  const lb = c.labels.map((l, i) => (i % Math.ceil(n / 6) === 0 ? '<text x="' + pts[i][0].toFixed(1) + '" y="' + (H - 9) + '" font-size="8" text-anchor="' + (i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle') + '" fill="#667">' + esc(l) + '</text>' : '')).join('');
-  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%"><line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - L) + '" y2="' + (H - B) + '" stroke="#dde"/><path d="' + area + '" fill="' + col + '" opacity=".14"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2.5" stroke-linejoin="round"/>' + dots + lb
-    + '<text x="' + L + '" y="9" font-size="8" fill="#667">' + fmtN(mx) + '</text></svg>';
+  const dots = pts.map((p) => '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="2.6" fill="#fff" stroke="' + col + '" stroke-width="1.8"/>').join('');
+  // A value above every point (alternating above and below when there are many, so numbers do not collide), and a date under every point.
+  const vals = pts.map((p, i) => { const up = !many || i % 2 === 0; const anc = i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'; return '<text x="' + p[0].toFixed(1) + '" y="' + (up ? p[1] - 6 : p[1] + 12).toFixed(1) + '" font-size="' + (many ? 6.5 : 8) + '" font-weight="600" text-anchor="' + anc + '" fill="#334">' + fmtN(c.values[i]) + '</text>'; }).join('');
+  const lb = c.labels.map((l, i) => many
+    ? '<text transform="translate(' + (pts[i][0] + 2).toFixed(1) + ' ' + (H - B + 8) + ') rotate(55)" font-size="6.5" fill="#667">' + esc(l) + '</text>'
+    : '<text x="' + pts[i][0].toFixed(1) + '" y="' + (H - 9) + '" font-size="8" text-anchor="' + (i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle') + '" fill="#667">' + esc(l) + '</text>').join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%"><line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - L) + '" y2="' + (H - B) + '" stroke="#dde"/><path d="' + area + '" fill="' + col + '" opacity=".14"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2.2" stroke-linejoin="round"/>' + dots + vals + lb + '</svg>';
 }
 function svgDonut(c: Chart) {
   const tot = c.values.reduce((a, b) => a + b, 0) || 1; const R = 42, C = 2 * Math.PI * R; let off = 0;
@@ -264,10 +267,12 @@ export async function deliver(name: string, mime: string, body: string, base64 =
   await Sh.shareAsync(uri, { mimeType: mime, dialogTitle: name });
   return true;
 }
-export async function deliverPdf(html: string): Promise<boolean> {
+export async function deliverPdf(html: string, name = 'my-life-report.pdf'): Promise<boolean> {
   const Print = await import('expo-print');
   if (Platform.OS === 'web') { await Print.printAsync({ html }); return true; }
   const r = await Print.printToFileAsync({ html }); const Sh = await import('expo-sharing');
   if (!(await Sh.isAvailableAsync())) return false;
-  await Sh.shareAsync(r.uri, { mimeType: 'application/pdf', dialogTitle: 'My Life report' }); return true;
+  let uri = r.uri;
+  try { const FS = await import('expo-file-system/legacy'); const to = (FS.cacheDirectory || '') + name; await FS.deleteAsync(to, { idempotent: true }); await FS.copyAsync({ from: r.uri, to }); uri = to; } catch (e) { /* keep the original name */ }
+  await Sh.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: name }); return true;
 }

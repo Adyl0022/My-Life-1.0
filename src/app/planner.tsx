@@ -11,6 +11,7 @@ import { PlannerArt } from '../components/PlannerArt';
 import { Inp, DateField, Pill, SBtn, Sheet, Toast, todayStr, W, GP } from '../components/Ui';
 import { useStored } from '../lib/store';
 import { TOP } from '../lib/layout';
+import { upcomingMy } from '../lib/myEvents';
 
 type Ev = { id: number; name: string; date: string; remind: string; done: boolean };
 type Tk = { id: number; name: string; note: string; prio: string; due: string; cat: string; status: 'todo' | 'doing' | 'done' };
@@ -97,13 +98,14 @@ export default function Planner() {
 
   const EventRow = ({ x }: { x: Ev }) => {
     const p = x.date.split('-'); const okd = p.length === 3;
+    const late = !x.done && okd && x.date < today;
     return (
       <Pressable onPress={() => setD({ ...d, events: d.events.map((y) => (y.id === x.id ? { ...y, done: !y.done } : y)) })}>
         <Raise c={x.done ? '#7df0a0' : '#8ea8ff'} dim={x.done}>
           <LinearGradient colors={x.done ? ['#2fae7a', '#5ee7b5'] : GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 48, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 10, fontWeight: '700' }}>{okd ? MON[+p[1] - 1] : 'NEW'}</Text><Text style={{ color: W, fontSize: 18, fontWeight: '800' }}>{okd ? p[2] : '--'}</Text>
           </LinearGradient>
-          <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 15.5, fontWeight: '700', textDecorationLine: x.done ? 'line-through' : 'none' }}>{x.name}</Text><Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>{x.remind === 'None' ? 'No reminder' : 'Reminder: ' + x.remind}</Text></View>
+          <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 15.5, fontWeight: '700', textDecorationLine: x.done ? 'line-through' : 'none' }}>{x.name}</Text><Text style={{ color: late ? '#ffb3c0' : 'rgba(255,255,255,.72)', fontSize: 11.5, marginTop: 2 }}>{(late ? 'Overdue · ' : '') + (x.remind === 'None' ? 'No reminder' : 'Reminder: ' + x.remind)}</Text></View>
           <Ic t="✎" label="Edit" onPress={() => setEdit({ id: x.id, kind: 'event', name: x.name, note: '', prio: 'Medium', date: x.date, remind: x.remind })} />
           <Ic t="✕" label="Delete" onPress={() => { setD({ ...d, events: d.events.filter((y) => y.id !== x.id) }); setEdit(null); }} />
         </Raise>
@@ -132,6 +134,7 @@ export default function Planner() {
 
   const sorted = d.events.slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
   const upcoming = sorted.filter((x) => !x.done), completed = sorted.filter((x) => x.done);
+  const my = upcomingMy(today, 6);
   const rank: any = { High: 0, Medium: 1, Low: 2 };
   const inCat = d.tasks.filter((x) => (x.cat || 'Tasks') === curCat);
   const byP = (a: Tk, b: Tk) => rank[a.prio] - rank[b.prio];
@@ -176,6 +179,29 @@ export default function Planner() {
 
           {tab === 'events' ? (
             <View style={{ gap: 8 }}>
+              <Sec t="Malaysia events" hint="auto · official calendar" c="#ffd27d" n={my.length} />
+              <Glass radius={22} style={{ padding: 12, gap: 8 }}>
+                {my.map((e) => {
+                  const added = d.events.some((y) => y.date === e.date && y.name === e.name);
+                  const c = e.kind === 'islam' ? '#7df0a0' : e.kind === 'national' ? '#8ea8ff' : '#ffd27d';
+                  const pp = e.date.split('-');
+                  return (
+                    <View key={e.date + e.name} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View style={{ width: 44, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.08)', borderWidth: 1, borderColor: c }}>
+                        <Text style={{ color: c, fontSize: 9.5, fontWeight: '700' }}>{MON[+pp[1] - 1]}</Text><Text style={{ color: W, fontSize: 16, fontWeight: '800' }}>{pp[2]}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text numberOfLines={1} style={{ color: W, fontSize: 14.5, fontWeight: '700' }}>{e.name}</Text>
+                        <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11.5, marginTop: 1 }}>{e.days === 0 ? 'Today' : e.days === 1 ? 'Tomorrow' : 'In ' + e.days + ' days'}{e.moon ? ' · may shift 1 day' : ''}</Text>
+                      </View>
+                      <Pressable disabled={added} onPress={() => { setD({ ...d, nextId: d.nextId + 1, events: [...d.events, { id: d.nextId, name: e.name, date: e.date, remind: '1 day before', done: false }] }); say('Added to your events'); }}>
+                        <View style={{ paddingHorizontal: 11, paddingVertical: 7, borderRadius: 14, backgroundColor: added ? 'rgba(125,240,160,.18)' : 'rgba(255,255,255,.14)' }}><Text style={{ color: W, fontSize: 12, fontWeight: '700' }}>{added ? 'Added' : '+ Add'}</Text></View>
+                      </Pressable>
+                    </View>
+                  );
+                })}
+              </Glass>
+
               <Sec t="Upcoming" hint="tap an event to mark done" c="#8ea8ff" n={upcoming.length} />
               {upcoming.map((x) => <EventRow key={x.id} x={x} />)}
               {ok && upcoming.length === 0 && <Empty t="No upcoming events." c="#8ea8ff" />}

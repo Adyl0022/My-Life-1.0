@@ -9,7 +9,7 @@ export default function Mathurat() {
   const head = (
     <View style={{ paddingHorizontal: 20, marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
       {pill(pe === 0, 'Morning', () => setPe(0))}{pill(pe === 1, 'Evening', () => setPe(1))}
-      <Text style={{ flex: 1, color: 'rgba(255,255,255,.7)', fontSize: 11.5, textAlign: 'right' }}>{pe === 0 ? 'Morning edition · after Subuh' : 'Evening edition · after Asar'}</Text>
+      <Text numberOfLines={1} style={{ flex: 1, color: 'rgba(255,255,255,.7)', fontSize: 11.5, textAlign: 'right' }}>{pe === 0 ? 'Read after Subuh' : 'Read after Asar'}</Text>
     </View>
   );
   return <ZikirScreen title="Al-Ma'thurat Sughra" sub="31 parts · Malaysian edition" parts={MATHURAT} storeKey={'mathurat_' + dayKey() + '_' + pe} bmKey="mathurat" start={0} evening={pe === 1} headExtra={head}

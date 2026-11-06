@@ -394,7 +394,7 @@ export const SEARCH_INDEX: SearchItem[] = [
  },
  {
   "t": "Add money to a savings goal",
-  "s": "From the Spending Tracker (Savings) or a monthly commitment",
+  "s": "From the Spending Tracker (Savings) or the goal itself",
   "m": "Finance",
   "c": "#ffc46b",
   "h": "Savings.dc.html",
@@ -431,14 +431,6 @@ export const SEARCH_INDEX: SearchItem[] = [
   "c": "#ffc46b",
   "h": "Finance.dc.html",
   "k": "month summary ringkasan bulan top category tip lebih kurang compare"
- },
- {
-  "t": "Link a commitment to a savings goal",
-  "s": "Paid amounts also count as saved",
-  "m": "Finance",
-  "c": "#ffc46b",
-  "h": "Finance.dc.html",
-  "k": "commitment goal tabung monthly komitmen link sambung simpanan auto"
  },
  {
   "t": "Copyright and licence",

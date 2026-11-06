@@ -121,17 +121,6 @@ export function Commitments({ income }: { income: number }) {
             <Inp style={{ flex: 1 }} keyboardType="decimal-pad" value={mo} onChangeText={setMo} placeholder="Monthly (RM)" />
             <Inp style={{ flex: 1 }} keyboardType="number-pad" value={day} onChangeText={setDay} placeholder="Due day (1 to 31)" onSubmitEditing={submit} />
           </View>
-          {sav.goals.length > 0 ? (
-            <View>
-              <Text style={{ color: dim, fontSize: 11.5 }}>Save this into a savings goal (optional)</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                {[{ id: 0, name: 'None' }, ...sav.goals].map((g) => (
-                  <Pressable key={g.id} onPress={() => setGl(g.id)} style={{ paddingVertical: 5, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1, borderColor: gl === g.id ? 'transparent' : 'rgba(255,255,255,.2)', backgroundColor: gl === g.id ? '#5ee7b5' : 'rgba(255,255,255,.08)' }}><Text style={{ color: gl === g.id ? '#0c2a28' : W, fontSize: 11.5, fontWeight: '700' }}>{g.name}</Text></Pressable>
-                ))}
-              </View>
-              {gl ? <Text style={{ color: dim, fontSize: 11, marginTop: 4 }}>When you tick this as paid, the amount also counts as saved in that goal.</Text> : null}
-            </View>
-          ) : null}
           <Pressable onPress={submit}><LinearGradient colors={WARM} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 42, borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#2a1030', fontSize: 13, fontWeight: '800' }}>{edit ? 'Save changes' : fixed ? 'Add commitment' : 'Add debt'}</Text></LinearGradient></Pressable>
         </View>
       ) : null}

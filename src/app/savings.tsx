@@ -9,6 +9,7 @@ import { Blob } from '../components/Bg';
 import { Inp, DateField, todayStr, W } from '../components/Ui';
 import { useStored } from '../lib/store';
 import { TOP } from '../lib/layout';
+import { useReveal } from '../lib/keyboard';
 import { DEBT_EMPTY, DebtData } from '../lib/debts';
 import { SAV_EMPTY, SavData, Goal, KINDS, kindOf, goalLines, goalSaved, perMonth, monthsUntil } from '../lib/savings';
 
@@ -34,7 +35,7 @@ const Chip = ({ t, on, c, onPress }: { t: string; on: boolean; c?: string; onPre
 const Lbl = ({ t }: { t: string }) => <Text style={{ color: dimC, fontSize: 11.5, marginTop: 2 }}>{t}</Text>;
 
 export default function Savings() {
-  const router = useRouter();
+  const router = useRouter(); const { kb, ref: sref, onScroll: sScroll, reveal } = useReveal();
   const [sv, setSv] = useStored<SavData>('ml_savings', SAV_EMPTY);
   const [fin, setFin] = useStored<any>('ml_finance', { inc: {}, cnt: {}, spends: [], nextId: 1 });
   const [debts, setDebts] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
@@ -99,7 +100,7 @@ export default function Savings() {
       <Blob size={320} color="rgba(94,231,181,.3)" style={{ right: -100, top: -40 }} />
       <Blob size={340} color="rgba(124,156,255,.28)" style={{ left: -120, bottom: 0 }} />
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 70 }}>
+        <ScrollView ref={sref} onScroll={sScroll} scrollEventThrottle={16} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 + TOP, paddingBottom: 70 + kb }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Pressable onPress={() => router.back()} accessibilityLabel="Back"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 24, marginTop: -3 }}>‹</Text></Glass></Pressable>
             <Text style={{ flex: 1, color: W, fontSize: 22, fontWeight: '800', letterSpacing: -0.3 }}>Savings Goals</Text>
@@ -121,10 +122,10 @@ export default function Savings() {
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                 {KINDS.map((k) => <Chip key={k.k} t={ICON[k.k] + ' ' + k.label} on={kind === k.k} c={k.color} onPress={() => pickKind(k.k)} />)}
               </View>
-              <Inp style={{ marginTop: 10 }} value={name} onChangeText={setName} placeholder="Name your goal, for example Wedding fund" />
-              <Inp style={{ marginTop: 8 }} keyboardType="decimal-pad" value={target} onChangeText={setTarget} placeholder="Target amount (RM)" />
-              <Inp style={{ marginTop: 8 }} value={place} onChangeText={setPlace} placeholder="Where do you keep it? e.g. Maybank (optional)" />
-              <Inp style={{ marginTop: 8 }} keyboardType="decimal-pad" value={start} onChangeText={setStart} placeholder="Already saved so far (RM, optional)" />
+              <Inp onFocus={reveal} style={{ marginTop: 10 }} value={name} onChangeText={setName} placeholder="Name your goal, for example Wedding fund" />
+              <Inp onFocus={reveal} style={{ marginTop: 8 }} keyboardType="decimal-pad" value={target} onChangeText={setTarget} placeholder="Target (RM)" />
+              <Inp onFocus={reveal} style={{ marginTop: 8 }} value={place} onChangeText={setPlace} placeholder="Kept in, e.g. Maybank" />
+              <Inp onFocus={reveal} style={{ marginTop: 8 }} keyboardType="decimal-pad" value={start} onChangeText={setStart} placeholder="Already saved (RM), optional" />
               <Text style={{ color: dimC, fontSize: 11.5, marginTop: 10 }}>Target date (optional)</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
                 <View style={{ flex: 1 }}><DateField value={due || todayStr()} onChange={setDue} /></View>
@@ -174,8 +175,8 @@ export default function Savings() {
                 {isOpen && (mode === 'add' || mode === 'out') ? (
                   <View style={{ marginTop: 12, gap: 8 }}>
                     <Text style={{ color: W, fontSize: 13, fontWeight: '700' }}>{mode === 'add' ? 'Add money to this goal' : 'Take money out of this goal'}</Text>
-                    <Inp autoFocus keyboardType="decimal-pad" value={amt} onChangeText={setAmt} placeholder="Amount (RM)" onSubmitEditing={() => (mode === 'add' ? addMoney(g) : withdraw(g))} />
-                    <Inp value={note} onChangeText={setNote} placeholder={mode === 'add' ? 'Note (optional), e.g. March saving' : 'Why? (optional)'} />
+                    <Inp onFocus={reveal} autoFocus keyboardType="decimal-pad" value={amt} onChangeText={setAmt} placeholder="Amount (RM)" onSubmitEditing={() => (mode === 'add' ? addMoney(g) : withdraw(g))} />
+                    <Inp onFocus={reveal} value={note} onChangeText={setNote} placeholder={mode === 'add' ? 'Note (optional), e.g. March saving' : 'Why? (optional)'} />
                     <DateField value={dt} onChange={setDt} />
                     <Lbl t={mode === 'add' ? 'This is saved in your Spending Tracker under Savings, so Money Left counts it too.' : 'This lowers the goal only. Add the money back to your spending or income if you need to track it.'} />
                     <Pressable onPress={() => (mode === 'add' ? addMoney(g) : withdraw(g))}><LinearGradient colors={WARM} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 42, borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#0c2a28', fontSize: 13, fontWeight: '800' }}>{mode === 'add' ? 'Add' : 'Take out'}</Text></LinearGradient></Pressable>
@@ -185,9 +186,9 @@ export default function Savings() {
                 {isOpen && mode === 'edit' ? (
                   <View style={{ marginTop: 12, gap: 8 }}>
                     <Text style={{ color: W, fontSize: 13, fontWeight: '700' }}>Edit goal</Text>
-                    <Inp value={eName} onChangeText={setEName} placeholder="Goal name" />
-                    <Inp value={ePlace} onChangeText={setEPlace} placeholder="Where do you keep it? e.g. Maybank" />
-                    <Inp keyboardType="decimal-pad" value={eTarget} onChangeText={setETarget} placeholder="Target amount (RM)" />
+                    <Inp onFocus={reveal} value={eName} onChangeText={setEName} placeholder="Goal name" />
+                    <Inp onFocus={reveal} value={ePlace} onChangeText={setEPlace} placeholder="Kept in, e.g. Maybank" />
+                    <Inp onFocus={reveal} keyboardType="decimal-pad" value={eTarget} onChangeText={setETarget} placeholder="Target (RM)" />
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <View style={{ flex: 1 }}><DateField value={eDue || todayStr()} onChange={setEDue} /></View>
                       {eDue ? <Pressable onPress={() => setEDue('')} style={{ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12, fontWeight: '700' }}>No date</Text></Pressable> : null}
@@ -212,7 +213,7 @@ export default function Savings() {
 
                 {isOpen && mode === 'hist' ? (
                   <View style={{ marginTop: 10 }}>
-                    {lines.length === 0 ? <Text style={{ color: dimC, fontSize: 12, marginTop: 4 }}>Nothing saved yet. Tap Add money, or choose Savings in the Spending Tracker, or link a monthly commitment to this goal.</Text> : null}
+                    {lines.length === 0 ? <Text style={{ color: dimC, fontSize: 12, marginTop: 4 }}>Nothing saved yet. Tap Add money, or choose Savings in the Spending Tracker.</Text> : null}
                     {lines.map((l, i) => (
                       <View key={l.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 9, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: 'rgba(255,255,255,.1)' }}>
                         <View style={{ flex: 1 }}>
@@ -232,7 +233,7 @@ export default function Savings() {
           {goals.length > 0 ? (
             <Glass radius={22} style={{ marginTop: 12, paddingVertical: 12, paddingHorizontal: 16 }}>
               <Text style={{ color: W, fontSize: 13, fontWeight: '800' }}>How it stays in sync</Text>
-              <Text style={{ color: dimC, fontSize: 12, lineHeight: 18, marginTop: 4 }}>In My Finance, pick the Savings category in the Spending Tracker and choose a goal, or link a monthly commitment to a goal. Either way the money lands here and in Money Left automatically.</Text>
+              <Text style={{ color: dimC, fontSize: 12, lineHeight: 18, marginTop: 4 }}>In My Finance, pick the Savings category in the Spending Tracker and choose a goal. The money lands here and in Money Left automatically.</Text>
             </Glass>
           ) : null}
         </ScrollView>

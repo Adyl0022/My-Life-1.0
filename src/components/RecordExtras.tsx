@@ -1,3 +1,4 @@
+import { fileStamp } from '../lib/exporter';
 import React, { useState } from 'react';
 import { View, Pressable, Image, Modal, Platform } from 'react-native';
 import { Text } from './Txt';
@@ -273,7 +274,7 @@ export function ExportCard({ name, d, latest }: { name: string; d: any; latest: 
     try {
       const html = buildHtml(name, d, latest, owner); const Print = await import('expo-print');
       if (Platform.OS === 'web') await Print.printAsync({ html });
-      else { const r = await Print.printToFileAsync({ html }); const Sh = await import('expo-sharing'); if (await Sh.isAvailableAsync()) await Sh.shareAsync(r.uri, { mimeType: 'application/pdf', dialogTitle: 'My Record · ' + name }); else setMsg('PDF saved.'); }
+      else { const r = await Print.printToFileAsync({ html }); const Sh = await import('expo-sharing'); let uri = r.uri; const fn = 'my-life-record-' + (name || 'vehicle').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + fileStamp() + '.pdf'; try { const FS = await import('expo-file-system/legacy'); const to = (FS.cacheDirectory || '') + fn; await FS.deleteAsync(to, { idempotent: true }); await FS.copyAsync({ from: r.uri, to }); uri = to; } catch (e) { /* keep name */ } if (await Sh.isAvailableAsync()) await Sh.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: fn }); else setMsg('PDF saved.'); }
     } catch (e) { setMsg('Could not create the PDF. Please try again.'); }
     setBusy(false);
   };

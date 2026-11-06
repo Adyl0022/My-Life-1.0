@@ -69,7 +69,7 @@ export default function Export() {
       } else {
         const r = await buildReport(sel, per);
         if (k === 'xlsx') ok = await deliver(file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', await toXlsxBase64(r), true);
-        else if (k === 'pdf') ok = await deliverPdf(toHtml(r));
+        else if (k === 'pdf') ok = await deliverPdf(toHtml(r), file);
         else ok = await deliver(file, 'text/csv', toCsv(r));
       }
       setMsg(ok ? (k === 'pdf' ? 'Your PDF is ready.' : 'Saved as ' + file) : 'The file was created, but this phone has no way to share it.'); setPhase(ok ? 2 : 3);

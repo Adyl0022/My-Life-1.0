@@ -71,12 +71,14 @@ export type Row = { l: string; now: string; prev: string; d: number | null; good
 export function weekly(c: Core) {
   const cg = cupsGoal(c.hd);
   const avg = (from: number, to: number, f: (x: any) => number, skip0 = false) => { let t = 0, n = 0; for (let o = from; o <= to; o++) { const v = f(getDay(c.hd, o)); if (skip0 && !(v > 0)) continue; t += v; n++; } return n ? t / n : 0; };
+  // Average daily score over the days that have anything logged.
+  const dayAvg = (from: number, to: number) => { let t = 0, n = 0; for (let o = from; o <= to; o++) if (hasData(c, o)) { t += dayPct(c, o); n++; } return n ? t / n : 0; };
   const mk = (l: string, a: number, b: number, fmt: (n: number) => string, up: boolean): Row => ({ l, now: fmt(a), prev: fmt(b), d: b > 0 ? Math.round(((a - b) / b) * 100) : null, good: up ? a >= b : a <= b });
   const rows: Row[] = [
     mk('Steps a day', avg(-6, 0, (x) => x.steps), avg(-13, -7, (x) => x.steps), (n) => Math.round(n).toLocaleString(), true),
     mk('Water a day', avg(-6, 0, (x) => x.cups), avg(-13, -7, (x) => x.cups), (n) => (Math.round(n * 10) / 10) + ' of ' + cg, true),
     mk('Sleep a night', avg(-6, 0, (x) => x.sleep, true), avg(-13, -7, (x) => x.sleep, true), (n) => (Math.round(n * 10) / 10) + ' h', true),
-    mk('Spending', spendSum(c, -6, 0), spendSum(c, -13, -7), (n) => rmf(n), false),
+    mk('Daily score', dayAvg(-6, 0), dayAvg(-13, -7), (n) => Math.round(n) + '%', true),
   ];
   let best = -1, worst = -1, bp = -1, wp = 101;
   for (let o = -6; o <= 0; o++) if (hasData(c, o)) { const p = dayPct(c, o); if (p > bp) { bp = p; best = o; } if (p < wp) { wp = p; worst = o; } }

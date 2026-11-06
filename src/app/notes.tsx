@@ -58,12 +58,14 @@ export default function Notes() {
   const [lh, setLh] = useState<Record<number, { t: string; h: number }>>({});
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    const a = Keyboard.addListener('keyboardDidShow', (e: any) => { setKb(e.endCoordinates.height); setTimeout(() => edScroll.current?.scrollToEnd?.({ animated: true }), 120); });
-    const b = Keyboard.addListener('keyboardDidHide', () => setKb(0));
-    return () => { a.remove(); b.remove(); };
+    let ht: any = null; let shown = false;
+    // Moving to the next line briefly hides and shows the keyboard on some phones. Ignore that blink so the screen does not shake.
+    const a = Keyboard.addListener('keyboardDidShow', (e: any) => { if (ht) { clearTimeout(ht); ht = null; } setKb((k) => (k === e.endCoordinates.height ? k : e.endCoordinates.height)); if (!shown) { shown = true; setTimeout(() => edScroll.current?.scrollToEnd?.({ animated: true }), 120); } });
+    const b = Keyboard.addListener('keyboardDidHide', () => { if (ht) clearTimeout(ht); ht = setTimeout(() => { setKb(0); ht = null; shown = false; }, 350); });
+    return () => { a.remove(); b.remove(); if (ht) clearTimeout(ht); };
   }, []);
   const [fo, setFo] = useState(-1);
-  useEffect(() => { if (fo >= 0) { const i = fo; setTimeout(() => refs.current[i]?.focus?.(), 40); setFo(-1); } }, [fo]);
+  useEffect(() => { if (fo >= 0) { const i = fo; setTimeout(() => refs.current[i]?.focus?.(), 0); setFo(-1); } }, [fo]);
   const setLines = (L: string[]) => upd({ s: L.join('\n') });
   const lineChange = (i: number, pre: string, v: string) => {
     const L = (draft?.s ?? '').split('\n');
@@ -118,7 +120,7 @@ export default function Notes() {
               return (
                 <Pressable key={n.id} style={{ width: grid ? '47.8%' : '100%' }} delayLongPress={450}
                   onPress={() => openEdit(n)} onLongPress={() => setMenuId(n.id)}>
-                  <Glass radius={22} style={{ padding: 14, minHeight: 110 }}>
+                  <Glass radius={22} style={{ padding: 14, minHeight: 110, ...(grid ? { height: 178, overflow: 'hidden' } : {}) }}>
                     <View style={{ width: 28, height: 4, borderRadius: 2, backgroundColor: COL[n.c], marginBottom: 8 }} />
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}><Text numberOfLines={1} style={{ flex: 1, color: W, fontSize: 14.5, fontWeight: '800' }}>{n.t.trim() || 'Untitled'}</Text>{n.pin ? <Text style={{ color: '#ffd593', fontSize: 10, fontWeight: '800' }}>PIN</Text> : null}</View>
                     <View style={{ marginTop: 4 }}>
@@ -133,7 +135,7 @@ export default function Notes() {
                         );
                       })}
                     </View>
-                    <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                    <View style={{ flexDirection: 'row', gap: 8, marginTop: grid ? 'auto' : 8, paddingTop: grid ? 6 : 0, flexWrap: 'wrap' }}>
                       <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 10.5 }}>{when(n.u)}</Text>
                       {tot ? <Text style={{ color: '#8fe9e2', fontSize: 10.5 }}>✓ {dn}/{tot}</Text> : null}
                     </View>
@@ -182,7 +184,7 @@ export default function Notes() {
                     return (
                       <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                         {ck ? <Pressable onPress={() => toggleLine(i)} hitSlop={8} accessibilityLabel="Toggle item" style={{ width: 30, height: 24, justifyContent: 'center' }}><Text style={{ color: on ? '#ffc46b' : W, fontSize: 20, lineHeight: 24 }}>{on ? '☑' : '☐'}</Text></Pressable> : null}
-                        <TextInput ref={(r) => { refs.current[i] = r; }} onFocus={() => { focI.current = i; }} onContentSizeChange={(e) => { const hh = Math.max(24, Math.ceil(e.nativeEvent.contentSize.height)); setLh((m) => (m[i] && m[i].t === rest && m[i].h === hh ? m : { ...m, [i]: { t: rest, h: hh } })); }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, height: lh[i] ? (lh[i].t === rest || rest.length > lh[i].t.length ? lh[i].h : undefined) : undefined, minHeight: 24, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
+                        <TextInput ref={(r) => { refs.current[i] = r; }} onFocus={() => { focI.current = i; }} onContentSizeChange={(e) => { const hh = Math.max(24, Math.ceil(e.nativeEvent.contentSize.height)); setLh((m) => (m[i] && m[i].t === rest && m[i].h === hh ? m : { ...m, [i]: { t: rest, h: hh } })); }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, height: lh[i] ? lh[i].h : 24, minHeight: 24, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
                       </View>
                     );
                   })}

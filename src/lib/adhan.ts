@@ -38,7 +38,7 @@ export async function syncPrayerAlerts(list: Alert[], zoneName: string): Promise
       await Notifications.scheduleNotificationAsync({
         identifier: 'prayer-' + a.key + '-' + a.at.getTime(),
         content: lead ? { title: a.name + ' in ' + lead + ' minutes', body: 'Get ready for ' + a.name + (zoneName ? ' · ' + zoneName : ''), sound: true }
-          : { title: 'Waktu ' + a.name, body: 'Masuk waktu ' + a.name + (zoneName ? ' · ' + zoneName : ''), sound: true },
+          : { title: a.name + ' prayer time', body: 'It is time for ' + a.name + ' prayer' + (zoneName ? ' · ' + zoneName : ''), sound: true },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: fire(a), channelId: 'prayer' } as any,
       });
     }

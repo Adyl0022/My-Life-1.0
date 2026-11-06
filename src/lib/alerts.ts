@@ -40,12 +40,12 @@ export async function syncZikirAlerts(tg: Toggles): Promise<void> {
     if (!tg.zk) return;
     const p = await Notifications.getPermissionsAsync(); if (p.status !== 'granted') return;
     if (Platform.OS === 'android') await Notifications.setNotificationChannelAsync('zikir', { name: 'Daily zikir', importance: Notifications.AndroidImportance.DEFAULT, lightColor: '#6a4df0' });
-    const slots: [string, number, number, string][] = [['morning', 6, 30, 'Al-Ma\'thurat pagi'], ['evening', 17, 30, 'Al-Ma\'thurat petang']];
+    const slots: [string, number, number, string][] = [['morning', 6, 30, 'Morning Al-Ma\'thurat'], ['evening', 17, 30, 'Evening Al-Ma\'thurat']];
     for (const [k, h, m, title] of slots) {
       if (inQuiet(new Date(2000, 0, 1, h, m), tg)) continue;
       await Notifications.scheduleNotificationAsync({
         identifier: 'zikir-' + k,
-        content: { title, body: 'Masa untuk zikir ' + (k === 'morning' ? 'pagi' : 'petang') + '. Buka Islamic Hub.', sound: false },
+        content: { title, body: 'Time for your ' + (k === 'morning' ? 'morning' : 'evening') + ' zikir. Open Islamic Hub.', sound: false },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: h, minute: m, channelId: 'zikir' } as any,
       });
     }

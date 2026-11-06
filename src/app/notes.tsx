@@ -211,7 +211,11 @@ export default function Notes() {
                 ))}
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 6 }}>
-                  {COL.map((c, i) => <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: c, borderWidth: draft.c === i ? 2 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.25)' }} />)}
+                  {COL.map((c, i) => (
+                    <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c, shadowColor: '#000', shadowOpacity: draft.c === i ? 0.5 : 0.35, shadowRadius: draft.c === i ? 9 : 6, shadowOffset: { width: 0, height: draft.c === i ? 6 : 4 }, elevation: draft.c === i ? 9 : 5 }}>
+                      <LinearGradient colors={['rgba(255,255,255,.55)', 'rgba(255,255,255,.08)', 'rgba(0,0,0,.18)']} locations={[0, 0.5, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1, borderRadius: 15, borderWidth: draft.c === i ? 2.5 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.3)', borderTopColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.7)' }} />
+                    </Pressable>
+                  ))}
                 </View>
               </LinearGradient></View>
               {confirmDel && (

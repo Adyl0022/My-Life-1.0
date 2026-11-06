@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useStored, getItem, setItem } from './store';
 import { HEMPTY, HData, keyOfDate, dateOf, cupsGoal, getDay, bestStreakAll, BLANK } from './habit';
 import { DEBT_EMPTY, DebtData, debtSummary, ymOf } from './debts';
+import { commitFor } from './moneyLeft';
 import { PUASA_EMPTY, PuasaData } from './fasting';
 import { Fin, Pl, scoreParts, lifeScore, incomeOf, Core } from './insights';
 import { TG_DEFAULT, Toggles } from './adhan';
@@ -20,7 +21,7 @@ export type Real = {
   P: [string, number, number][]; // prayer times today, empty when the place is not known yet
   spends: { id: number; name: string; cat: string; amt: number; date: string }[]; days: Record<string, { mood: number; cups: number; sleep: number; steps: number }>;
   plTasks: { id: number; name: string; due: string; prio: string; status: string }[]; plEvents: { id: number; name: string; date: string; done: boolean }[];
-  incomeLast: number;
+  incomeLast: number; commit: number; saveGoal: number;
 };
 
 const td = () => keyOfDate(new Date());
@@ -79,7 +80,7 @@ export function useReal(P: [string, number, number][]): Real {
     spends: spends as any, days: (hd.days || {}) as any,
     plTasks: ((pl && pl.tasks) || []).map((x: any) => ({ id: x.id, name: x.name, due: x.due || '', prio: x.prio || 'Medium', status: x.status })),
     plEvents: ((pl && pl.events) || []).map((e: any) => ({ id: e.id, name: e.name, date: e.date, done: !!e.done })),
-    incomeLast: incomeLastMonth(fin),
+    incomeLast: incomeLastMonth(fin), commit: commitFor(debts, ym), saveGoal: num((fin as any).save),
   };
 }
 

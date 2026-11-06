@@ -10,6 +10,7 @@ export async function getItem<T>(k: string, d: T): Promise<T> {
 export async function setItem(k: string, v: unknown) {
   try { await AsyncStorage.setItem(k, await seal(JSON.stringify(v))); } catch (e) {}
   listeners.forEach((f) => f());
+  if (k === 'ml_finance' || k === 'ml_debts') import('./budgetAlert').then((m) => m.checkBudget()).catch(() => {});
 }
 // Raw readable JSON text of a saved key (used by Export).
 export async function getText(k: string): Promise<string | null> {

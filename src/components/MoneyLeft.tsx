@@ -6,15 +6,17 @@ import Svg, { Circle } from 'react-native-svg';
 import { Glass } from './Glass';
 import { W } from './Ui';
 import { useStored } from '../lib/store';
-import { DEBT_EMPTY, DebtData, isActive, amountDue } from '../lib/debts';
+import { DEBT_EMPTY, DebtData } from '../lib/debts';
+import { calcLeft, commitFor, monthSummary, MONTHS, Sp } from '../lib/moneyLeft';
+import { setup } from '../lib/adhan';
+import { BUDGET_EMPTY, BudgetCfg, checkBudget } from '../lib/budgetAlert';
 
 const money = (n: number) => n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const rnd = (n: number) => Math.round(n).toLocaleString('en-MY');
-const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const GOALS = [0, 10, 20, 30];
 const COL = { commit: '#b794ff', spent: '#ffc46b', save: '#7c9cff', left: '#5ee7b5', over: '#ff7a8a' };
+const dim = 'rgba(255,255,255,.68)';
 
-type Sp = { id: number; name: string; cat: string; amt: number; date: string };
 type Props = { ym: string; income: number; spends: Sp[]; goal: number; setGoal: (g: number) => void };
 
 const Row = ({ c, l, v, minus, bold }: { c?: string; l: string; v: string; minus?: boolean; bold?: boolean }) => (
@@ -26,62 +28,46 @@ const Row = ({ c, l, v, minus, bold }: { c?: string; l: string; v: string; minus
 );
 const Tile = ({ l, v, sub, c }: { l: string; v: string; sub?: string; c?: string }) => (
   <View style={{ flex: 1, borderRadius: 16, paddingVertical: 9, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,.09)' }}>
-    <Text style={{ color: 'rgba(255,255,255,.68)', fontSize: 10.5 }}>{l}</Text>
+    <Text style={{ color: dim, fontSize: 10.5 }}>{l}</Text>
     <Text style={{ color: c || W, fontSize: 15, fontWeight: '800', marginTop: 2 }}>{v}</Text>
     {sub ? <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 10, marginTop: 1 }}>{sub}</Text> : null}
   </View>
 );
+const Sw = ({ on, set }: { on: boolean; set: (v: boolean) => void }) => (
+  <Pressable accessibilityLabel="Budget alerts" onPress={() => set(!on)} style={{ width: 44, height: 26, borderRadius: 13, padding: 3, backgroundColor: on ? '#ffc46b' : 'rgba(255,255,255,.2)', alignItems: on ? 'flex-end' : 'flex-start', justifyContent: 'center' }}>
+    <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: on ? '#2a1030' : '#fff' }} />
+  </Pressable>
+);
 
 export function MoneyLeft({ ym, income, spends, goal, setGoal }: Props) {
   const [debts] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
-  const now = new Date();
-  const curKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-  const isCur = ym === curKey;
-  const y = parseInt(ym.slice(0, 4), 10), m = parseInt(ym.slice(5, 7), 10) - 1;
-  const dim = new Date(y, m + 1, 0).getDate();
-  const dayNo = isCur ? now.getDate() : dim;
-  const daysLeft = isCur ? dim - dayNo + 1 : 0;
-
-  const list = debts.debts || [];
-  const commit = list.filter((x) => isActive(x, ym)).reduce((a, x) => a + amountDue(x, ym), 0);
-  const inM = spends.filter((p) => (p.date || '').slice(0, 7) === ym);
-  const spent = inM.reduce((a, p) => a + p.amt, 0);
-  const today = isCur ? inM.filter((p) => p.date === curKey + '-' + String(now.getDate()).padStart(2, '0')).reduce((a, p) => a + p.amt, 0) : 0;
-  const save = Math.round(income * goal) / 100;
-  const left = income - commit - spent - save;
-  const over = left < 0;
-  const used = income > 0 ? Math.min(1.5, (commit + spent + save) / income) : 0;
-
-  const avg = dayNo > 0 ? spent / dayNo : 0;
-  const projSpent = isCur ? spent + avg * (daysLeft - 1) : spent;
-  const projLeft = income - commit - save - projSpent;
-  const perDay = isCur && daysLeft > 0 ? Math.max(0, left) / daysLeft : 0;
-  const runOutIn = avg > 0 && left > 0 ? Math.floor(left / avg) : -1;
-  const runOutDay = runOutIn >= 0 && isCur ? dayNo + runOutIn : 0;
-
-  const state = income <= 0 ? 'none' : over ? 'over' : (isCur && projLeft < 0) || used >= 0.85 ? 'care' : 'ok';
+  const [bc, setBc] = useStored<BudgetCfg>('ml_budget', BUDGET_EMPTY);
+  const c = calcLeft({ ym, income, commit: commitFor(debts, ym), spends, goal });
+  const { isCur, dim: dimDays, dayNo, daysLeft, commit, spent, today, save, left, over, used, allowance, projLeft, pace, oneOff, runOutDay, state } = c;
   const sc = state === 'over' ? COL.over : state === 'care' ? COL.spent : COL.left;
-  const sl = state === 'over' ? 'Over budget' : state === 'care' ? 'Be careful' : 'On track';
-  const title = 'Money Left · ' + MON[m] + ' ' + y;
-
+  const sl = state === 'over' ? 'Over budget' : state === 'care' ? (isCur ? 'Be careful' : 'Tight month') : 'On track';
   const R = 46, C = 2 * Math.PI * R;
-  const pct = income > 0 ? Math.min(100, Math.round(((commit + spent + save) / income) * 100)) : 0;
+  const pct = income > 0 ? Math.min(100, Math.round(used * 100)) : 0;
   const seg = (v: number) => (income > 0 ? Math.max(0, Math.min(1, v / income)) : 0);
   const bar = [{ v: commit, c: COL.commit }, { v: spent, c: COL.spent }, { v: save, c: COL.save }, { v: Math.max(0, left), c: COL.left }];
+  const py = c.y, pm = c.m; const prev = new Date(py, pm - 1, 1);
+  const prevYm = prev.getFullYear() + '-' + String(prev.getMonth() + 1).padStart(2, '0');
+  const showSum = income > 0 && (!isCur || daysLeft <= 3);
+  const sm = showSum ? monthSummary({ ym, income, commit, spends, goal, prevYm }) : null;
 
   let tip = '';
   if (state === 'none') tip = 'Add this month\'s income above and I will show how much is left after your commitments and spending.';
   else if (state === 'over') tip = 'You have gone RM ' + rnd(-left) + ' past what you earned this month. Hold off on non-essential spending' + (goal > 0 ? ', or lower your savings target.' : '.');
   else if (!isCur) tip = left > 0 ? 'You finished this month with RM ' + rnd(left) + ' left. Well done.' : 'This month ended exactly on budget.';
-  else if (spent === 0) tip = 'No spending recorded yet. You can spend about RM ' + rnd(perDay) + ' a day and stay on track.';
-  else if (projLeft < 0) tip = 'At your current pace of RM ' + rnd(avg) + ' a day, your money runs out around the ' + Math.min(dim, runOutDay) + 'th. Try to keep to RM ' + rnd(perDay) + ' a day.';
-  else tip = 'At your current pace you would finish the month with about RM ' + rnd(projLeft) + ' left. Keep to RM ' + rnd(perDay) + ' a day or less.';
+  else if (spent === 0) tip = 'No spending recorded yet. You can spend about RM ' + rnd(allowance) + ' a day and stay on track.';
+  else if (projLeft < 0) tip = 'At your usual pace of RM ' + rnd(pace) + ' a day, your money runs out around the ' + (runOutDay || dimDays) + 'th. Try to keep to RM ' + rnd(allowance) + ' a day.';
+  else tip = 'At your usual pace you would finish the month with about RM ' + rnd(projLeft) + ' left. Keep to RM ' + rnd(allowance) + ' a day or less.';
 
   return (
     <Glass radius={26} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
       <LinearGradient colors={[state === 'over' ? 'rgba(255,122,138,.28)' : 'rgba(94,231,181,.2)', 'rgba(124,156,255,.12)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: -1 }} />
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <Text style={{ flexShrink: 1, color: 'rgba(255,255,255,.8)', fontSize: 13, fontWeight: '700' }}>{title}</Text>
+        <Text style={{ flexShrink: 1, color: 'rgba(255,255,255,.8)', fontSize: 13, fontWeight: '700' }}>{'Money Left · ' + MONTHS[pm] + ' ' + py}</Text>
         {state !== 'none' ? <View style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, backgroundColor: sc }}><Text style={{ color: '#2a1030', fontSize: 11, fontWeight: '800' }}>{sl}</Text></View> : null}
       </View>
 
@@ -120,25 +106,44 @@ export function MoneyLeft({ ym, income, spends, goal, setGoal }: Props) {
 
           {isCur ? (
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-              <Tile l="Per day" v={'RM ' + rnd(perDay)} sub={daysLeft + (daysLeft === 1 ? ' day left' : ' days left')} c={perDay > 0 ? W : COL.over} />
-              <Tile l="Today" v={'RM ' + rnd(today)} sub={perDay > 0 ? (today <= perDay ? 'within limit' : 'over limit') : ''} c={perDay > 0 && today > perDay ? COL.over : W} />
-              {!over ? <Tile l="Month end" v={(projLeft < 0 ? '-' : '') + 'RM ' + rnd(Math.abs(projLeft))} sub="at this pace" c={projLeft < 0 ? COL.over : COL.left} /> : null}
+              <Tile l="Per day" v={'RM ' + rnd(allowance)} sub={daysLeft + (daysLeft === 1 ? ' day left' : ' days left')} c={allowance > 0 ? W : COL.over} />
+              <Tile l="Today" v={'RM ' + rnd(today)} sub={allowance > 0 ? (today <= allowance ? 'within limit' : 'over limit') : ''} c={allowance > 0 && today > allowance ? COL.over : W} />
+              {!over ? <Tile l="Month end" v={(projLeft < 0 ? '-' : '') + 'RM ' + rnd(Math.abs(projLeft))} sub="at usual pace" c={projLeft < 0 ? COL.over : COL.left} /> : null}
             </View>
           ) : null}
         </>
       ) : null}
 
       <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12.5, lineHeight: 18, marginTop: 10 }}>{tip}</Text>
+      {isCur && income > 0 && spent > 0 && oneOff > 0 ? <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11, lineHeight: 15, marginTop: 4 }}>{'Usual pace leaves out bills and big one-off buys (RM ' + rnd(oneOff) + ' so far), because they do not repeat every day.'}</Text> : null}
+
+      {sm ? (
+        <View style={{ marginTop: 14, borderRadius: 16, padding: 12, backgroundColor: 'rgba(0,0,0,.2)' }}>
+          <Text style={{ color: '#ffd593', fontSize: 11, fontWeight: '700', letterSpacing: 1.2 }}>{isCur ? 'MONTH SO FAR' : 'MONTH SUMMARY'}</Text>
+          <Text style={{ color: sm.ok ? COL.left : COL.over, fontSize: 15, fontWeight: '800', marginTop: 6 }}>{sm.ok ? 'Saved RM ' + money(sm.saved) + (isCur ? ' so far' : '') : 'Overspent by RM ' + money(-sm.saved)}</Text>
+          {sm.topCat ? <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 12.5, marginTop: 6 }}>{'Biggest category: ' + sm.topCat + ' RM ' + rnd(sm.topAmt) + ' (' + sm.topShare + '% of spending)'}</Text> : null}
+          {sm.biggest ? <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 12.5, marginTop: 3 }}>{'Biggest single spend: ' + sm.biggest.name + ' RM ' + rnd(sm.biggest.amt)}</Text> : null}
+          {sm.vsPrev !== null ? <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 12.5, marginTop: 3 }}>{'Spending was ' + (sm.vsPrev === 0 ? 'the same as' : Math.abs(sm.vsPrev) + '% ' + (sm.vsPrev > 0 ? 'higher than' : 'lower than')) + ' ' + MONTHS[prev.getMonth()] + ' (RM ' + rnd(sm.prevSpent) + ').'}</Text> : null}
+          {sm.tip ? <Text style={{ color: '#ffd593', fontSize: 12.5, lineHeight: 18, marginTop: 8 }}>{'Next month: ' + sm.tip}</Text> : null}
+        </View>
+      ) : null}
 
       {income > 0 ? (
         <View style={{ marginTop: 18 }}>
-          <Text style={{ color: 'rgba(255,255,255,.68)', fontSize: 11.5, lineHeight: 16, marginBottom: 12 }}>Keep part of your income aside as savings</Text>
+          <Text style={{ color: dim, fontSize: 11.5, lineHeight: 16, marginBottom: 12 }}>Keep part of your income aside as savings</Text>
           <View style={{ flexDirection: 'row', gap: 6 }}>
             {GOALS.map((g) => (
               <Pressable key={g} onPress={() => setGoal(g)} style={{ flex: 1, paddingVertical: 7, borderRadius: 999, alignItems: 'center', borderWidth: 1, borderColor: goal === g ? 'transparent' : 'rgba(255,255,255,.2)', backgroundColor: goal === g ? COL.save : 'rgba(255,255,255,.08)' }}>
                 <Text style={{ color: goal === g ? '#10163a' : W, fontSize: 12, fontWeight: '800' }}>{g === 0 ? 'None' : g + '%'}</Text>
               </Pressable>
             ))}
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>Budget alerts</Text>
+              <Text style={{ color: dim, fontSize: 11.5, lineHeight: 16, marginTop: 2 }}>A notification when you use 80% of your income, go over today's limit, or go over budget.</Text>
+            </View>
+            <Sw on={bc.on} set={(v) => { setBc({ ...bc, on: v }); if (v) setup().then(() => setTimeout(() => { checkBudget(); }, 600)).catch(() => {}); }} />
           </View>
         </View>
       ) : null}

@@ -37,6 +37,7 @@ export function buildRecordHtml(vehicle: string, d: any, latest: number, owner =
   // monthly distance + spending
   const dm: Record<string, number> = {};
   for (let i = 1; i < rd.length; i++) { const dlt = n0(rd[i].odo) - n0(rd[i - 1].odo); if (dlt > 0) dm[mk(rd[i].date)] = (dm[mk(rd[i].date)] || 0) + dlt; }
+  const yr: Record<string, number> = {}; rd.forEach((x) => { const y = (x.date || '').slice(0, 4); if (y && n0(x.odo) > (yr[y] || 0)) yr[y] = n0(x.odo); });
   const sp: Record<string, number> = {};
   exps.concat(fuel).forEach((e: any) => { const m = mk(e.date); if (m) sp[m] = (sp[m] || 0) + n0(e.amt); });
   const last = (o: Record<string, number>) => Object.keys(o).sort().slice(-6);
@@ -44,6 +45,8 @@ export function buildRecordHtml(vehicle: string, d: any, latest: number, owner =
   const rl = rd.slice(-14);
   if (rl.length > 1) charts.push({ title: 'Odometer over time', kind: 'line', labels: rl.map((x) => fd(x.date).slice(0, -5)), values: rl.map((x) => n0(x.odo)), unit: 'km', color: '#d63f7c' });
   if (last(dm).length) charts.push({ title: 'Distance ridden per month', kind: 'bars', labels: last(dm).map(ml), values: last(dm).map((m) => dm[m]), unit: 'km', color: '#7a50e6' });
+  const yk = Object.keys(yr).sort().slice(-5);
+  if (yk.length > 1) charts.push({ title: 'Odometer at the end of each year', kind: 'bars', labels: yk, values: yk.map((y) => yr[y]), unit: 'km', color: '#d63f7c' });
   if (last(sp).length) charts.push({ title: 'Spending per month', kind: 'bars', labels: last(sp).map(ml), values: last(sp).map((m) => Math.round(sp[m] * 100) / 100), unit: 'RM', color: '#ff8f5a' });
   if (mTot + fTot > 0) charts.push({ title: 'Where the money went', kind: 'donut', labels: ['Maintenance', 'Fuel'], values: [Math.round(mTot * 100) / 100, Math.round(fTot * 100) / 100], unit: 'RM' });
   const fl = fuel.slice(0, 8).reverse();
@@ -72,7 +75,8 @@ export function buildRecordHtml(vehicle: string, d: any, latest: number, owner =
 
   const cards = charts.map((c) => '<div class="c"><h3>' + esc(c.title) + (c.unit ? ' <small>(' + esc(c.unit) + ')</small>' : '') + '</h3>' + chartSvg(c) + '</div>').join('');
   const sub = [(d.profile && d.profile.model) || '', (d.profile && d.profile.plate) || ''].filter(Boolean).join(' · ');
-  const hl = (mTot + fTot > 0 || dist > 0) ? '<div class="hl"><b>Highlights.</b> ' + (dist > 0 ? 'You rode ' + k(dist) + ' km. ' : '') + (mTot + fTot > 0 ? 'You spent ' + rm(mTot + fTot) + ' in total' + (cpk > 0 ? ', about RM ' + cpk.toFixed(2) + ' per km' : '') + '. ' : '') + (kml > 0 ? 'Your fuel economy is about ' + kml.toFixed(1) + ' km/L.' : '') + '</div>' : '';
+  const dmk = Object.keys(dm).filter((m) => dm[m] > 0); const hiM = dmk.sort((a, b) => dm[b] - dm[a])[0]; const loM = dmk.sort((a, b) => dm[a] - dm[b])[0];
+  const hl = (mTot + fTot > 0 || dist > 0) ? '<div class="hl"><b>Highlights.</b> ' + (dist > 0 ? 'You rode ' + k(dist) + ' km. ' : '') + (dmk.length > 1 ? 'Your longest month was ' + ml(hiM) + ' (' + k(dm[hiM]) + ' km) and your shortest was ' + ml(loM) + ' (' + k(dm[loM]) + ' km). ' : '') + (mTot + fTot > 0 ? 'You spent ' + rm(mTot + fTot) + ' in total' + (cpk > 0 ? ', about RM ' + cpk.toFixed(2) + ' per km' : '') + '. ' : '') + (kml > 0 ? 'Your fuel economy is about ' + kml.toFixed(1) + ' km/L.' : '') + '</div>' : '';
 
   return '<html><head><meta charset="utf-8"><style>' + PDF_CSS + EXTRA + '</style></head><body>'
     + '<div class="ban rec"><h1>My Record · ' + esc(vehicle) + '</h1>' + (sub ? '<div class="big">' + esc(sub) + '</div>' : '') + '<span class="pill">Created: ' + esc(stamp()) + '</span>' + (owner ? '<span class="pill">For: ' + esc(owner) + '</span>' : '') + (latest > 0 ? '<span class="pill">Odometer: ' + k(latest) + ' km</span>' : '') + '</div>'

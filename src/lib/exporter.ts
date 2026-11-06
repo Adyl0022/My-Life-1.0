@@ -1,5 +1,7 @@
 import { Platform } from 'react-native';
 import { getText, DEFAULT_NAME } from './store';
+import { calcLeft, commitFor, MONTHS as MN3 } from './moneyLeft';
+import { goalLines, goalSaved } from './savings';
 
 export type Sheet = { name: string; head: string[]; rows: (string | number)[][] };
 export type Chart = { title: string; kind: 'bars' | 'hbars' | 'line' | 'donut'; labels: string[]; values: number[]; unit?: string; color?: string };
@@ -13,7 +15,7 @@ const dm = (k: string) => { const p = String(k).split('-'); return p.length === 
 export const MODS = [
   { k: 'planner', name: 'Planner and Notes', sub: 'Events, tasks and notes', keys: ['ml_planner', 'ml_notes'] },
   { k: 'islamic', name: 'Islamic Hub', sub: 'Fasting log, Tasbih counts, bookmarks and reading progress', keys: ['ml_islamic', 'ml_tasbih', 'ml_puasa'] },
-  { k: 'finance', name: 'My Finance', sub: 'Income, spending and commitments', keys: ['ml_finance', 'ml_debts'] },
+  { k: 'finance', name: 'My Finance', sub: 'Income, spending, savings goals and commitments', keys: ['ml_finance', 'ml_debts', 'ml_savings'] },
   { k: 'record', name: 'My Record', sub: 'Motorcycle mileage, fuel and services', keys: ['ml_record'] },
   { k: 'habit', name: 'Habit and Health', sub: 'Mood, sleep, water and steps', keys: ['ml_habit'] },
   { k: 'usage', name: 'App usage history', sub: 'Time spent and opens from Stats', keys: ['ml_usage_v1'] },
@@ -65,23 +67,58 @@ export async function buildReport(sel: string[], per: number): Promise<Report> {
     if (tasks.length) { const dn = tasks.filter((t: any) => t.status === 'done').length; charts.push({ title: 'Tasks', kind: 'donut', labels: ['Done', 'To do'], values: [dn, tasks.length - dn] }); }
   }
   if (sel.includes('finance')) {
-    const f = g('finance', 'ml_finance'); const d = g('finance', 'ml_debts');
-    const sp = ((f && f.spends) || []).filter((s: any) => inP(s.date));
+    const f = g('finance', 'ml_finance'); const d = g('finance', 'ml_debts'); const sv = g('finance', 'ml_savings');
+    const allSp = ((f && f.spends) || []) as any[];
+    const inPSp = allSp.filter((s: any) => inP(s.date));
+    const sp = inPSp.filter((s: any) => s.cat !== 'Savings');
+    const put = inPSp.filter((s: any) => s.cat === 'Savings');
+    const goals = ((sv && sv.goals) || []) as any[];
+    const gname = (id: any) => { const gg = goals.find((x: any) => x.id === id); return gg ? gg.name : ''; };
     const inc: [string, string, number][] = [];
     Object.keys((f && f.inc) || {}).sort().forEach((m) => { if (inP(m)) Object.keys(f.inc[m] || {}).forEach((s) => inc.push([m, s, num(f.inc[m][s])])); });
-    const tin = inc.reduce((a, r) => a + r[2], 0); const tsp = sp.reduce((a: number, s: any) => a + num(s.amt), 0);
+    const tin = inc.reduce((a, r) => a + r[2], 0); const tsp = sp.reduce((a: number, s: any) => a + num(s.amt), 0); const tsv = put.reduce((a: number, s: any) => a + num(s.amt), 0);
     if (sp.length) sheets.push({ name: 'Spending', head: ['Date', 'Item', 'Category', 'Amount (RM)'], rows: sp.map((s: any) => [s.date || '', s.name || '', s.cat || '', num(s.amt)]) });
+    if (put.length) sheets.push({ name: 'Savings entries', head: ['Date', 'Item', 'Goal', 'Amount (RM)'], rows: put.map((s: any) => [s.date || '', s.name || '', gname(s.goal) || 'No goal chosen', num(s.amt)]) });
     if (inc.length) sheets.push({ name: 'Income', head: ['Month', 'Source', 'Amount (RM)'], rows: inc });
     const debts = (d && d.debts) || [];
-    if (debts.length) sheets.push({ name: 'Commitments', head: ['Name', 'Balance (RM)', 'Monthly (RM)', 'Due day', 'Since'], rows: debts.map((x: any) => [x.name || '', num(x.bal), num(x.monthly), num(x.due), x.since || '']) });
-    totals.push(['Total income', rm(tin)], ['Total spending', rm(tsp)], ['Net balance', rm(tin - tsp)]);
+    if (debts.length) sheets.push({ name: 'Commitments', head: ['Name', 'Balance (RM)', 'Monthly (RM)', 'Due day', 'Since', 'Saves into goal'], rows: debts.map((x: any) => [x.name || '', num(x.bal), num(x.monthly), num(x.due), x.since || '', gname(x.goal)]) });
+    if (goals.length) {
+      sheets.push({ name: 'Savings goals', head: ['Goal', 'Kept in', 'Target (RM)', 'Saved (RM)', 'Progress', 'To go (RM)', 'Target date'], rows: goals.map((x: any) => { const sd = goalSaved(x, allSp, d); const tg = num(x.target); return [x.name || '', x.place || '', tg, sd, tg > 0 ? Math.min(100, Math.round((sd / tg) * 100)) + '%' : '-', Math.max(0, Math.round((tg - sd) * 100) / 100), x.due || '']; }) });
+      const gl: (string | number)[][] = []; goals.forEach((x: any) => goalLines(x, allSp, d).filter((l) => inP(l.date)).forEach((l) => gl.push([x.name || '', l.date || '', l.src === 'tracker' ? 'Spending Tracker' : l.src === 'commit' ? 'Monthly commitment' : l.src === 'out' ? 'Taken out' : 'Opening amount', l.note, l.amt])));
+      if (gl.length) sheets.push({ name: 'Savings history', head: ['Goal', 'Date', 'Source', 'Note', 'Amount (RM)'], rows: gl });
+    }
+    const lim = ((f && f.limits) || {}) as Record<string, number>; const bcAll: Record<string, number> = {};
+    sp.forEach((x: any) => { const c = x.cat || 'Other'; bcAll[c] = (bcAll[c] || 0) + num(x.amt); });
+    const ymNow = new Date().toISOString().slice(0, 7); const curSp: Record<string, number> = {};
+    allSp.filter((x: any) => x.cat !== 'Savings' && String(x.date || '').slice(0, 7) === ymNow).forEach((x: any) => { const c = x.cat || 'Other'; curSp[c] = (curSp[c] || 0) + num(x.amt); });
+    const lk = Object.keys(lim).filter((c) => lim[c] > 0);
+    if (lk.length) sheets.push({ name: 'Category limits', head: ['Category', 'Monthly limit (RM)', 'Spent this month (RM)', 'Used'], rows: lk.map((c) => [c, num(lim[c]), Math.round((curSp[c] || 0) * 100) / 100, Math.round(((curSp[c] || 0) / lim[c]) * 100) + '%']) });
+    // Money Left for each month in the period, worked out the same way as the app does
+    const months = new Set<string>(); Object.keys((f && f.inc) || {}).forEach((m) => { if (inP(m)) months.add(m); }); inPSp.forEach((x: any) => { if (x.date) months.add(String(x.date).slice(0, 7)); });
+    const mrows: (string | number)[][] = []; let ovr = 0;
+    Array.from(months).sort().forEach((m) => {
+      const mi = Object.keys((f && f.inc && f.inc[m]) || {}).reduce((a, k2) => a + num(f.inc[m][k2]), 0);
+      const L = calcLeft({ ym: m, income: mi, commit: commitFor(d, m), spends: allSp });
+      if (L.left < 0) ovr++;
+      mrows.push([MN3[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4), mi, L.commit, Math.round(L.spent * 100) / 100, Math.round(L.savings * 100) / 100, Math.round(L.left * 100) / 100]);
+    });
+    if (mrows.length) sheets.push({ name: 'Money left', head: ['Month', 'Income (RM)', 'Commitments (RM)', 'Spending (RM)', 'Savings goals (RM)', 'Left (RM)'], rows: mrows });
+    const tcm = mrows.reduce((a, r) => a + num(r[2]), 0); const net = mrows.length ? mrows.reduce((a, r) => a + num(r[5]), 0) : tin - tsp - tsv;
+    totals.push(['Total income', rm(tin)]);
+    if (tcm > 0) totals.push(['Commitments and debts', rm(tcm)]);
+    totals.push(['Total spending', rm(tsp)]);
+    if (tsv > 0) totals.push(['Put into savings goals', rm(tsv)]);
+    totals.push(['Money left', rm(net)]);
+    if (goals.length) totals.push(['Saved in all goals', rm(goals.reduce((a: number, x: any) => a + goalSaved(x, allSp, d), 0))]);
+    if (ovr > 0) totals.push(['Months over budget', String(ovr)]);
     const bc: Record<string, number> = {}; const bd: Record<string, number> = {};
     sp.forEach((x: any) => { const c = x.cat || 'Other'; bc[c] = (bc[c] || 0) + num(x.amt); if (x.date) bd[x.date] = (bd[x.date] || 0) + num(x.amt); });
     const cs = Object.keys(bc).sort((a, b) => bc[b] - bc[a]).slice(0, 7);
-    if (tin || tsp) charts.push({ title: 'Income and spending', kind: 'bars', labels: ['Income', 'Spending', 'Net'], values: [tin, tsp, Math.max(0, tin - tsp)], unit: 'RM' });
+    if (tin || tsp) charts.push({ title: 'Income and spending', kind: 'bars', labels: tsv > 0 ? ['Income', 'Spending', 'Savings', 'Left'] : ['Income', 'Spending', 'Left'], values: tsv > 0 ? [tin, tsp, tsv, Math.max(0, net)] : [tin, tsp, Math.max(0, net)], unit: 'RM' });
     if (cs.length) charts.push({ title: 'Spending by category', kind: 'hbars', labels: cs, values: cs.map((c) => Math.round(bc[c] * 100) / 100), unit: 'RM' });
     const dk = Object.keys(bd).sort().slice(-14);
     if (dk.length > 1) charts.push({ title: 'Daily spending', kind: 'bars', labels: dk.map(dm), values: dk.map((k) => Math.round(bd[k] * 100) / 100), unit: 'RM', color: '#ff8f5a' });
+    if (goals.length) charts.push({ title: 'Savings goals progress (%)', kind: 'hbars', labels: goals.slice(0, 7).map((x: any) => String(x.name || '').slice(0, 16)), values: goals.slice(0, 7).map((x: any) => num(x.target) > 0 ? Math.min(100, Math.round((goalSaved(x, allSp, d) / num(x.target)) * 100)) : 0), unit: '%', color: '#34d399' });
   }
   if (sel.includes('record')) {
     const r = g('record', 'ml_record'); const rows: (string | number)[][] = []; let km = 0;

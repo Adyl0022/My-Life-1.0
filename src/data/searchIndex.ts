@@ -166,7 +166,7 @@ export const SEARCH_INDEX: SearchItem[] = [
   "m": "Record",
   "c": "#ff8fab",
   "h": "Record.dc.html",
-  "k": "record rekod motor motosikal motorcycle kenderaan vehicle"
+  "k": "record rekod motor motosikal motorcycle kenderaan vehicle export report pdf laporan"
  },
  {
   "t": "Monthly Mileage",
@@ -338,11 +338,11 @@ export const SEARCH_INDEX: SearchItem[] = [
  },
  {
   "t": "Export my data",
-  "s": "Excel, PDF, CSV or full backup",
+  "s": "Excel, PDF, CSV or a backup, including savings goals and Money Left",
   "m": "System",
   "c": "#5ee7df",
   "h": "Export.dc.html",
-  "k": "export eksport backup sandaran excel pdf csv xlsx download muat turun data"
+  "k": "export eksport backup sandaran excel pdf csv xlsx download muat turun data tabung savings goals money left had kategori category limits laporan report simpanan"
  },
  {
   "t": "Reset all data",
@@ -455,5 +455,13 @@ export const SEARCH_INDEX: SearchItem[] = [
   "c": "#5ee7df",
   "h": "Assistant.dc.html",
   "k": "assistant tanya baki tabung belanja bajet money left savings goal how much left"
+ },
+ {
+  "t": "Export Report (My Record)",
+  "s": "One PDF with readings, spending, parts, fuel and yearly mileage",
+  "m": "Record",
+  "c": "#ff8fab",
+  "h": "Record.dc.html",
+  "k": "export report pdf laporan record motosikal mileage yearly tahunan highest lowest tertinggi terendah km"
  }
 ];

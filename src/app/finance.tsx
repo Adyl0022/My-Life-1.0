@@ -90,19 +90,19 @@ export default function Finance() {
     setD({ ...d, limits: lm }); setLimKey(''); setLimVal('');
   };
   // Goal choices for the Savings category: ready-made goals first, your own in the middle, Wedding last.
-  const PRE = ['motor', 'car', 'house', 'emergency', 'medical', 'travel', 'hajj'];
+  const PRE = ['motor', 'car', 'house', 'emergency', 'medical', 'travel', 'hajj', 'other'];
   const opts: { key: string; id: number; name: string; kind: string }[] = [];
-  PRE.forEach((k) => { const ex = sav.goals.filter((g) => g.kind === k); if (ex.length) ex.forEach((g) => opts.push({ key: 'g' + g.id, id: g.id, name: g.name, kind: k })); else opts.push({ key: 'p' + k, id: 0, name: kindOf(k).name, kind: k }); });
+  PRE.forEach((k) => { const ex = sav.goals.filter((g) => g.kind === k); if (ex.length) ex.forEach((g) => opts.push({ key: 'g' + g.id, id: g.id, name: g.name, kind: k })); else opts.push({ key: 'p' + k, id: 0, name: kindOf(k).name || 'Other', kind: k }); });
   sav.goals.filter((g) => PRE.indexOf(g.kind) < 0 && g.kind !== 'wedding').forEach((g) => opts.push({ key: 'g' + g.id, id: g.id, name: g.name, kind: g.kind }));
   { const ex = sav.goals.filter((g) => g.kind === 'wedding'); if (ex.length) ex.forEach((g) => opts.push({ key: 'g' + g.id, id: g.id, name: g.name, kind: 'wedding' })); else opts.push({ key: 'pwedding', id: 0, name: kindOf('wedding').name, kind: 'wedding' }); }
   const addSpend = () => {
     const n = parseFloat(fAmt.replace(',', '.')); if (!(n > 0)) return;
     let fGoal2 = fGoal;
     if (fCat === 'Savings' && fPre) {
-      const k = fPre.slice(1); const g = { id: sav.nextId, name: kindOf(k).name, kind: k, target: 0, place: '', due: '', start: 0, out: [], made: todayStr() } as any;
+      const k = fPre.slice(1); const g = { id: sav.nextId, name: kindOf(k).name || 'Other', kind: k, target: 0, place: '', due: '', start: 0, out: [], made: todayStr() } as any;
       setSav({ goals: [...sav.goals, g], nextId: sav.nextId + 1 }); fGoal2 = g.id;
     }
-    setD({ ...d, spends: [{ id: d.nextId, name: fName.trim() || (fCat === 'Savings' ? (fPre ? kindOf(fPre.slice(1)).name : ((sav.goals.find((g) => g.id === fGoal) || { name: fCat }).name)) : fCat), cat: fCat, amt: n, date: fDate || todayStr(), ...(fCat === 'Savings' && fGoal2 ? { goal: fGoal2 } : {}) }, ...d.spends], nextId: d.nextId + 1 });
+    setD({ ...d, spends: [{ id: d.nextId, name: fName.trim() || (fCat === 'Savings' ? (fPre ? (kindOf(fPre.slice(1)).name || 'Other') : ((sav.goals.find((g) => g.id === fGoal) || { name: fCat }).name)) : fCat), cat: fCat, amt: n, date: fDate || todayStr(), ...(fCat === 'Savings' && fGoal2 ? { goal: fGoal2 } : {}) }, ...d.spends], nextId: d.nextId + 1 });
     setFName(''); setFAmt(''); setFGoal(0); setFPre('');
   };
   const dateText = (s: string) => { const p = (s || '').split('-'); return p.length === 3 ? parseInt(p[2], 10) + ' ' + MON[parseInt(p[1], 10) - 1] : ''; };

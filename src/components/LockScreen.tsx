@@ -6,6 +6,7 @@ import { usePathname } from 'expo-router';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import { Blob } from './Bg';
 import { Inp } from './Ui';
+import { Logo } from './AuthScreen';
 import { checkPassword, getSession } from '../lib/auth';
 import { useName } from '../lib/store';
 import { useLock, checkPin, unlock, bioAuth, bioReady, wipeEverything, setPin, SENSITIVE } from '../lib/lock';
@@ -191,11 +192,9 @@ function Header({ forgot }: { forgot: string }) {
 }
 function Tile() {
   return (
-    <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: '#3a2aa8', shadowColor: '#7c9cff', shadowOpacity: 0.7, shadowRadius: 22, shadowOffset: { width: 0, height: 8 }, elevation: 0 }}>
-      <LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)' }}>
-        <Text style={{ color: W, fontSize: 34, fontWeight: '800' }}>M</Text>
-      </LinearGradient>
-      <View style={{ position: 'absolute', right: -6, bottom: -6, width: 28, height: 28, borderRadius: 14, backgroundColor: '#0f1550', borderWidth: 1.5, borderColor: 'rgba(255,255,255,.35)', alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: 118, height: 118, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ width: 170, height: 170, alignItems: 'center', justifyContent: 'center', transform: [{ scale: 0.68 }] }}><Logo /></View>
+      <View style={{ position: 'absolute', right: 18, bottom: 18, width: 28, height: 28, borderRadius: 14, backgroundColor: '#0f1550', borderWidth: 1.5, borderColor: 'rgba(255,255,255,.35)', alignItems: 'center', justifyContent: 'center' }}>
         <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#8fe9e2" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><Rect x={5} y={11} width={14} height={9} rx={2.5} /><Path d="M8 11V8a4 4 0 0 1 8 0v3" /></Svg>
       </View>
     </View>

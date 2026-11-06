@@ -114,7 +114,7 @@ function Wave({ delay }: { delay: number }) {
   useEffect(() => { const a = Animated.loop(Animated.sequence([Animated.delay(delay), Animated.timing(t, { toValue: 1, duration: 3200, easing: Easing.out(Easing.quad), useNativeDriver: true }), Animated.timing(t, { toValue: 0, duration: 0, useNativeDriver: true })])); a.start(); return () => a.stop(); }, []);
   return <Animated.View pointerEvents="none" style={{ position: 'absolute', width: 108, height: 108, borderRadius: 34, borderWidth: 1.5, borderColor: 'rgba(143,233,226,.7)', opacity: t.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.6, 0] }), transform: [{ scale: t.interpolate({ inputRange: [0, 1], outputRange: [1, 1.7] }) }] }} />;
 }
-function Logo() {
+export function Logo() {
   const ring = useSpin(6000); const inner = useSpin(9000); const inner2 = useSpin(13000, true); const orbit = useSpin(7000); const orbit2 = useSpin(11000, true);
   const pulse = useRef(new Animated.Value(0)).current;
   useEffect(() => { const a = Animated.loop(Animated.sequence([Animated.timing(pulse, { toValue: 1, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }), Animated.timing(pulse, { toValue: 0, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true })])); a.start(); return () => a.stop(); }, []);

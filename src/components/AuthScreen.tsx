@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Keyboard, useWindowDimensions, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, Animated, Easing } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Circle, Rect, Defs, Pattern } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, Defs, Pattern, Stop, RadialGradient as SRG } from 'react-native-svg';
 import { GP, W } from './Ui';
 import { Blob } from './Bg';
 import { signIn, signUp, verifyCode, resendSignup, sendReset, setNewPassword } from '../lib/auth';
@@ -151,23 +151,28 @@ export function Logo() {
   );
 }
 
-// Faint diamond lattice with a dot on every corner, like the sign-in design.
-function Lattice() {
+// Wallpaper for the sign in and register screens.
+const FULL: any = { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 };
+function Geo() {
+  // Eight-pointed star tiles, a pattern used all over Islamic art. Faint, with a soft glow from the top.
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
+    <View pointerEvents="none" style={FULL}>
       <Svg width="100%" height="100%">
         <Defs>
-          <Pattern id="lat" width="30" height="30" patternUnits="userSpaceOnUse">
-            <Path d="M0 15L15 0L30 15L15 30Z" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={1} />
-            <Circle cx="15" cy="0" r="1" fill="rgba(255,255,255,0.2)" /><Circle cx="15" cy="30" r="1" fill="rgba(255,255,255,0.2)" />
-            <Circle cx="0" cy="15" r="1" fill="rgba(255,255,255,0.2)" /><Circle cx="30" cy="15" r="1" fill="rgba(255,255,255,0.2)" />
+          <Pattern id="geo" width="60" height="60" patternUnits="userSpaceOnUse">
+            <Path d="M30 4L36.5 17L50.5 13.5L47 27.5L60 34L47 40.5L50.5 54.5L36.5 51L30 64L23.5 51L9.5 54.5L13 40.5L0 34L13 27.5L9.5 13.5L23.5 17Z" transform="translate(0 -4)" fill="none" stroke="rgba(143,233,226,0.2)" strokeWidth={1} />
+            <Circle cx="30" cy="30" r="2" fill="rgba(255,213,147,0.35)" />
+            <Circle cx="0" cy="0" r="1.4" fill="rgba(255,255,255,0.22)" /><Circle cx="60" cy="0" r="1.4" fill="rgba(255,255,255,0.22)" /><Circle cx="0" cy="60" r="1.4" fill="rgba(255,255,255,0.22)" /><Circle cx="60" cy="60" r="1.4" fill="rgba(255,255,255,0.22)" />
           </Pattern>
+          <SRG id="gl" cx="50%" cy="8%" r="70%"><Stop offset="0" stopColor="#8a7bff" stopOpacity="0.45" /><Stop offset="1" stopColor="#0a0f2c" stopOpacity="0" /></SRG>
         </Defs>
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#lat)" />
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#geo)" />
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#gl)" />
       </Svg>
     </View>
   );
 }
+function Wallpaper() { return <Geo />; }
 
 export function AuthScreen() {
   const [mode, setMode] = useState<Mode>('in');
@@ -230,11 +235,11 @@ export function AuthScreen() {
       <Drift size={420} color="rgba(106,77,240,0.6)" x={-160} y={-110} dx={50} dy={40} dur={7000} />
       <Drift size={340} color="rgba(94,231,223,0.32)" x={150} y={250} dx={-45} dy={50} dur={9000} />
       <Drift size={320} color="rgba(255,143,224,0.26)" x={-130} y={520} dx={55} dy={-40} dur={8000} />
-      <Lattice />
+      <Wallpaper />
       <Sky />
       <KeyboardAvoidingView style={{ flex: 1, justifyContent: 'flex-start', paddingTop: top, paddingBottom: 16 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {kb ? null : (
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingTop: 0, paddingBottom: 14, paddingHorizontal: 22 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingTop: 0, paddingBottom: 14, paddingLeft: 22, paddingRight: 70 }}>
             <View style={{ width: 96, height: 96, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 170, height: 170, transform: [{ scale: 0.52 }] }}><Logo /></View></View>
             <View style={{ marginLeft: 6 }}>
               <Text style={{ color: W, fontSize: 28, fontWeight: '800', letterSpacing: 0.3 }}>My Life</Text>

@@ -64,7 +64,9 @@ const Logo = () => (
 );
 const Stat = ({ l, v, bg, vc }: { l: string; v: string; bg?: string; vc?: string }) => (
   <View style={{ flex: 1, borderRadius: 14, paddingVertical: 8, paddingHorizontal: 10, backgroundColor: bg || 'rgba(255,255,255,.08)' }}>
-    <Text style={{ color: 'rgba(255,255,255,.68)', fontSize: 10.5 }}>{l}</Text><Text style={{ color: vc || W, fontSize: 15, fontWeight: '800', marginTop: 2 }} numberOfLines={1}>{v}</Text>
+    <Text style={{ color: 'rgba(255,255,255,.68)', fontSize: 10.5 }}>{l}</Text>
+    <Text style={{ color: vc || W, fontSize: 15, fontWeight: '800', marginTop: 2 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{/ km$/.test(v) ? v.replace(/ km$/, '') : v}</Text>
+    {/ km$/.test(v) ? <Text style={{ color: vc || 'rgba(255,255,255,.7)', fontSize: 10.5, fontWeight: '700', marginTop: -1 }}>km</Text> : null}
   </View>
 );
 const Arrow = ({ t, onPress, op, label }: { t: string; onPress: () => void; op: number; label: string }) => (

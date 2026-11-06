@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Glass } from './Glass';
 import { Inp, W } from './Ui';
 import { useStored } from '../lib/store';
+import { SAV_EMPTY, SavData } from '../lib/savings';
 import { DEBT_EMPTY, DebtData, Debt, remaining, monthsLeft, dueDay, isActive, amountDue, yearsMonths, payoffLabel, ymOf, syncDebtAlerts } from '../lib/debts';
 
 const WARM = ['#ffc46b', '#ff8fab'] as [string, string];
@@ -24,6 +25,7 @@ const Sw = ({ on, set, label }: { on: boolean; set: (v: boolean) => void; label:
 
 export function Commitments({ income }: { income: number }) {
   const [d, setD] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
+  const [sav] = useStored<SavData>('ml_savings', SAV_EMPTY); const [gl, setGl] = useState(0);
   const [adding, setAdding] = useState(false); const [edit, setEdit] = useState(0);
   const [n, setN] = useState(''); const [bal, setBal] = useState(''); const [mo, setMo] = useState(''); const [day, setDay] = useState('');
   const [msg, setMsg] = useState(''); const [fixed, setFixed] = useState(false); const [fb, setFb] = useState(''); const [fe, setFe] = useState(false);
@@ -43,16 +45,16 @@ export function Commitments({ income }: { income: number }) {
   const after = income - commit - food;
   const free = income - commit - food;
   const save = (nd: DebtData) => setD(nd);
-  const reset = () => { setFixed(false); setAdding(false); setEdit(0); setN(''); setBal(''); setMo(''); setDay(''); };
-  const startEdit = (x: Debt) => { setEdit(x.id); setAdding(true); setN(x.name); setFixed(!!x.fixed); setBal(x.fixed ? '' : String(remaining(x) + (x.paid[ym] || 0))); setMo(String(x.monthly)); setDay(String(x.due)); };
+  const reset = () => { setFixed(false); setAdding(false); setEdit(0); setN(''); setBal(''); setMo(''); setDay(''); setGl(0); };
+  const startEdit = (x: Debt) => { setEdit(x.id); setAdding(true); setN(x.name); setFixed(!!x.fixed); setBal(x.fixed ? '' : String(remaining(x) + (x.paid[ym] || 0))); setMo(String(x.monthly)); setDay(String(x.due)); setGl(x.goal || 0); };
   const submit = () => {
     const b = parseFloat(bal.replace(',', '.')), m = parseFloat(mo.replace(',', '.')), dd = Math.round(parseFloat(day));
     if (!n.trim() || (!fixed && !(b > 0)) || !(m > 0) || !(dd >= 1 && dd <= 31)) { setMsg(fixed ? 'Fill in the name, the monthly amount and a due day from 1 to 31.' : 'Fill in the name, balance, monthly payment and a due day from 1 to 31.'); return; }
     setMsg('');
     if (edit) {
-      save({ ...d, debts: list.map((x) => (x.id === edit ? { ...x, name: n.trim(), monthly: m, due: dd, fixed, bal: fixed ? 0 : b + Object.keys(x.paid).filter((k) => k !== ym).reduce((a, k) => a + x.paid[k], 0) } : x)) });
+      save({ ...d, debts: list.map((x) => (x.id === edit ? { ...x, name: n.trim(), monthly: m, due: dd, fixed, goal: gl || undefined, bal: fixed ? 0 : b + Object.keys(x.paid).filter((k) => k !== ym).reduce((a, k) => a + x.paid[k], 0) } : x)) });
     } else {
-      save({ ...d, nextId: d.nextId + 1, debts: [...list, { id: d.nextId, name: n.trim(), monthly: m, due: dd, since: ym, paid: {}, remind: true, fixed, bal: fixed ? 0 : b }] });
+      save({ ...d, nextId: d.nextId + 1, debts: [...list, { id: d.nextId, name: n.trim(), monthly: m, due: dd, since: ym, paid: {}, remind: true, fixed, goal: gl || undefined, bal: fixed ? 0 : b }] });
     }
     reset();
   };
@@ -119,6 +121,17 @@ export function Commitments({ income }: { income: number }) {
             <Inp style={{ flex: 1 }} keyboardType="decimal-pad" value={mo} onChangeText={setMo} placeholder="Monthly (RM)" />
             <Inp style={{ flex: 1 }} keyboardType="number-pad" value={day} onChangeText={setDay} placeholder="Due day (1 to 31)" onSubmitEditing={submit} />
           </View>
+          {sav.goals.length > 0 ? (
+            <View>
+              <Text style={{ color: dim, fontSize: 11.5 }}>Save this into a savings goal (optional)</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                {[{ id: 0, name: 'None' }, ...sav.goals].map((g) => (
+                  <Pressable key={g.id} onPress={() => setGl(g.id)} style={{ paddingVertical: 5, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1, borderColor: gl === g.id ? 'transparent' : 'rgba(255,255,255,.2)', backgroundColor: gl === g.id ? '#5ee7b5' : 'rgba(255,255,255,.08)' }}><Text style={{ color: gl === g.id ? '#0c2a28' : W, fontSize: 11.5, fontWeight: '700' }}>{g.name}</Text></Pressable>
+                ))}
+              </View>
+              {gl ? <Text style={{ color: dim, fontSize: 11, marginTop: 4 }}>When you tick this as paid, the amount also counts as saved in that goal.</Text> : null}
+            </View>
+          ) : null}
           <Pressable onPress={submit}><LinearGradient colors={WARM} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 42, borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#2a1030', fontSize: 13, fontWeight: '800' }}>{edit ? 'Save changes' : fixed ? 'Add commitment' : 'Add debt'}</Text></LinearGradient></Pressable>
         </View>
       ) : null}
@@ -136,7 +149,7 @@ export function Commitments({ income }: { income: number }) {
                 <Pressable accessibilityLabel={pd ? 'Mark as unpaid' : 'Mark as paid'} onPress={() => tick(x)} style={{ width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: pd ? '#34d399' : 'rgba(255,255,255,.4)', backgroundColor: pd ? '#34d399' : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                   {pd ? <Text style={{ color: '#062b1c', fontSize: 16, fontWeight: '900', marginTop: -1 }}>✓</Text> : null}
                 </Pressable>
-                <Text style={{ flex: 1, color: W, fontSize: 15, fontWeight: '800', textDecorationLine: pd ? 'line-through' : 'none', opacity: pd ? 0.7 : 1 }} numberOfLines={1}>{x.name}</Text>
+                <Text style={{ flex: 1, color: W, fontSize: 15, fontWeight: '800', textDecorationLine: pd ? 'line-through' : 'none', opacity: pd ? 0.7 : 1 }} numberOfLines={1}>{x.name}{x.goal && sav.goals.find((g) => g.id === x.goal) ? '  → ' + (sav.goals.find((g) => g.id === x.goal) as any).name : ''}</Text>
                 <View style={{ flexDirection: 'row', gap: 6 }}>
                     <Pressable accessibilityLabel="Reminder" onPress={() => save({ ...d, debts: list.map((y) => (y.id === x.id ? { ...y, remind: !y.remind } : y)) })} style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: x.remind ? 'rgba(255,196,107,.28)' : 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 14, opacity: x.remind ? 1 : 0.4 }}>🔔</Text></Pressable>
                     <Pressable accessibilityLabel="Edit" onPress={() => startEdit(x)} style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ffd593', fontSize: 14 }}>✎</Text></Pressable>

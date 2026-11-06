@@ -13,7 +13,7 @@ import { Glass } from '../../components/Glass';
 import { Blob } from '../../components/Bg';
 import { SettingsBg } from '../../components/SettingsBg';
 import { useStored, clearMine, DEFAULT_NAME } from '../../lib/store';
-import { PRIVACY, TERMS, WHATS_NEW, LICENCES, HOWTO, FAQ, SUPPORT_EMAIL, PRIVACY_URL, Sec } from '../../lib/legal';
+import { PRIVACY, TERMS, COPYRIGHT, WHATS_NEW, LICENCES, HOWTO, FAQ, SUPPORT_EMAIL, PRIVACY_URL, Sec } from '../../lib/legal';
 import { TOP } from '../../lib/layout';
 import { useLock, setPin, patchLock, disableLock, bioReady, AFTER } from '../../lib/lock';
 import { PinDialog } from '../../components/LockScreen';
@@ -157,7 +157,7 @@ export default function Settings() {
       say('Sent. It will appear in 3 seconds');
     } catch (e) { say('Could not send a test notification'); }
   };
-  const [dlg, setDlg] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq' | 'done' | 'restore' | 'confirm'>('');
+  const [dlg, setDlg] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq' | 'copy' | 'done' | 'restore' | 'confirm'>('');
   const [bk, setBk] = useState<Backup | null>(null); const [bkErr, setBkErr] = useState('');
   const [sto, setSto] = useState<{ data: number; temp: number } | null>(null); const [stoMsg, setStoMsg] = useState('');
   React.useEffect(() => { if (tab === 2) storageInfo().then(setSto); }, [tab]);
@@ -294,6 +294,7 @@ export default function Settings() {
                 <Row t="Privacy Policy" onPress={() => setDlg('privacy')} right={<Chev />} />
                 <Row t="Privacy Policy on the web" onPress={() => Linking.openURL(PRIVACY_URL)} right={<Chev />} />
                 <Row t="Terms of Use" onPress={() => setDlg('terms')} right={<Chev />} />
+                <Row t="Copyright and licence" onPress={() => setDlg('copy')} right={<Chev />} />
                 <Row t="Open-source licences" last onPress={() => setDlg('lic')} right={<Chev />} />
               </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
@@ -330,6 +331,7 @@ export default function Settings() {
         {lkd === 'change' && <PinDialog mode="new" onClose={() => setLkd('')} onOk={async (pin) => { await setPin(pin!, lk.bio); setLkd(''); say('PIN changed'); }} />}
         {dlg === 'privacy' && <Doc title="Privacy Policy" secs={PRIVACY} onClose={close} />}
         {dlg === 'terms' && <Doc title="Terms of Use" secs={TERMS} onClose={close} />}
+        {dlg === 'copy' && <Doc title="Copyright and licence" secs={COPYRIGHT} onClose={close} />}
         {dlg === 'new' && <Doc title="What's new in 1.0.0" secs={WHATS_NEW} onClose={close} />}
         {dlg === 'done' && (
           <Overlay onClose={() => { close(); router.replace('/' as any); }}><View style={{ padding: 22, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)', alignItems: 'center' }}>

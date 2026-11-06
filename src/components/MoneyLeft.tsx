@@ -42,13 +42,13 @@ export function MoneyLeft({ ym, income, spends }: Props) {
   const [debts] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
   const [bc, setBc] = useStored<BudgetCfg>('ml_budget', BUDGET_EMPTY);
   const c = calcLeft({ ym, income, commit: commitFor(debts, ym), spends });
-  const { isCur, dim: dimDays, dayNo, daysLeft, commit, spent, today, left, over, used, allowance, projLeft, pace, oneOff, runOutDay, state } = c;
+  const { isCur, dim: dimDays, dayNo, daysLeft, commit, spent, today, left, over, savings, used, allowance, projLeft, pace, oneOff, runOutDay, state } = c;
   const sc = state === 'over' ? COL.over : state === 'care' ? COL.spent : COL.left;
   const sl = state === 'over' ? 'Over budget' : state === 'care' ? (isCur ? 'Be careful' : 'Tight month') : 'On track';
   const R = 46, C = 2 * Math.PI * R;
   const pct = income > 0 ? Math.min(100, Math.round(used * 100)) : 0;
   const seg = (v: number) => (income > 0 ? Math.max(0, Math.min(1, v / income)) : 0);
-  const bar = [{ v: commit, c: COL.commit }, { v: spent, c: COL.spent }, { v: Math.max(0, left), c: COL.left }];
+  const bar = [{ v: commit, c: COL.commit }, { v: spent, c: COL.spent }, { v: savings, c: COL.save }, { v: Math.max(0, left), c: COL.left }];
   const py = c.y, pm = c.m; const prev = new Date(py, pm - 1, 1);
   const prevYm = prev.getFullYear() + '-' + String(prev.getMonth() + 1).padStart(2, '0');
   const showSum = income > 0 && (!isCur || daysLeft <= 3);
@@ -98,6 +98,7 @@ export function MoneyLeft({ ym, income, spends }: Props) {
             <Row c={COL.commit} l="Commitments and debts" v={money(commit)} minus />
             <Row l="After commitments" v={money(income - commit)} bold />
             <Row c={COL.spent} l="Spent" v={money(spent)} minus />
+            {savings > 0 ? <Row c={COL.save} l="Put into savings goals" v={money(savings)} minus /> : null}
             <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,.16)', marginVertical: 4 }} />
             <Row c={over ? COL.over : COL.left} l={over ? 'Over budget' : 'Left'} v={money(Math.abs(left))} bold />
           </View>

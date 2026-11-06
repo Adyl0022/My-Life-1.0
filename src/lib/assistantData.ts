@@ -1,3 +1,4 @@
+import { goalSaved } from './savings';
 import { useEffect } from 'react';
 import { useStored, getItem, setItem } from './store';
 import { HEMPTY, HData, keyOfDate, dateOf, cupsGoal, getDay, bestStreakAll, BLANK } from './habit';
@@ -21,7 +22,7 @@ export type Real = {
   P: [string, number, number][]; // prayer times today, empty when the place is not known yet
   spends: { id: number; name: string; cat: string; amt: number; date: string }[]; days: Record<string, { mood: number; cups: number; sleep: number; steps: number }>;
   plTasks: { id: number; name: string; due: string; prio: string; status: string }[]; plEvents: { id: number; name: string; date: string; done: boolean }[];
-  incomeLast: number; commit: number; limits: Record<string, number>;
+  incomeLast: number; commit: number; limits: Record<string, number>; goals: { id: number; name: string; target: number; place: string; due: string; saved: number }[];
 };
 
 const td = () => keyOfDate(new Date());
@@ -46,18 +47,19 @@ export function useReal(P: [string, number, number][]): Real {
   const [rec, , o4] = useStored<RecData>('ml_record', { cats: ['Motorcycle'], sel: 0, data: {}, nextId: 1 });
   const [tas, , o5] = useStored<{ day: string; total: number }>('ml_tasbih', { day: '', total: 0 });
   const [debts, , o6] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
+  const [sav, , o9] = useStored<any>('ml_savings', { goals: [], nextId: 1 });
   const [puasa, , o7] = useStored<PuasaData>('ml_puasa', PUASA_EMPTY);
   const [tgRaw, , o8] = useStored<Partial<Toggles>>('ml_toggles', {});
   const { cfg: lockRaw } = useLock();
   useEffect(() => { loadLock(); }, []);
-  const ready = o1 && o2 && o3 && o4 && o5 && o6 && o7 && o8;
+  const ready = o1 && o2 && o3 && o4 && o5 && o6 && o7 && o8 && o9;
 
   const t = getDay(hd, 0); const cg = cupsGoal(hd);
   const core: Core = { hd, fin, pl, rec: { data: (rec.data || {}) as any }, tas, debts, puasa, off: {}, setOff: () => {} };
   const spends = (fin && fin.spends) || [];
   const ym = ymOf(new Date()); const today = td();
   let spendToday = 0, spendMonth = 0; const cats: Record<string, number> = {};
-  spends.forEach((x) => { const a = num(x.amt); if (x.date === today) spendToday += a; if ((x.date || '').slice(0, 7) === ym) { spendMonth += a; const c = x.cat || 'Other'; cats[c] = (cats[c] || 0) + a; } });
+  spends.filter((x) => x.cat !== 'Savings').forEach((x) => { const a = num(x.amt); if (x.date === today) spendToday += a; if ((x.date || '').slice(0, 7) === ym) { spendMonth += a; const c = x.cat || 'Other'; cats[c] = (cats[c] || 0) + a; } });
 
   const vname = (rec.cats && rec.cats[rec.sel]) || (rec.cats && rec.cats[0]) || 'Motorcycle';
   const v: RecVeh = (rec.data && rec.data[vname]) || {};
@@ -77,6 +79,7 @@ export function useReal(P: [string, number, number][]): Real {
     tasks: ((pl && pl.tasks) || []).map((x: any) => ({ n: x.name, d: x.due || '', s: x.status })), events: ((pl && pl.events) || []).filter((e: any) => !e.done).map((e: any) => ({ n: e.name, d: e.date })),
     hasVehicle: sorted.length > 0, odo, kmMonth: kmBetween(sorted, k(a0), k(a1)), kmLast: kmBetween(sorted, k(b0), k(a0)), mtcMonth: Math.round(mtcMonth * 100) / 100, nextSvc, nextSvcName,
     debts, puasa, tg: { ...TG_DEFAULT, ...tgRaw }, lock: lockRaw, P,
+    goals: ((sav && sav.goals) || []).map((g: any) => ({ id: g.id, name: g.name, target: g.target, place: g.place || '', due: g.due || '', saved: goalSaved(g, spends as any, debts) })),
     spends: spends as any, days: (hd.days || {}) as any,
     plTasks: ((pl && pl.tasks) || []).map((x: any) => ({ id: x.id, name: x.name, due: x.due || '', prio: x.prio || 'Medium', status: x.status })),
     plEvents: ((pl && pl.events) || []).map((e: any) => ({ id: e.id, name: e.name, date: e.date, done: !!e.done })),

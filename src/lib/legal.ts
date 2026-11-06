@@ -46,3 +46,13 @@ export const FAQ: Sec[] = [
   { h: 'Notifications do not ring.', p: 'Use Settings, General, Send a test notification. If nothing shows, allow notifications for My Life in your phone settings and turn off battery saving for the app.' },
   { h: 'Prayer times look wrong.', p: 'Open Islamic Hub and refresh your location. Times follow JAKIM. Please confirm with your local authority.' },
 ];
+
+export const COPYRIGHT: Sec[] = [
+  { h: 'Copyright', p: '© 2026 Adli Syahmi. All rights reserved. My Life 1.0, including its name, logo, design, screens, text, icons, artwork, animations and source code, is the private property of Adli Syahmi and is protected by copyright law.' },
+  { h: 'Licence to use', p: 'You are given a personal, non-exclusive, non-transferable and revocable licence to install and use My Life on your own devices for your own non-commercial use. This is a licence to use the app, not a sale of it or of any part of it.' },
+  { h: 'What is not allowed', p: 'Without written permission from the developer you may not:\n•  copy, reproduce or redistribute the app or any part of it\n•  modify it, or make new apps or works based on it\n•  decompile, reverse engineer or try to extract its source code, design or data\n•  sell, rent, lend, sublicense or share the app file (APK) with others\n•  remove or change any copyright or ownership notice\n•  use its name, logo or design in a way that suggests it is yours or that it is approved by the developer' },
+  { h: 'Third-party software', p: 'My Life uses open-source software that stays under its own licences. See Open-source licences in this screen. These licences do not give you rights over the My Life code, design or name.' },
+  { h: 'No warranty', p: 'The app is provided as it is, without any promise that it is free of mistakes or will always be available. Use the figures and reminders as a helper and not as professional financial, medical or religious advice.' },
+  { h: 'Breaking these terms', p: 'If you break these terms your licence ends automatically, and the developer may take action to protect the app, including under copyright law.' },
+  { h: 'Contact', p: 'For permission or questions about copyright and licence, contact the developer, Adli Syahmi.' },
+];

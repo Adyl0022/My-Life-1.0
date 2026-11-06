@@ -139,7 +139,7 @@ export function think(A, q, lang) {
   const dayNo = todayD.getDate();
   const spends = R.spends || [];
 
-  const spendIn = (from, to, cat) => spends.filter((x) => x.date >= from && x.date < to && (!cat || x.cat === cat));
+  const spendIn = (from, to, cat) => spends.filter((x) => x.date >= from && x.date < to && (cat ? x.cat === cat : x.cat !== 'Savings'));
   const debtLeft = () => { try { return DB.debtSummary(R.debts || DB.DEBT_EMPTY).toPay || 0; } catch (e) { return 0; } };
   const monthSpend = () => sum(spendIn(todayS.slice(0, 7) + '-01', iso(addDays(todayD, 1))), (x) => x.amt);
   const ML = () => calcLeft({ ym: todayS.slice(0, 7), income: s.income || 0, commit: R.commit || 0, spends });
@@ -290,6 +290,15 @@ export function think(A, q, lang) {
   let cat = null; CATK.forEach((c) => { if (!cat && c[1].some((w) => (' ' + qn + ' ').indexOf(' ' + w + ' ') >= 0)) cat = c[0]; });
   const intent = A.pick(qn);
 
+  if (has(['tabung', 'simpanan', 'savings goal', 'saving goal', 'savings goals', 'my savings', 'goal saya', 'matlamat simpanan', 'down payment', 'deposit motor', 'dana kahwin', 'wedding fund', 'travel fund', 'emergency fund', 'emergency savings']) && !has(['belanja', 'spend'])) {
+    const G = R.goals || [];
+    if (!G.length) return done(mk(L('You have no savings goal yet. Open My Finance, Savings Goals, then tap New goal.', 'Awak belum ada tabung. Buka My Finance, Savings Goals, kemudian tekan New goal.'), FIN), {}, null, {intent:'goals'});
+    const AL = { kahwin: 'wedding', nikah: 'wedding', kereta: 'car', rumah: 'house', motosikal: 'motor', cuti: 'travel', kecemasan: 'emergency', perubatan: 'medical' }; const pick = G.filter((g) => qn.split(' ').some((w) => w.length > 3 && g.name.toLowerCase().indexOf(AL[w] || w) >= 0));
+    const use = pick.length ? pick : G;
+    const rows = use.map((g) => { const pc = g.target > 0 ? Math.min(100, Math.round(g.saved / g.target * 100)) : 0; return '• ' + g.name + (g.place ? ' (' + g.place + ')' : '') + ': ' + rm(g.saved) + ' / ' + rm(g.target) + ' (' + pc + '%)' + (g.saved >= g.target ? L(', reached', ', tercapai') : L(', ' + rm(g.target - g.saved) + ' to go', ', baki ' + rm(g.target - g.saved))); });
+    const tot = G.reduce((a, g) => a + g.saved, 0);
+    return done(mk(L('Your savings goals:\n', 'Tabung awak:\n') + rows.join('\n') + (use.length > 1 ? L('\nTotal saved: ', '\nJumlah simpanan: ') + rm(tot) : ''), FIN), {}, null, {intent:'goals'});
+  }
   if (has(['baki hutang', 'hutang tinggal', 'hutang saya', 'berapa hutang', 'debt left', 'how much debt', 'my debt', 'my debts'])) {
     try { const ds = DB.debtSummary(R.debts || DB.DEBT_EMPTY); return done(mk(ds.totalLeft > 0 ? L('Your debt balance left is ' + rm(ds.totalLeft) + '. This month you still have ' + rm(ds.toPay) + ' of commitments to pay.', 'Baki hutang awak ' + rm(ds.totalLeft) + '. Bulan ini awak masih ada ' + rm(ds.toPay) + ' komitmen untuk dibayar.') : L('You have no debt balance. This month you still have ' + rm(ds.toPay) + ' of commitments to pay.', 'Awak tiada baki hutang. Bulan ini masih ada ' + rm(ds.toPay) + ' komitmen untuk dibayar.'), Object.assign({ big: rm(ds.totalLeft), bigLbl: L('debt left', 'baki hutang'), color: '#ff8fab' }, FIN))); } catch (e) { /* fall through */ }
   }
@@ -302,7 +311,7 @@ export function think(A, q, lang) {
   const blockL = has(['hutang', 'debt', 'odometer', 'servis', 'service', 'langkah', 'steps', 'solat', 'prayer', 'tugasan', 'task', 'gelas', 'minum', 'quran', 'puasa']);
   const moneyW = has(['duit', 'wang', 'gaji', 'income', 'pendapatan', 'money', 'belanja', 'bulan', 'month', 'rm', 'spend', 'baki', 'komitmen']);
   if (!blockL && moneyW && has(['kenapa', 'why', 'sebab']) && has(['baki', 'tinggal', 'left', 'money', 'duit', 'wang']) && has(['rendah', 'kurang', 'sikit', 'low', 'habis', 'little', 'cepat', 'less', 'small', 'tak banyak'])) return done(whyLow(), {}, null, { intent: 'left' });
-  if (!blockL && moneyW && (has(['baki', 'tinggal', 'sisa', 'money left', 'left to spend', 'remaining', 'berapa lagi']) || /\bleft\b/.test(qn)) && !has(['hari lagi', 'days left']) && (!per || per.k === 'month')) return done(leftMsg(), {}, null, { intent: 'left' });
+  if (!blockL && (moneyW || intent === 'left' || /\b(how much|what|whats|berapa|apa)\b.*\b(left|baki|tinggal)\b/.test(qn)) && (has(['baki', 'tinggal', 'sisa', 'money left', 'left to spend', 'remaining', 'berapa lagi']) || /\bleft\b/.test(qn) || intent === 'left') && !has(['hari lagi', 'days left']) && (!per || per.k === 'month')) return done(leftMsg(), {}, null, { intent: 'left' });
   if (has(['amaran', 'alert', 'alerts', 'notifikasi bajet', 'budget alert']) && has(['bajet', 'budget', 'belanja', 'baki', 'money'])) return done(mk(L('Budget alerts are in My Finance, under Money Left. Turn them on and I notify you when you have used 80% of your income, when you go over the daily limit, or when you go over budget.', 'Amaran bajet ada dalam My Finance, di bawah Money Left. Hidupkan dan saya akan beritahu bila awak dah guna 80% pendapatan, melebihi had harian, atau terlebih bajet.'), FIN));
   if (has(['kenapa', 'why', 'sebab apa', 'punca']) && (isSpend || has(['banyak', 'tinggi', 'high', 'mahal', 'much', 'duit']))) {
     return done(analyseSpend(), {}, null, { intent: 'spend', period: 'month' });

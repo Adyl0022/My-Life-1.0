@@ -1,3 +1,5 @@
+import { SAV_EMPTY, SavData, goalSaved } from '../lib/savings';
+import { DEBT_EMPTY, DebtData } from '../lib/debts';
 import React, { useState } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
 import { Text } from '../components/Txt';
@@ -13,13 +15,13 @@ import { Commitments } from '../components/Commitments';
 import { MoneyLeft } from '../components/MoneyLeft';
 import { TOP } from '../lib/layout';
 
-type Sp = { id: number; name: string; cat: string; amt: number; date: string };
+type Sp = { id: number; name: string; cat: string; amt: number; date: string; goal?: number };
 type Data = { inc: Record<string, Record<string, number>>; cnt: Record<string, Record<string, number>>; spends: Sp[]; nextId: number; limits?: Record<string, number> };
 const EMPTY: Data = { inc: {}, cnt: {}, spends: [], nextId: 1 };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DEFS: [string, string, string][] = [['salary', 'Basic salary', '#7c9cff'], ['overtime', 'Overtime', '#ffc46b'], ['claim', 'Claim', '#8fe9e2'], ['sunday', 'Sunday work', '#b794ff'], ['holiday', 'Public holiday work', '#ff8fab'], ['other', 'Other', '#5ee7b5']];
 const UN: Record<string, [string, string, string]> = { sunday: ['Days', 'day', 'Number of days worked'], holiday: ['Days', 'day', 'Number of days worked'], overtime: ['Hours', 'hour', 'Number of overtime hours'] };
-const CATS: [string, string][] = [['Food', '#ffc46b'], ['Petrol', '#7c9cff'], ['Bills', '#ff8fab'], ['Shopping', '#b794ff'], ['Health', '#ff8fab'], ['Other', '#8fe9e2']];
+const CATS: [string, string][] = [['Food', '#ffc46b'], ['Petrol', '#7c9cff'], ['Bills', '#ff8fab'], ['Shopping', '#b794ff'], ['Savings', '#5ee7b5'], ['Health', '#ff8fab'], ['Other', '#8fe9e2']];
 const money = (n: number) => n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const rnd = (n: number) => Math.round(n).toLocaleString('en-MY');
 const keyOf = (y: number, m: number) => y + '-' + String(m + 1).padStart(2, '0');
@@ -59,7 +61,8 @@ export default function Finance() {
   const [ym, setYm] = useState(curKey);
   const [editKey, setEditKey] = useState(''); const [editUnit, setEditUnit] = useState<'rm' | 'cnt'>('rm'); const [editVal, setEditVal] = useState('');
   const [limKey, setLimKey] = useState(''); const [limVal, setLimVal] = useState('');
-  const [fDate, setFDate] = useState(todayStr()); const [fName, setFName] = useState(''); const [fAmt, setFAmt] = useState(''); const [fCat, setFCat] = useState('Food');
+  const [fDate, setFDate] = useState(todayStr()); const [fName, setFName] = useState(''); const [fAmt, setFAmt] = useState(''); const [fCat, setFCat] = useState('Food'); const [fGoal, setFGoal] = useState(0);
+  const [sav] = useStored<SavData>('ml_savings', SAV_EMPTY); const [dbt] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
 
   const selY = parseInt(ym.slice(0, 4), 10), selM = parseInt(ym.slice(5, 7), 10) - 1;
   const sumOf = (o?: Record<string, number>) => DEFS.reduce((a, x) => a + ((o || {})[x[0]] || 0), 0);
@@ -72,13 +75,13 @@ export default function Finance() {
     const all = { ...d[store] }; all[ym] = { ...all[ym], [k]: n > 0 ? n : 0 };
     setD({ ...d, [store]: all }); setEditKey(''); setEditVal('');
   };
-  const spendIn = (key: string) => d.spends.filter((p) => (p.date || '').slice(0, 7) === key).reduce((a, p) => a + p.amt, 0);
+  const spendIn = (key: string) => d.spends.filter((p) => p.cat !== 'Savings' && (p.date || '').slice(0, 7) === key).reduce((a, p) => a + p.amt, 0);
   const gk = (back: number) => { const x = new Date(curY, now.getMonth() - back, 1); return { key: keyOf(x.getFullYear(), x.getMonth()), label: MON[x.getMonth()] }; };
   const gm = [5, 4, 3, 2, 1, 0].map((b) => { const k = gk(b); return { key: k.key, label: k.label, v: spendIn(k.key), prev: spendIn(gk(b + 1).key) }; });
   const gMax = Math.max(...gm.map((x) => x.v), 1);
   const gc = gm[5].v, gp = gm[4].v, gd = gc - gp; const gPct = gp > 0 ? Math.round(Math.abs(gd) / gp * 100) : 0;
-  const spent = d.spends.reduce((a, p) => a + p.amt, 0);
-  const monthSpent = d.spends.filter((p) => (p.date || '').slice(0, 7) === ym).reduce((a, p) => a + p.amt, 0);
+  const spent = d.spends.filter((p) => p.cat !== 'Savings').reduce((a, p) => a + p.amt, 0);
+  const monthSpent = d.spends.filter((p) => p.cat !== 'Savings' && (p.date || '').slice(0, 7) === ym).reduce((a, p) => a + p.amt, 0);
   const tr = [5, 4, 3, 2, 1, 0].map((b) => { const k = gk(b); return { key: k.key, label: k.label, t: sumOf(d.inc[k.key]) }; });
   const maxT = Math.max(...tr.map((x) => x.t), 1);
   const saveLimit = (k: string) => {
@@ -88,8 +91,8 @@ export default function Finance() {
   };
   const addSpend = () => {
     const n = parseFloat(fAmt.replace(',', '.')); if (!(n > 0)) return;
-    setD({ ...d, spends: [{ id: d.nextId, name: fName.trim() || fCat, cat: fCat, amt: n, date: fDate || todayStr() }, ...d.spends], nextId: d.nextId + 1 });
-    setFName(''); setFAmt('');
+    setD({ ...d, spends: [{ id: d.nextId, name: fName.trim() || (fCat === 'Savings' && fGoal ? ((sav.goals.find((g) => g.id === fGoal) || { name: fCat }).name) : fCat), cat: fCat, amt: n, date: fDate || todayStr(), ...(fCat === 'Savings' && fGoal ? { goal: fGoal } : {}) }, ...d.spends], nextId: d.nextId + 1 });
+    setFName(''); setFAmt(''); setFGoal(0);
   };
   const dateText = (s: string) => { const p = (s || '').split('-'); return p.length === 3 ? parseInt(p[2], 10) + ' ' + MON[parseInt(p[1], 10) - 1] : ''; };
   const diffTxt = gc === 0 && gp === 0 ? '-' : gd === 0 ? 'Same' : (gd > 0 ? '+' : '-') + 'RM ' + rnd(Math.abs(gd));
@@ -117,6 +120,18 @@ export default function Finance() {
           </Glass>
 
           <MoneyLeft ym={ym} income={total} spends={d.spends} />
+
+          <Pressable onPress={() => router.push('/savings')}>
+            <Glass radius={24} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+              <LinearGradient colors={['rgba(94,231,181,.32)', 'rgba(124,156,255,.16)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: -1 }} />
+              <View style={{ width: 46, height: 46, borderRadius: 16, backgroundColor: 'rgba(94,231,181,.25)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 22 }}>🐷</Text></View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>Savings Goals</Text>
+                <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, marginTop: 1 }}>{sav.goals.length === 0 ? 'Save for a motorcycle, wedding, travel and more' : 'RM ' + rnd(sav.goals.reduce((a, g) => a + goalSaved(g, d.spends, dbt), 0)) + ' saved across ' + sav.goals.length + (sav.goals.length === 1 ? ' goal' : ' goals')}</Text>
+              </View>
+              <Text style={{ color: W, fontSize: 22 }}>›</Text>
+            </Glass>
+          </Pressable>
 
           <Commitments income={sumOf(d.inc[curKey])} />
 
@@ -225,6 +240,14 @@ export default function Finance() {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
               {CATS.map(([n, c]) => <Chip key={n} t={n} on={fCat === n} c={c} onPress={() => setFCat(n)} />)}
             </View>
+            {fCat === 'Savings' ? (
+              <View style={{ marginTop: 10 }}>
+                <Text style={{ color: dim, fontSize: 11.5 }}>{sav.goals.length ? 'Which savings goal is this for?' : 'No savings goal yet. Create one in Savings Goals to track it there too.'}</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                  {sav.goals.map((g) => <Chip key={g.id} t={g.name} on={fGoal === g.id} c="#5ee7b5" onPress={() => setFGoal(fGoal === g.id ? 0 : g.id)} />)}
+                </View>
+              </View>
+            ) : null}
             {d.spends.length === 0 ? (
               <View style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 8, borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,.3)' }}><Text style={{ textAlign: 'center', color: 'rgba(255,255,255,.7)', fontSize: 12, lineHeight: 18 }}>No spending yet. Type what you bought, the amount, pick a category and tap Add.</Text></View>
             ) : null}
@@ -248,7 +271,7 @@ export default function Finance() {
             </View>
             <Text style={{ color: dim, fontSize: 11.5, marginTop: 4 }}>Set a monthly limit for a category. The bar turns yellow when you are close and red when you go over.</Text>
             <View style={{ marginTop: 12, gap: 14 }}>
-              {CATS.map(([n, c]) => {
+              {CATS.filter((x) => x[0] !== 'Savings').map(([n, c]) => {
                 const t = d.spends.filter((p) => p.cat === n && (p.date || '').slice(0, 7) === ym).reduce((a, p) => a + p.amt, 0);
                 const lim = (d.limits || {})[n] || 0; const ratio = lim > 0 ? t / lim : 0;
                 const col = lim > 0 ? (ratio > 1 ? '#ff7a8a' : ratio >= 0.8 ? '#ffd24a' : c) : c;

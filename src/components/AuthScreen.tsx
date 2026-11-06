@@ -1,21 +1,56 @@
-import React, { useState } from 'react';
-import { View, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, Animated, Easing } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Inp, GP, W } from './Ui';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { GP, W } from './Ui';
 import { Blob } from './Bg';
+import { OrbLive } from './OrbLive';
 import { signIn, signUp, verifyCode, resendSignup, sendReset, setNewPassword } from '../lib/auth';
 
 type Mode = 'in' | 'up' | 'verify' | 'forgot' | 'reset';
 const OK = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const TEAL = '#8fe9e2';
 
-// Full-screen sign in / register / reset screen. Shown until the user is signed in; the login is then remembered on the phone.
+const Ico = ({ n, c = 'rgba(255,255,255,.55)' }: { n: 'user' | 'mail' | 'lock' | 'key' | 'eye' | 'eyeoff'; c?: string }) => (
+  <Svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+    {n === 'user' && <><Circle cx="12" cy="8" r="4" /><Path d="M4 21c1-4.2 4.2-6 8-6s7 1.8 8 6" /></>}
+    {n === 'mail' && <><Rect x="3" y="5" width="18" height="14" rx="3" /><Path d="M3.5 7.5l8.5 6 8.5-6" /></>}
+    {n === 'lock' && <><Rect x="5" y="11" width="14" height="10" rx="3" /><Path d="M8 11V8a4 4 0 0 1 8 0v3" /></>}
+    {n === 'key' && <><Circle cx="8" cy="15" r="4" /><Path d="M11 12l9-9M16 7l3 3" /></>}
+    {n === 'eye' && <><Path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><Circle cx="12" cy="12" r="3" /></>}
+    {n === 'eyeoff' && <><Path d="M3 3l18 18M10.6 6.1A9.6 9.6 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4M6.5 7.6A16.6 16.6 0 0 0 2 12s3.5 7 10 7c1.6 0 3-.4 4.3-1" /></>}
+  </Svg>
+);
+
+// One input row: icon on the left, glowing border while typing, optional show/hide for passwords.
+function Field({ icon, secret, ...p }: any) {
+  const [f, setF] = useState(false); const [show, setShow] = useState(false);
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', height: 52, borderRadius: 16, paddingHorizontal: 14, marginBottom: 11, backgroundColor: f ? 'rgba(143,233,226,.07)' : 'rgba(0,0,0,.26)', borderWidth: 1.2, borderColor: f ? 'rgba(143,233,226,.75)' : 'rgba(255,255,255,.13)', shadowColor: TEAL, shadowOpacity: f ? 0.55 : 0, shadowRadius: 10, shadowOffset: { width: 0, height: 0 }, elevation: f ? 4 : 0 }}>
+      <Ico n={icon} c={f ? TEAL : undefined} />
+      <TextInput {...p} secureTextEntry={secret && !show} onFocus={() => setF(true)} onBlur={() => setF(false)} placeholderTextColor="rgba(255,255,255,.38)" maxFontSizeMultiplier={1.1}
+        style={[{ flex: 1, minWidth: 0, color: W, fontSize: 15, marginLeft: 11, paddingVertical: 0, outlineStyle: 'none' } as any, p.style]} />
+      {secret ? <Pressable onPress={() => setShow(!show)} hitSlop={10}><Ico n={show ? 'eye' : 'eyeoff'} /></Pressable> : null}
+    </View>
+  );
+}
+
+// A soft light that drifts slowly, so the background feels alive.
+function Drift({ size, color, x, y, dx, dy, dur }: any) {
+  const t = useRef(new Animated.Value(0)).current;
+  useEffect(() => { const a = Animated.loop(Animated.sequence([Animated.timing(t, { toValue: 1, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true }), Animated.timing(t, { toValue: 0, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true })])); a.start(); return () => a.stop(); }, []);
+  return <Animated.View pointerEvents="none" style={{ position: 'absolute', left: x, top: y, transform: [{ translateX: t.interpolate({ inputRange: [0, 1], outputRange: [0, dx] }) }, { translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, dy] }) }] }}><Blob size={size} color={color} /></Animated.View>;
+}
+const STARS: [number, number, number][] = [[40, 90, 2], [320, 60, 2.5], [350, 210, 1.8], [24, 330, 2.2], [340, 420, 2], [60, 640, 2.5], [310, 700, 2]];
+
 export function AuthScreen() {
   const [mode, setMode] = useState<Mode>('in');
   const [name, setName] = useState(''); const [email, setEmail] = useState('');
   const [pw, setPw] = useState(''); const [pw2, setPw2] = useState(''); const [code, setCode] = useState('');
-  const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [info, setInfo] = useState('');
+  const enter = useRef(new Animated.Value(0)).current;
+  useEffect(() => { enter.setValue(0); Animated.timing(enter, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(); }, [mode]);
   const go = (m: Mode) => { setMode(m); setErr(''); setInfo(''); setCode(''); };
   const run = async (f: () => Promise<void>) => { if (busy) return; setBusy(true); setErr(''); setInfo(''); try { await f(); } finally { setBusy(false); } };
   const needEmail = () => { if (!OK.test(email.trim())) { setErr('Enter a valid email address.'); return false; } return true; };
@@ -50,52 +85,71 @@ export function AuthScreen() {
     const r = await setNewPassword(pw); if (!r.ok) setErr(r.err);
   });
 
-  const title = { in: 'Welcome back', up: 'Create your account', verify: 'Confirm your email', forgot: 'Forgot password', reset: 'Set a new password' }[mode];
-  const sub = { in: 'Sign in to open My Life.', up: 'Your name, email and a password. That is all.', verify: 'Type the 6-digit code we emailed you.', forgot: 'We will email you a 6-digit code.', reset: 'Enter the code and choose a new password.' }[mode];
+  const head = { in: ['Welcome back', 'Sign in to pick up where you left off.'], up: ['Create your account', 'Free. Your data stays yours.'], verify: ['Check your email', 'Type the 6-digit code we sent you.'], forgot: ['Forgot password?', 'We will email you a 6-digit code.'], reset: ['New password', 'Enter the code and choose a new password.'] }[mode];
   const main = { in: ['Sign in', doIn], up: ['Create account', doUp], verify: ['Confirm', doVerify], forgot: ['Send code', doForgot], reset: ['Save password', doReset] }[mode] as [string, () => void];
-
-  const pwRow = (v: string, set: (s: string) => void, ph: string, ac: any) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-      <Inp value={v} onChangeText={set} placeholder={ph} secureTextEntry={!show} autoCapitalize="none" autoCorrect={false} autoComplete={ac} style={{ flex: 1 }} />
-      <Pressable onPress={() => setShow(!show)} hitSlop={8} style={{ position: 'absolute', right: 12 }}><Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 12, fontWeight: '700' }}>{show ? 'Hide' : 'Show'}</Text></Pressable>
-    </View>
-  );
-  const link = (t: string, f: () => void) => <Pressable onPress={f} hitSlop={8}><Text style={{ color: '#8fe9e2', fontSize: 13, fontWeight: '700' }}>{t}</Text></Pressable>;
+  const tabs = mode === 'in' || mode === 'up';
+  const link = (t: string, f: () => void) => <Pressable onPress={f} hitSlop={8}><Text style={{ color: TEAL, fontSize: 13.5, fontWeight: '700' }}>{t}</Text></Pressable>;
 
   return (
-    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#0a0f2c', zIndex: 60 }}>
-      <Blob size={380} color="rgba(106,77,240,0.55)" style={{ left: -140, top: -90 }} /><Blob size={320} color="rgba(94,231,223,0.3)" style={{ right: -130, top: 260 }} />
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#0a0f2c', zIndex: 60, overflow: 'hidden' }}>
+      <LinearGradient colors={['#0a0f2c', '#1b1466', '#0a0f2c']} locations={[0, 0.45, 1]} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
+      <Drift size={420} color="rgba(106,77,240,0.6)" x={-160} y={-110} dx={50} dy={40} dur={7000} />
+      <Drift size={340} color="rgba(94,231,223,0.32)" x={150} y={250} dx={-45} dy={50} dur={9000} />
+      <Drift size={320} color="rgba(255,143,224,0.26)" x={-130} y={520} dx={55} dy={-40} dur={8000} />
+      {STARS.map(([x, y, r], i) => <View key={i} pointerEvents="none" style={{ position: 'absolute', left: x, top: y, width: r * 2, height: r * 2, borderRadius: r, backgroundColor: '#fff', opacity: 0.5 }} />)}
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 22 }}>
-          <View style={{ alignItems: 'center', marginBottom: 22 }}>
-            <LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-              <Text style={{ color: W, fontSize: 26, fontWeight: '800' }}>M</Text>
-            </LinearGradient>
-            <Text style={{ color: W, fontSize: 22, fontWeight: '800' }}>{title}</Text>
-            <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, marginTop: 4, textAlign: 'center' }}>{sub}</Text>
+        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 28 }}>
+          <View style={{ alignItems: 'center', marginBottom: 20 }}>
+            <OrbLive size={92} />
+            <Text style={{ color: W, fontSize: 30, fontWeight: '800', marginTop: 14, letterSpacing: 0.3 }}>My Life</Text>
+            <Text style={{ color: TEAL, fontSize: 12, fontWeight: '700', letterSpacing: 2.4, marginTop: 2 }}>YOUR DAY, ONE APP</Text>
           </View>
-          <View style={{ padding: 16, borderRadius: 22, backgroundColor: 'rgba(255,255,255,.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
-            {mode === 'up' ? <Inp value={name} onChangeText={setName} placeholder="Your name" autoCapitalize="words" autoComplete="name" style={{ marginBottom: 10 }} /> : null}
-            {mode !== 'verify' && mode !== 'reset' ? <Inp value={email} onChangeText={setEmail} placeholder="Email" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" style={{ marginBottom: 10 }} /> : null}
-            {mode === 'in' ? pwRow(pw, setPw, 'Password', 'current-password') : null}
-            {mode === 'up' ? <>{pwRow(pw, setPw, 'Password (min 8 characters)', 'new-password')}{pwRow(pw2, setPw2, 'Repeat password', 'new-password')}</> : null}
-            {mode === 'verify' || mode === 'reset' ? <Inp value={code} onChangeText={(t: string) => setCode(t.replace(/\D/g, '').slice(0, 8))} placeholder="6-digit code" keyboardType="number-pad" maxLength={8} style={{ marginBottom: 10, textAlign: 'center', fontSize: 20, letterSpacing: 6 }} /> : null}
-            {mode === 'reset' ? <>{pwRow(pw, setPw, 'New password (min 8 characters)', 'new-password')}{pwRow(pw2, setPw2, 'Repeat new password', 'new-password')}</> : null}
-            {err ? <Text style={{ color: '#ffb3bf', fontSize: 12.5, marginBottom: 10 }}>{err}</Text> : null}
-            {info ? <Text style={{ color: '#8fe9e2', fontSize: 12.5, marginBottom: 10 }}>{info}</Text> : null}
-            <Pressable onPress={main[1]} disabled={busy}>
-              <LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 13, borderRadius: 16, alignItems: 'center', opacity: busy ? 0.7 : 1 }}>
-                {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>{main[0]}</Text>}
-              </LinearGradient>
-            </Pressable>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 14 }}>
-              {mode === 'in' ? <>{link('Create account', () => go('up'))}{link('Forgot password?', () => go('forgot'))}</> : null}
-              {mode === 'up' ? <>{link('I have an account', () => go('in'))}</> : null}
-              {mode === 'verify' ? <>{link('Resend code', doResend)}{link('Back', () => go('in'))}</> : null}
-              {mode === 'forgot' || mode === 'reset' ? <>{link('Back to sign in', () => go('in'))}</> : null}
-            </View>
+
+          <View style={{ borderRadius: 28, padding: 18, backgroundColor: 'rgba(255,255,255,.075)', borderWidth: 1, borderColor: 'rgba(255,255,255,.2)', shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 10 }}>
+            <LinearGradient colors={['rgba(255,255,255,.14)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 70, borderTopLeftRadius: 28, borderTopRightRadius: 28 }} />
+            {tabs ? (
+              <View style={{ flexDirection: 'row', padding: 4, borderRadius: 16, backgroundColor: 'rgba(0,0,0,.28)', marginBottom: 16 }}>
+                {(['in', 'up'] as const).map((m) => (
+                  <Pressable key={m} onPress={() => go(m)} style={{ flex: 1 }}>
+                    {mode === m
+                      ? <LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 10, borderRadius: 12, alignItems: 'center' }}><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>{m === 'in' ? 'Sign in' : 'Register'}</Text></LinearGradient>
+                      : <View style={{ paddingVertical: 10, alignItems: 'center' }}><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 14, fontWeight: '700' }}>{m === 'in' ? 'Sign in' : 'Register'}</Text></View>}
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
+            <Animated.View style={{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }}>
+              <Text style={{ color: W, fontSize: 21, fontWeight: '800' }}>{head[0]}</Text>
+              <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 13, marginTop: 3, marginBottom: 16, lineHeight: 18 }}>{head[1]}</Text>
+
+              {mode === 'up' ? <Field icon="user" value={name} onChangeText={setName} placeholder="Your name" autoCapitalize="words" autoComplete="name" maxLength={30} /> : null}
+              {mode !== 'verify' && mode !== 'reset' ? <Field icon="mail" value={email} onChangeText={setEmail} placeholder="Email address" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" /> : null}
+              {mode === 'in' ? <Field icon="lock" secret value={pw} onChangeText={setPw} placeholder="Password" autoCapitalize="none" autoCorrect={false} autoComplete="current-password" /> : null}
+              {mode === 'up' ? <><Field icon="lock" secret value={pw} onChangeText={setPw} placeholder="Password (8+ characters)" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /><Field icon="lock" secret value={pw2} onChangeText={setPw2} placeholder="Repeat password" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /></> : null}
+              {mode === 'verify' || mode === 'reset' ? <Field icon="key" value={code} onChangeText={(t: string) => setCode(t.replace(/\D/g, '').slice(0, 8))} placeholder="6-digit code" keyboardType="number-pad" maxLength={8} style={{ fontSize: 20, letterSpacing: 5, fontWeight: '700' }} /> : null}
+              {mode === 'reset' ? <><Field icon="lock" secret value={pw} onChangeText={setPw} placeholder="New password (8+ characters)" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /><Field icon="lock" secret value={pw2} onChangeText={setPw2} placeholder="Repeat new password" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /></> : null}
+
+              {err ? <View style={{ padding: 10, borderRadius: 12, backgroundColor: 'rgba(255,107,129,.16)', borderWidth: 1, borderColor: 'rgba(255,107,129,.4)', marginBottom: 12 }}><Text style={{ color: '#ffc2cc', fontSize: 12.5, lineHeight: 17 }}>{err}</Text></View> : null}
+              {info ? <View style={{ padding: 10, borderRadius: 12, backgroundColor: 'rgba(143,233,226,.12)', borderWidth: 1, borderColor: 'rgba(143,233,226,.35)', marginBottom: 12 }}><Text style={{ color: TEAL, fontSize: 12.5, lineHeight: 17 }}>{info}</Text></View> : null}
+
+              <Pressable onPress={main[1]} disabled={busy} style={{ shadowColor: '#8a7bff', shadowOpacity: 0.7, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 8, borderRadius: 18 }}>
+                <LinearGradient colors={['#7c9cff', '#9a8cff', '#b794ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', opacity: busy ? 0.75 : 1 }}>
+                  {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: W, fontSize: 16, fontWeight: '800', letterSpacing: 0.3 }}>{main[0]}</Text>}
+                </LinearGradient>
+              </Pressable>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 22, marginTop: 16 }}>
+                {mode === 'in' ? link('Forgot password?', () => go('forgot')) : null}
+                {mode === 'verify' ? <>{link('Resend code', doResend)}{link('Back', () => go('in'))}</> : null}
+                {mode === 'forgot' || mode === 'reset' ? link('Back to sign in', () => go('in')) : null}
+              </View>
+            </Animated.View>
           </View>
-          <Text style={{ color: 'rgba(255,255,255,.4)', fontSize: 11.5, textAlign: 'center', marginTop: 16 }}>Your data stays on this phone first. Signing in lets it back up and sync to your other phones.</Text>
+
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 18 }}>
+            {['Planner', 'Prayer times', 'Finance', 'Habits', 'Works offline'].map((t) => <View key={t} style={{ paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)' }}><Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11.5, fontWeight: '600' }}>{t}</Text></View>)}
+          </View>
+          <Text style={{ color: 'rgba(255,255,255,.4)', fontSize: 11.5, textAlign: 'center', marginTop: 12, lineHeight: 16 }}>Your data is saved on this phone first, then backed up to your account.</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

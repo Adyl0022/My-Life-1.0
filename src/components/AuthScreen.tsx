@@ -42,7 +42,66 @@ function Drift({ size, color, x, y, dx, dy, dur }: any) {
   useEffect(() => { const a = Animated.loop(Animated.sequence([Animated.timing(t, { toValue: 1, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true }), Animated.timing(t, { toValue: 0, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true })])); a.start(); return () => a.stop(); }, []);
   return <Animated.View pointerEvents="none" style={{ position: 'absolute', left: x, top: y, transform: [{ translateX: t.interpolate({ inputRange: [0, 1], outputRange: [0, dx] }) }, { translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, dy] }) }] }}><Blob size={size} color={color} /></Animated.View>;
 }
-const STARS: [number, number, number][] = [[40, 90, 2], [320, 60, 2.5], [350, 210, 1.8], [24, 330, 2.2], [340, 420, 2], [60, 640, 2.5], [310, 700, 2]];
+// Same night-sky effects as the Islamic Hub: twinkling stars, shooting stars and little lights floating up.
+const SKY: [number, number, number][] = [[6, 4, 2], [18, 9, 1], [31, 3, 2], [46, 7, 1], [60, 4, 2], [74, 9, 1], [88, 5, 2], [95, 14, 1], [10, 19, 1], [26, 24, 2], [52, 21, 1], [68, 27, 2], [84, 22, 1], [4, 33, 2], [92, 36, 1], [38, 33, 1], [14, 47, 1], [80, 46, 2], [56, 52, 1], [6, 60, 2], [93, 58, 1], [30, 66, 1], [72, 64, 2], [48, 72, 1], [12, 78, 2], [88, 76, 1], [62, 84, 2], [24, 90, 1], [78, 92, 1], [42, 96, 2]];
+function Twinkle({ x, y, s, i }: { x: number; y: number; s: number; i: number }) {
+  const v = useRef(new Animated.Value(0.1)).current;
+  useEffect(() => {
+    const l = Animated.loop(Animated.sequence([
+      Animated.delay((i * 230) % 2600),
+      Animated.timing(v, { toValue: 1, duration: 1200 + s * 400, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(v, { toValue: 0.1, duration: 1200 + s * 400, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    l.start(); return () => l.stop();
+  }, []);
+  return <Animated.View pointerEvents="none" style={{ position: 'absolute', left: (x + '%') as any, top: (y + '%') as any, width: s + 1.5, height: s + 1.5, borderRadius: 4, backgroundColor: '#fff', opacity: v, shadowColor: '#fff', shadowOpacity: 0.9, shadowRadius: 4, shadowOffset: { width: 0, height: 0 } }} />;
+}
+function Shoot({ left, top, delay, gap, angle = 28 }: { left: string; top: string; delay: number; gap: number; angle?: number }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const l = Animated.loop(Animated.sequence([
+      Animated.delay(delay),
+      Animated.timing(v, { toValue: 1, duration: 1100, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.delay(gap),
+      Animated.timing(v, { toValue: 0, duration: 0, useNativeDriver: true }),
+    ]));
+    l.start(); return () => l.stop();
+  }, []);
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: left as any, top: top as any, width: 120, height: 2.5, opacity: v.interpolate({ inputRange: [0, 0.08, 0.7, 1], outputRange: [0, 1, 0.9, 0] }), transform: [{ rotate: angle + 'deg' }, { translateX: v.interpolate({ inputRange: [0, 1], outputRange: [-20, 230] }) }] }}>
+      <LinearGradient colors={['rgba(255,255,255,0)', 'rgba(143,233,226,.6)', '#fff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1, borderRadius: 2 }} />
+      <View style={{ position: 'absolute', right: -2, top: -2, width: 6.5, height: 6.5, borderRadius: 4, backgroundColor: '#fff', shadowColor: '#fff', shadowOpacity: 1, shadowRadius: 8, shadowOffset: { width: 0, height: 0 } }} />
+    </Animated.View>
+  );
+}
+function Mote({ left, delay, dur, size, color }: { left: string; delay: number; dur: number; size: number; color: string }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const l = Animated.loop(Animated.sequence([
+      Animated.delay(delay),
+      Animated.timing(v, { toValue: 1, duration: dur, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(v, { toValue: 0, duration: 0, useNativeDriver: true }),
+    ]));
+    l.start(); return () => l.stop();
+  }, []);
+  return <Animated.View pointerEvents="none" style={{ position: 'absolute', left: left as any, bottom: 20, width: size, height: size, borderRadius: size, backgroundColor: color, shadowColor: color, shadowOpacity: 0.9, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, opacity: v.interpolate({ inputRange: [0, 0.15, 0.8, 1], outputRange: [0, 0.9, 0.7, 0] }), transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -640] }) }, { translateX: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 14, -8] }) }] }} />;
+}
+function Sky() {
+  return (
+    <>
+      {SKY.map((t, i) => <Twinkle key={i} x={t[0]} y={t[1]} s={t[2]} i={i} />)}
+      <Shoot left="2%" top="4%" delay={900} gap={3800} />
+      <Shoot left="40%" top="10%" delay={3600} gap={5200} angle={32} />
+      <Shoot left="-6%" top="38%" delay={6400} gap={6800} angle={22} />
+      <Shoot left="30%" top="62%" delay={9000} gap={7600} angle={26} />
+      <Mote left="10%" delay={0} dur={7500} size={4} color="#8fe9e2" />
+      <Mote left="30%" delay={2400} dur={9000} size={3} color="#ffd593" />
+      <Mote left="52%" delay={1100} dur={8000} size={4} color="#ff8fe0" />
+      <Mote left="72%" delay={3900} dur={8600} size={3} color="#8fe9e2" />
+      <Mote left="90%" delay={1900} dur={7000} size={3} color="#ffd593" />
+    </>
+  );
+}
 
 export function AuthScreen() {
   const [mode, setMode] = useState<Mode>('in');
@@ -96,7 +155,7 @@ export function AuthScreen() {
       <Drift size={420} color="rgba(106,77,240,0.6)" x={-160} y={-110} dx={50} dy={40} dur={7000} />
       <Drift size={340} color="rgba(94,231,223,0.32)" x={150} y={250} dx={-45} dy={50} dur={9000} />
       <Drift size={320} color="rgba(255,143,224,0.26)" x={-130} y={520} dx={55} dy={-40} dur={8000} />
-      {STARS.map(([x, y, r], i) => <View key={i} pointerEvents="none" style={{ position: 'absolute', left: x, top: y, width: r * 2, height: r * 2, borderRadius: r, backgroundColor: '#fff', opacity: 0.5 }} />)}
+      <Sky />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 28 }}>
           <View style={{ alignItems: 'center', marginBottom: 20 }}>

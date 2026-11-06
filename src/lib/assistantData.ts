@@ -18,9 +18,13 @@ export type Real = {
   debts: DebtData; puasa: PuasaData;
   tg: Toggles; lock: LockCfg;
   P: [string, number, number][]; // prayer times today, empty when the place is not known yet
+  spends: { id: number; name: string; cat: string; amt: number; date: string }[]; days: Record<string, { mood: number; cups: number; sleep: number; steps: number }>;
+  plTasks: { id: number; name: string; due: string; prio: string; status: string }[]; plEvents: { id: number; name: string; date: string; done: boolean }[];
+  incomeLast: number;
 };
 
 const td = () => keyOfDate(new Date());
+function incomeLastMonth(fin: any): number { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); const row = (fin && fin.inc && fin.inc[k]) || {}; return Object.keys(row).reduce((a, n) => a + (Number(row[n]) || 0), 0); }
 const num = (x: any) => (typeof x === 'number' && isFinite(x) ? x : 0);
 
 type RecVeh = { readings?: { date: string; odo: number }[]; exps?: { name: string; amt: number; date: string }[]; parts?: { name: string; odo: number; life: number }[] };
@@ -72,6 +76,10 @@ export function useReal(P: [string, number, number][]): Real {
     tasks: ((pl && pl.tasks) || []).map((x: any) => ({ n: x.name, d: x.due || '', s: x.status })), events: ((pl && pl.events) || []).filter((e: any) => !e.done).map((e: any) => ({ n: e.name, d: e.date })),
     hasVehicle: sorted.length > 0, odo, kmMonth: kmBetween(sorted, k(a0), k(a1)), kmLast: kmBetween(sorted, k(b0), k(a0)), mtcMonth: Math.round(mtcMonth * 100) / 100, nextSvc, nextSvcName,
     debts, puasa, tg: { ...TG_DEFAULT, ...tgRaw }, lock: lockRaw, P,
+    spends: spends as any, days: (hd.days || {}) as any,
+    plTasks: ((pl && pl.tasks) || []).map((x: any) => ({ id: x.id, name: x.name, due: x.due || '', prio: x.prio || 'Medium', status: x.status })),
+    plEvents: ((pl && pl.events) || []).map((e: any) => ({ id: e.id, name: e.name, date: e.date, done: !!e.done })),
+    incomeLast: incomeLastMonth(fin),
   };
 }
 
@@ -106,6 +114,20 @@ export async function persist(a: any): Promise<void> {
   } else if (a.type === 'task') {
     const p: any = await getItem('ml_planner', { events: [], tasks: [], cats: ['Tasks'], nextId: 1 });
     const nid = p.nextId || 1;
-    await setItem('ml_planner', { ...p, nextId: nid + 1, tasks: [...(p.tasks || []), { id: nid, name: a.name, note: '', prio: 'Medium', due: '', cat: (p.cats && p.cats[0]) || 'Tasks', status: 'todo' }] });
+    await setItem('ml_planner', { ...p, nextId: nid + 1, tasks: [...(p.tasks || []), { id: nid, name: a.name, note: '', prio: a.prio || 'Medium', due: a.due || '', cat: (p.cats && p.cats[0]) || 'Tasks', status: 'todo' }] });
+  } else if (a.type === 'event') {
+    const p: any = await getItem('ml_planner', { events: [], tasks: [], cats: ['Tasks'], nextId: 1 });
+    const nid = p.nextId || 1;
+    await setItem('ml_planner', { ...p, nextId: nid + 1, events: [...(p.events || []), { id: nid, name: a.name, date: a.date, remind: a.remind || '1 day before', done: false }] });
+  } else if (a.type === 'taskdone') {
+    const p: any = await getItem('ml_planner', { events: [], tasks: [], cats: ['Tasks'], nextId: 1 });
+    await setItem('ml_planner', { ...p, tasks: (p.tasks || []).map((x: any) => (x.id === a.id ? { ...x, status: 'done' } : x)) });
+  } else if (a.type === 'undoSpend') {
+    const f: any = await getItem('ml_finance', { inc: {}, cnt: {}, spends: [], nextId: 1 });
+    await setItem('ml_finance', { ...f, spends: (f.spends || []).filter((x: any) => x.id !== a.id) });
+  } else if (a.type === 'note') {
+    const n: any = await getItem('ml_notes', { notes: [], seq: 1 });
+    const id = n.seq || 1;
+    await setItem('ml_notes', { notes: [{ id, t: a.title || '', s: a.text, c: 6, pin: false, u: Date.now(), r: '' }, ...(n.notes || [])], seq: id + 1 });
   }
 }

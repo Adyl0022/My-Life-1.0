@@ -2,6 +2,7 @@
 import React from 'react';
 import * as F from './fasting';
 import * as DB from './debts';
+import { think, fix } from './assistantBrain';
 // Answer engine. It reads the real saved data of the app, handed in through this.props.real, and saves through this.props.persist.
 export class AssistantBase extends React.Component<any, any> {
   render(): any { return null; }
@@ -84,7 +85,9 @@ export class AssistantBase extends React.Component<any, any> {
     const L = (en, ms) => (s.lang === 'ms' ? ms : en);
     const D = this.D(); let patch = { pending: null }; let m;
     if (!yes) m = this.mk(L('Okay, I did not save it.', 'Baik, saya tidak simpan.'));
-    else if (p.type === 'spend') {
+    else if (p.type === 'undoSpend') {
+      m = this.mk(L('Removed "' + p.name + '" (RM ' + this.rm(p.amt) + ') from My Finance.', 'Dah buang "' + p.name + '" (RM ' + this.rm(p.amt) + ') daripada My Finance.'), { label: L('Open My Finance', 'Buka My Finance'), href: 'Finance.dc.html' });
+    } else if (p.type === 'spend') {
       const tdy = D.spendToday + (p.date === this.todayStr() ? p.amt : 0);
       m = this.mk(L('Saved RM ' + this.rm(p.amt) + ' under ' + p.cat + ' in My Finance. You have spent RM ' + this.rm(tdy) + ' today.', 'Dah disimpan RM ' + this.rm(p.amt) + ' di bawah ' + p.cat + ' dalam My Finance. Awak dah belanja RM ' + this.rm(tdy) + ' hari ini.'), { big: 'RM ' + this.rm(tdy), bigLbl: L('spent today', 'belanja hari ini'), color: '#ffc46b', label: L('Open Spending Tracker', 'Buka Spending Tracker'), href: 'Finance.dc.html' });
     } else if (p.type === 'mtc') {
@@ -101,7 +104,7 @@ export class AssistantBase extends React.Component<any, any> {
       m = this.mk(L('Odometer saved: ' + this.num(p.val) + ' km. That is ' + diff + ' km since the last reading, so this month is ' + (s.kmMonth + diff) + ' km.', 'Odometer disimpan: ' + this.num(p.val) + ' km. Itu ' + diff + ' km sejak bacaan terakhir, jadi bulan ini ' + (s.kmMonth + diff) + ' km.'), { big: this.num(p.val), bigLbl: 'km', color: '#ff8fab', label: L('Open My Record', 'Buka My Record'), href: 'Record.dc.html' });
     }
     this.setState(Object.assign({ msgs: s.msgs.concat([m]) }, patch));
-    if (yes && this.props.persist) this.props.persist(p);
+    if (yes && this.props.persist) this.props.persist(p.type === 'undoSpend' ? { type: 'undoSpend', id: p.sid } : p);
     this.scroll();
   }
   hm() { const d = new Date(); let h = d.getHours(); const m = String(d.getMinutes()).padStart(2, '0'); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + m + ' ' + ap; }
@@ -212,7 +215,13 @@ export class AssistantBase extends React.Component<any, any> {
     const R = this.R();
     const open = s.tasks.filter(t => t.s !== 'done');
     const dnow = s.tasks.filter(t => t.s === 'done').length;
-    const act = this.parseAct(q, qn);
+    const isAfford = /(mampu|afford|boleh ke|boleh saya beli|patut ke|should i buy|can i buy|worth it)/i.test(q);
+    const act = isAfford ? null : this.parseAct(q, qn);
+    if (!act && !cmdWater) {
+      let th = null;
+      try { th = think(this, q, lang); } catch (e) { th = null; }
+      if (th) return { m: th.m, patch: Object.assign({}, th.patch), act: th.act };
+    }
     if (act) {
       const id = s.pid + 1;
       if (act.type === 'spend' || act.type === 'mtc' || act.type === 'inc' || act.type === 'odo') {
@@ -247,7 +256,7 @@ export class AssistantBase extends React.Component<any, any> {
       patch.cups = c; doAct = { type: 'cups', c: c };
       m = mk(c === s.cups ? L('You already reached your water goal today. Well done.', 'Awak dah capai sasaran air hari ini. Syabas.') : L('Logged. That is ' + c + ' of ' + D.cupGoal + ' glasses today.', 'Dah direkod. Sekarang ' + c + ' daripada ' + D.cupGoal + ' gelas hari ini.'), { big: c + '/' + D.cupGoal, bigLbl: L('glasses', 'gelas'), pct: Math.round(c / D.cupGoal * 100), color: '#5ee7df', label: L('Open Habit & Health', 'Buka Habit & Health'), href: 'Habit.dc.html' });
     } else {
-      let id = this.pick(qn);
+      let id = this.pick(this.norm(fix(q)));
       if (id === 'spend' && /(bulan|month)/.test(qn)) id = 'spendM';
       if (id === 'mmonth' && /(banding|compare|lepas|last)/.test(qn)) id = 'mcmp';
       switch (id) {
@@ -421,9 +430,10 @@ export class AssistantBase extends React.Component<any, any> {
           m = mk(L('You can ask me about:\n• Health: steps, distance, sleep, water, mood\n• Faith: next prayer, prayer times, Quran, zikir, fasting\n• Money: spending, income, what is left, commitments and debts\n• Motorcycle: mileage, service, odometer\n• Tasks: open tasks, due soon, events\n• App: reminders, app lock, export\nI can save for you: "spent RM10 on lunch", "service motor RM120", "add mileage 18500 km", "I slept 7 hours", "add task buy milk".', 'Awak boleh tanya saya tentang:\n• Kesihatan: langkah, jarak, tidur, air, mood\n• Ibadah: solat seterusnya, waktu solat, Quran, zikir, puasa dan qadha\n• Wang: belanja, pendapatan, baki, komitmen dan hutang\n• Motosikal: jarak, servis, odometer\n• Tugasan: tugasan, hampir tarikh, acara\n• App: peringatan, kunci app, eksport\nSaya boleh simpankan: "belanja RM10 untuk makan", "servis motor RM120", "tambah milage 18500 km", "saya tidur 7 jam", "tambah tugasan beli susu".'));
           break;
         default:
-          m = mk(L('I have not learned that question yet. I only answer from your own data, so try something like "How many steps today?", "How did I sleep?" or "What did I spend this month?".', 'Saya belum belajar soalan itu. Saya hanya jawab berdasarkan data awak sendiri, jadi cuba seperti "Berapa step saya hari ini?", "Berapa jam saya tidur?" atau "Belanja bulan ini?".'));
+          m = mk(L('I did not quite get that. I answer from your own data, so you can say it in your own words, for example:\n• "How much did I spend last week?"\n• "Why is my spending high?"\n• "Add task send report on Friday"\n• "Can I afford RM300?"', 'Saya kurang faham ayat itu. Saya jawab berdasarkan data awak sendiri, jadi awak boleh cakap dengan cara awak, contohnya:\n• "Berapa saya belanja minggu lepas?"\n• "Kenapa belanja saya tinggi?"\n• "Tambah tugasan hantar laporan Jumaat"\n• "Boleh ke saya beli RM300?"'));
       }
     }
+    if (!patch.ctx) { const mkm = { steps: 'steps', dist: 'steps', sleep: 'sleep', water: 'water', mood: 'mood' }; const idd = this.pick(this.norm(fix(q))); patch.ctx = mkm[idd] ? { intent: 'metric', mkey: mkm[idd] } : (idd === 'spend' || idd === 'spendM') ? { intent: 'spend' } : {}; }
     return { m: m, patch: patch, act: doAct };
   }
   scroll() { setTimeout(() => { try { this.props.onScroll && this.props.onScroll(); } catch (e) { } }, 80); }
@@ -485,7 +495,7 @@ export class AssistantBase extends React.Component<any, any> {
       l1: ms ? '' : 'on', l2: ms ? 'on' : '',
       goEn: () => this.setState({ lang: 'en' }), goMs: () => this.setState({ lang: 'ms' }),
       clear: () => this.setState({ msgs: [], typing: false }),
-      welcome: L('Hi ' + this.fn() + '! I am your My Life assistant. I answer from your own data, on this device, with no internet or AI service. I can also save records for you, like "I spent RM10 on lunch". Tap a question below or type your own.', 'Hai ' + this.fn() + '! Saya pembantu My Life awak. Saya jawab berdasarkan data awak sendiri, dalam peranti ini, tanpa internet atau perkhidmatan AI. Saya juga boleh simpankan rekod, contohnya "Saya belanja RM10 untuk makan". Tekan soalan di bawah atau taip sendiri.'),
+      welcome: L('Hi ' + this.fn() + '! I am your My Life assistant. I answer from your own data, on this device, with no internet or AI service. You can type in your own words, like "how much did I spend last week?" or "remind me to call mom tomorrow". Tap a question below or type your own.', 'Hai ' + this.fn() + '! Saya pembantu My Life awak. Saya jawab berdasarkan data awak sendiri, dalam peranti ini, tanpa internet atau perkhidmatan AI. Taip dengan cara awak sendiri, contohnya "berapa belanja minggu lepas?" atau "ingatkan saya telefon mak esok". Tekan soalan di bawah atau taip sendiri.'),
       startDisp: s.msgs.length === 0 ? 'grid' : 'none',
       starters: S.map(x => { const q = Q[x[0]][x[1]][ix]; return { label: q, d: x[2], bg: x[3], go: () => this.ask(q) }; }),
       msgs: msgs,

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { seal, open } from './secure';
 
-export const DEFAULT_NAME = 'Adli Syahmi';
+export const DEFAULT_NAME = '';
 const listeners = new Set<() => void>();
 export async function getItem<T>(k: string, d: T): Promise<T> {
   try { const r = await AsyncStorage.getItem(k); return r == null ? d : (JSON.parse(await open(r)) as T); } catch (e) { return d; }

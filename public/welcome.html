@@ -79,6 +79,13 @@ details p{margin:0 0 18px;color:var(--dim);font-size:14.5px}
 .install{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .card{background:var(--glass);border:1px solid var(--line);border-radius:26px;padding:26px}
 .card h3{margin:0 0 6px;font-size:19px;letter-spacing:-.4px}.card ol{margin:10px 0 0;padding-left:20px;color:var(--dim);font-size:14.5px}.card li{margin:5px 0}
+.steps{display:grid;gap:12px;max-width:760px;margin:0 auto}
+.st{display:flex;gap:18px;align-items:flex-start;background:var(--glass);border:1px solid var(--line);border-radius:24px;padding:22px}
+.st>i{flex:0 0 40px;height:40px;border-radius:14px;display:grid;place-items:center;font-style:normal;font-weight:800;background:linear-gradient(135deg,var(--b),var(--v));box-shadow:0 8px 20px rgba(91,140,255,.35)}
+.st b{display:block;font-size:17px;margin-bottom:4px}.st p{margin:0;color:var(--dim);font-size:14.5px}.st code{background:rgba(255,255,255,.1);padding:1px 7px;border-radius:7px;font-size:13px;color:#e4e8ff}
+.btn.sm{padding:11px 20px;font-size:14px;margin-top:14px}
+.tips{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:760px;margin:16px auto 0}.tips div{background:rgba(52,211,176,.07);border:1px solid rgba(52,211,176,.22);border-radius:20px;padding:16px}
+.tips b{display:block;font-size:14px;margin-bottom:3px}.tips span{font-size:13px;color:var(--dim)}
 .end{margin-top:84px;text-align:center;padding:52px 24px;border-radius:34px;background:radial-gradient(600px 300px at 50% 0,rgba(52,211,176,.28),transparent 70%),linear-gradient(135deg,rgba(139,123,255,.28),rgba(91,140,255,.18));border:1px solid var(--line)}
 .end h2{margin-bottom:8px}.end p{margin:0 auto 24px;color:#dbe0ff;max-width:480px}
 footer{margin-top:44px;border-top:1px solid var(--line);padding:34px 0 10px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:20px;font-size:13.5px;color:var(--mute)}
@@ -86,7 +93,7 @@ footer b{display:block;color:#dfe2ff;margin-bottom:8px;font-size:14px}footer a{d
 .copy{grid-column:1/-1;text-align:center;margin-top:10px;font-size:12.5px}
 .rv{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}.rv.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.ph,.orb{animation:none}}
-@media(max-width:860px){.hero{grid-template-columns:1fr;padding-top:36px}.phones{height:470px;margin:0 auto;width:100%;max-width:420px}.ph{width:190px}.band{grid-template-columns:1fr 1fr}.bento{grid-template-columns:1fr 1fr}.f,.f.w{grid-column:span 1}.how,.sec,.docs,.install{grid-template-columns:1fr}footer{grid-template-columns:1fr 1fr}footer>div:first-child{grid-column:1/-1}nav a.h{display:none}}
+@media(max-width:860px){.hero{grid-template-columns:1fr;padding-top:36px}.phones{height:470px;margin:0 auto;width:100%;max-width:420px}.ph{width:190px}.band{grid-template-columns:1fr 1fr}.bento{grid-template-columns:1fr 1fr}.f,.f.w{grid-column:span 1}.how,.sec,.docs,.tips{grid-template-columns:1fr}footer{grid-template-columns:1fr 1fr}footer>div:first-child{grid-column:1/-1}nav a.h{display:none}}
 @media(max-width:560px){.bento{grid-template-columns:1fr}.pl{grid-template-columns:1fr}.perm td:first-child{white-space:normal}.perm th:nth-child(2),.perm td:nth-child(2){display:none}h1{letter-spacing:-1.4px}}
 </style></head><body><div class="grain"></div><div class="orb o1"></div><div class="orb o2"></div>
 <nav><div><b><img src="icon.png" alt="">My Life 1.0</b><a class="h" href="#features">Features</a><a class="h" href="#privacy">Privacy</a><a class="h" href="#faq">FAQ</a><a class="h" href="#install">Install</a><a class="dl" href="https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest">Download</a></div></nav>
@@ -99,9 +106,9 @@ footer b{display:block;color:#dfe2ff;margin-bottom:8px;font-size:14px}footer a{d
     <p class="lead">Plan your tasks, keep prayer times, track your money, record your motorcycle and build healthy habits. One calm, private app that lives on your phone.</p>
     <div class="cta">
       <a class="btn p" href="https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest">⬇ Download for Android</a>
-      <a class="btn s" href="./">Open web version</a>
+      <a class="btn s" href="#install">How to install</a>
     </div>
-    <p class="note">Free · No ads · iPhone: open the web version and tap “Add to Home Screen”.</p>
+    <p class="note">Free · No ads · Made for Android phones.</p>
     <div class="chips"><span>🔒 Encrypted on your phone</span><span>🚫 No ads</span><span>📴 Works offline</span></div>
   </div>
   <div class="phones"><div class="ph p1"><img src="welcome/home.jpg" alt="My Life home screen"></div><div class="ph p2"><img src="welcome/planner.jpg" alt="Daily Planner"></div></div>
@@ -188,8 +195,7 @@ footer b{display:block;color:#dfe2ff;margin-bottom:8px;font-size:14px}footer a{d
     <details class="rv"><summary>Is My Life free?</summary><p>Yes. It is free to use and has no ads.</p></details>
     <details class="rv"><summary>Do I need an account?</summary><p>No. You can use everything without signing up. Your data lives on your phone.</p></details>
     <details class="rv"><summary>Does it work without internet?</summary><p>Yes, almost everything works offline. Internet is only used for things like looking up your prayer zone or refreshing the list of Malaysian holidays.</p></details>
-    <details class="rv"><summary>What if I change or lose my phone?</summary><p>Save a backup file from Settings, Export, and keep it somewhere safe. On the new phone, restore it from Settings. Without a backup, data cannot be recovered because it is only on your phone.</p></details>
-    <details class="rv"><summary>Is there an iPhone version?</summary><p>Not as an app yet. iPhone users can open the web version in Safari and use “Add to Home Screen”. Some features, such as reliable notifications and automatic steps, work best on Android.</p></details>
+    <details class="rv"><summary>What if I change or lose my phone?</summary><p>Save a backup file from Settings, Export, and keep it somewhere safe. On the new phone, install My Life and restore the file from Settings. Without a backup, data cannot be recovered because it is only on your phone.</p></details>
     <details class="rv"><summary>Why does Android say it is an unknown app?</summary><p>The app is installed from a file instead of the Play Store, so Android asks you to allow it once. Download only from the official link on this page.</p></details>
     <details class="rv"><summary>Are the prayer times accurate?</summary><p>They follow JAKIM zones for Malaysia. Please confirm with your local authority where it matters.</p></details>
     <details class="rv"><summary>Is the Assistant real AI?</summary><p>It is a built-in helper that answers from your own data on your phone. Your questions are not sent to any server.</p></details>
@@ -199,10 +205,19 @@ footer b{display:block;color:#dfe2ff;margin-bottom:8px;font-size:14px}footer a{d
 </section>
 
 <section id="install">
-  <span class="eyebrow rv">GET THE APP</span><h2 class="rv">Install in a minute</h2><p class="sub rv">Pick your phone.</p>
-  <div class="install">
-    <div class="card rv"><h3>🤖 Android</h3><ol><li>Tap “Download for Android” and open the release page.</li><li>Download the APK file.</li><li>Open it. If asked, allow installing from your browser or Files app.</li><li>Open My Life, then allow notifications and location.</li></ol><div style="margin-top:18px"><a class="btn p" href="https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest">⬇ Download for Android</a></div></div>
-    <div class="card rv"><h3>🍎 iPhone</h3><ol><li>Open the web version in Safari.</li><li>Tap the Share button.</li><li>Choose “Add to Home Screen”.</li><li>Open My Life from your home screen.</li></ol><div style="margin-top:18px"><a class="btn s" href="./">Open web version</a></div></div>
+  <span class="eyebrow rv">GET THE APP</span><h2 class="rv">Install on your Android phone</h2><p class="sub rv">It takes about a minute. Follow the steps one by one.</p>
+  <div class="steps">
+    <div class="st rv"><i>1</i><div><b>Open the download page</b><p>Tap the green “Download for Android” button. It opens the My Life release page on GitHub.</p><a class="btn p sm" href="https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest">⬇ Download for Android</a></div></div>
+    <div class="st rv"><i>2</i><div><b>Download the APK file</b><p>Scroll to “Assets” on that page and tap the file that ends with <code>.apk</code>. Your phone downloads it. If your browser warns that this type of file can harm your device, tap “Download anyway”, as long as you came from this page.</p></div></div>
+    <div class="st rv"><i>3</i><div><b>Open the file</b><p>When the download finishes, tap “Open” in the notification, or open the file from the Downloads folder in your Files app.</p></div></div>
+    <div class="st rv"><i>4</i><div><b>Allow the install</b><p>If Android says it cannot install apps from this source, tap “Settings”, switch on “Allow from this source”, then go back and tap “Install”. If Google Play Protect shows a warning, tap “More details”, then “Install anyway”.</p></div></div>
+    <div class="st rv"><i>5</i><div><b>Open My Life</b><p>Tap “Open”. When asked, allow notifications and location so prayer times and reminders can work. You can change these later in Settings.</p></div></div>
+    <div class="st rv"><i>6</i><div><b>Set up your name</b><p>Go to Settings and type the name you want to see on your Home screen. Then explore the tools from Home.</p></div></div>
+  </div>
+  <div class="tips rv">
+    <div><b>Updating the app</b><span>First save a backup from Settings, Export. Then come back to this page, download the newest APK and open it. If Android will not install it over the old one, remove the old app, install the new one and restore your backup.</span></div>
+    <div><b>Install does not start?</b><span>Make sure the APK finished downloading, there is enough free space, and “Allow from this source” is on for the browser or Files app you used.</span></div>
+    <div><b>Safe to install?</b><span>Only download from the link on this page. Android shows the same warning for any app installed outside the Play Store.</span></div>
   </div>
 </section>
 
@@ -214,7 +229,7 @@ footer b{display:block;color:#dfe2ff;margin-bottom:8px;font-size:14px}footer a{d
 <footer>
   <div><b>My Life 1.0</b>Your life, all in one place. A private app for planning, faith, money, records and habits.</div>
   <div><b>Explore</b><a href="#features">Features</a><a href="#privacy">Privacy</a><a href="#faq">FAQ</a><a href="#install">Install</a></div>
-  <div><b>Legal and contact</b><a href="privacy.html">Privacy Policy and Terms</a><a href="mailto:adlisyahmi324@gmail.com">Contact support</a><a href="./">Web version</a></div>
+  <div><b>Legal and contact</b><a href="privacy.html">Privacy Policy and Terms</a><a href="mailto:adlisyahmi324@gmail.com">Contact support</a><a href="#install">How to install</a></div>
   <div class="copy">© 2026 My Life 1.0. All rights reserved.</div>
 </footer>
 </main>

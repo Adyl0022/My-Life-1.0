@@ -189,7 +189,7 @@ export function AuthScreen() {
     const r = await setNewPassword(pw); if (!r.ok) setErr(r.err);
   });
 
-  const head = { in: ['Welcome back', 'Sign in to pick up where you left off.'], up: ['Create your account', 'Free. Your data stays yours.'], verify: ['Check your email', 'Type the 6-digit code we sent you.'], forgot: ['Forgot password?', 'We will email you a 6-digit code.'], reset: ['New password', 'Enter the code and choose a new password.'] }[mode];
+  const head = { in: ['Welcome back', 'Sign in to pick up where you left off.'], up: ['Create your account', 'Your name, email and a password. Your data stays yours.'], verify: ['Check your email', 'Type the 6-digit code we sent you.'], forgot: ['Forgot password?', 'We will email you a 6-digit code.'], reset: ['New password', 'Enter the code and choose a new password.'] }[mode];
   const main = { in: ['Sign in', doIn], up: ['Create account', doUp], verify: ['Confirm', doVerify], forgot: ['Send code', doForgot], reset: ['Save password', doReset] }[mode] as [string, () => void];
   const tabs = mode === 'in' || mode === 'up';
   const link = (t: string, f: () => void) => <Pressable onPress={f} hitSlop={8}><Text style={{ color: TEAL, fontSize: 13.5, fontWeight: '700' }}>{t}</Text></Pressable>;

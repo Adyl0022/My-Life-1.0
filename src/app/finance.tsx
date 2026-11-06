@@ -109,6 +109,8 @@ export default function Finance() {
             <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>Track every ringgit</Text><Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, marginTop: 1 }}>Income and spending at a glance</Text></View>
           </Glass>
 
+          <MoneyLeft ym={ym} income={total} spends={d.spends} goal={d.save || 0} setGoal={(g) => setD({ ...d, save: g })} />
+
           <Commitments income={sumOf(d.inc[curKey])} />
 
           {/* Monthly income */}
@@ -230,8 +232,6 @@ export default function Finance() {
               ))}
             </View>
           </Glass>
-
-          <MoneyLeft ym={ym} income={total} spends={d.spends} goal={d.save || 0} setGoal={(g) => setD({ ...d, save: g })} />
 
           {/* By category */}
           <Glass radius={24} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>

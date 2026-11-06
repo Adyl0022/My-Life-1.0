@@ -111,6 +111,7 @@ export function MoneyLeft({ ym, income, spends, goal, setGoal }: Props) {
           <View style={{ marginTop: 8 }}>
             <Row c="#fff" l="Income" v={money(income)} />
             <Row c={COL.commit} l="Commitments and debts" v={money(commit)} minus />
+            <Row l="After commitments" v={money(income - commit)} bold />
             <Row c={COL.spent} l="Spent" v={money(spent)} minus />
             {goal > 0 ? <Row c={COL.save} l={'Saved aside (' + goal + '%)'} v={money(save)} minus /> : null}
             <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,.16)', marginVertical: 4 }} />

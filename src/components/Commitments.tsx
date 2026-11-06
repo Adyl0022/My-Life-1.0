@@ -172,7 +172,8 @@ export function Commitments({ income }: { income: number }) {
             (v as number) > 0 ? <View key={(l as string) + sg} style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}><Text style={{ color: dim, fontSize: 12.5 }}>{l as string}</Text><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{(sg as number) < 0 ? '- ' : ''}RM {money(v as number)}</Text></View> : null
           ))}
           <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,.12)', marginTop: 8 }} />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}><Text style={{ color: W, fontSize: 13, fontWeight: '800' }}>{free >= 0 ? 'Free to spend or save' : 'Short by'}</Text><Text style={{ color: free >= 0 ? '#7df0c6' : '#ffb3a0', fontSize: 14, fontWeight: '800' }}>RM {money(Math.abs(free))}</Text></View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}><Text style={{ color: W, fontSize: 13, fontWeight: '800' }}>{free >= 0 ? 'After commitments' : 'Short by'}</Text><Text style={{ color: free >= 0 ? '#7df0c6' : '#ffb3a0', fontSize: 14, fontWeight: '800' }}>RM {money(Math.abs(free))}</Text></View>
+          <Text style={{ color: dim, fontSize: 11, marginTop: 6 }}>Before your daily spending. See Money Left at the top for what is left after spending too.</Text>
         </View>
       ) : null}
 

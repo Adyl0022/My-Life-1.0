@@ -375,17 +375,17 @@ export default function Stats() {
                   <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>{rows.map((r) => <Text key={r.ym} style={{ flex: 1, textAlign: 'center', color: 'rgba(255,255,255,.55)', fontSize: 9.5 }}>{r.label}</Text>)}</View>
                   <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginTop: 8 }}>{best && best.ym !== cur.ym ? 'Your best month was ' + best.label + ' with ' + fm(best.left) + ' left. ' : ''}Red bars are months you went over budget. Months without income are grey.</Text>
                 </>) : <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12.5, marginTop: 8 }}>Add your income and spending in My Finance to see how much you keep each month.</Text>}
-                {any && cur.income > 0 ? (<View style={{ marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,.1)' }}>
-                  <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>Where this month's income goes</Text>
-                  <View style={{ flexDirection: 'row', height: 10, borderRadius: 5, overflow: 'hidden', marginTop: 8, backgroundColor: 'rgba(255,255,255,.12)' }}>
+                {any && cur.income > 0 ? (<View style={{ marginTop: 18, paddingTop: 18, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,.1)' }}>
+                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', marginBottom: 14 }}>Where this month's income goes</Text>
+                  <View style={{ flexDirection: 'row', height: 10, borderRadius: 5, overflow: 'hidden', marginBottom: 6, backgroundColor: 'rgba(255,255,255,.12)' }}>
                     {[[cur.commit, '#b794ff'], [cur.spent, '#ffc46b'], [cur.savings, '#7c9cff'], [Math.max(0, cur.left), '#5ee7b5']].map(([v, col], i) => <View key={i} style={{ flex: Math.max(0, v as number) / Math.max(cur.income, cur.commit + cur.spent + cur.savings), backgroundColor: col as string }} />)}
                   </View>
                   {[['Commitments and debts', cur.commit, '#b794ff'], ['Spending', cur.spent, '#ffc46b'], ['Savings goals', cur.savings, '#7c9cff'], ['Left', Math.max(0, cur.left), '#5ee7b5']].map(([l, v, col]) => (
-                    <View key={l as string} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 7 }}>
-                      <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: col as string }} />
-                      <Text style={{ flex: 1, color: 'rgba(255,255,255,.85)', fontSize: 12.5 }}>{l as string}</Text>
-                      <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '700' }}>{fm(v as number)}</Text>
-                      <Text style={{ width: 38, textAlign: 'right', color: 'rgba(255,255,255,.6)', fontSize: 12 }}>{Math.round(((v as number) / cur.income) * 100)}%</Text>
+                    <View key={l as string} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 9 }}>
+                      <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: col as string }} />
+                      <Text style={{ flex: 1, color: 'rgba(255,255,255,.88)', fontSize: 13.5 }}>{l as string}</Text>
+                      <Text style={{ width: 84, textAlign: 'right', color: '#fff', fontSize: 13.5, fontWeight: '700' }}>{fm(v as number)}</Text>
+                      <Text style={{ width: 42, textAlign: 'right', color: 'rgba(255,255,255,.6)', fontSize: 12.5 }}>{Math.round(((v as number) / cur.income) * 100)}%</Text>
                     </View>
                   ))}
                 </View>) : null}

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Image, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, Animated, Easing } from 'react-native';
+import { View, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, Animated, Easing } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
@@ -26,10 +26,10 @@ const Ico = ({ n, c = 'rgba(255,255,255,.55)' }: { n: 'user' | 'mail' | 'lock' |
 function Field({ icon, secret, ...p }: any) {
   const [f, setF] = useState(false); const [show, setShow] = useState(false);
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', height: 52, borderRadius: 16, paddingHorizontal: 14, marginBottom: 11, backgroundColor: f ? 'rgba(143,233,226,.07)' : 'rgba(0,0,0,.26)', borderWidth: 1.2, borderColor: f ? 'rgba(143,233,226,.75)' : 'rgba(255,255,255,.13)', shadowColor: TEAL, shadowOpacity: f ? 0.55 : 0, shadowRadius: 10, shadowOffset: { width: 0, height: 0 }, elevation: f ? 4 : 0 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', height: 52, borderRadius: 16, paddingHorizontal: 14, marginBottom: 11, backgroundColor: f ? '#173a4f' : '#10143d', borderWidth: 1.2, borderColor: f ? 'rgba(143,233,226,.75)' : 'rgba(255,255,255,.13)', shadowColor: TEAL, shadowOpacity: f ? 0.55 : 0, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } }}>
       <Ico n={icon} c={f ? TEAL : undefined} />
-      <TextInput {...p} secureTextEntry={secret && !show} onFocus={() => setF(true)} onBlur={() => setF(false)} placeholderTextColor="rgba(255,255,255,.38)" maxFontSizeMultiplier={1.1}
-        style={[{ flex: 1, minWidth: 0, color: W, fontSize: 15, marginLeft: 11, paddingVertical: 0, outlineStyle: 'none' } as any, p.style]} />
+      <TextInput {...p} secureTextEntry={secret && !show} onFocus={() => setF(true)} onBlur={() => setF(false)} placeholderTextColor="rgba(255,255,255,.38)" underlineColorAndroid="transparent" importantForAutofill="no" selectionColor="#8fe9e2" maxFontSizeMultiplier={1.1}
+        style={[{ flex: 1, minWidth: 0, backgroundColor: 'transparent', color: W, fontSize: 15, marginLeft: 11, paddingVertical: 0, outlineStyle: 'none' } as any, p.style]} />
       {secret ? <Pressable onPress={() => setShow(!show)} hitSlop={10}><Ico n={show ? 'eye' : 'eyeoff'} /></Pressable> : null}
     </View>
   );
@@ -135,7 +135,10 @@ export function Logo() {
           <LinearGradient colors={['rgba(143,233,226,0)', '#8fe9e2', '#b794ff', '#ff8fe0', 'rgba(255,143,224,0)']} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ flex: 1 }} />
         </Animated.View>
         <View style={{ width: 106, height: 106, borderRadius: 32, overflow: 'hidden', backgroundColor: '#0a0f2c' }}>
-          <Image source={require('../../assets/icon.png')} style={{ width: 106, height: 106 }} />
+          <LinearGradient colors={['#2a2a8f', '#15184f', '#0e2e4d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, width: 106, height: 106 }} />
+          <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: 106, height: 106, alignItems: 'center', justifyContent: 'center' }}>
+            <Svg width={56} height={56} viewBox="0 0 56 56" fill="none"><Path d="M12 44V13L28 33L44 13V44" stroke="#fff" strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" /></Svg>
+          </View>
           <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: 106, height: 106, transform: [{ rotate: inner }] }}>
             <View style={{ position: 'absolute', left: 58, top: -30 }}><Blob size={90} color="rgba(94,231,223,0.55)" /></View>
           </Animated.View>
@@ -204,12 +207,12 @@ export function AuthScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 28 }}>
           <View style={{ alignItems: 'center', marginBottom: 14, marginTop: -10 }}>
-            <Logo />
+            <View style={{ width: 128, height: 128, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 170, height: 170, transform: [{ scale: 0.75 }] }}><Logo /></View></View>
             <Text style={{ color: W, fontSize: 30, fontWeight: '800', marginTop: 14, letterSpacing: 0.3 }}>My Life</Text>
             <Text style={{ color: TEAL, fontSize: 12, fontWeight: '700', letterSpacing: 2.4, marginTop: 2 }}>YOUR DAY, ONE APP</Text>
           </View>
 
-          <View style={{ borderRadius: 28, padding: 18, backgroundColor: 'rgba(255,255,255,.075)', borderWidth: 1, borderColor: 'rgba(255,255,255,.2)', shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 10 }}>
+          <View style={{ borderRadius: 28, padding: 18, backgroundColor: 'rgba(255,255,255,.075)', borderWidth: 1, borderColor: 'rgba(255,255,255,.2)' }}>
             <LinearGradient colors={['rgba(255,255,255,.14)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 70, borderTopLeftRadius: 28, borderTopRightRadius: 28 }} />
             {tabs ? (
               <View style={{ flexDirection: 'row', padding: 4, borderRadius: 16, backgroundColor: 'rgba(0,0,0,.28)', marginBottom: 16 }}>

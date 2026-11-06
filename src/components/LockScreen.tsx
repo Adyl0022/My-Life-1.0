@@ -172,7 +172,7 @@ function Header({ forgot }: { forgot: string }) {
     <View style={{ alignItems: 'center', marginBottom: 14 }}>
       <Tile />
       <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 13, marginTop: 16, letterSpacing: 0.4 }}>Welcome back</Text>
-      {name ? <Text style={{ color: W, fontSize: 26, fontWeight: '800', marginTop: 2 }}>{name}</Text> : null}
+      <Text style={{ color: W, fontSize: 26, fontWeight: '800', marginTop: 2 }}>{name}</Text>
     </View>
   );
 }

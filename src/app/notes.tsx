@@ -53,14 +53,17 @@ export default function Notes() {
   const del = (id: number) => { setData({ ...data, notes: notes.filter((x) => x.id !== id) }); };
   const addLine = (pre: string) => { if (!draft) return; const ns = (draft.s && !/\n$/.test(draft.s) ? draft.s + '\n' : draft.s) + pre; upd({ s: ns }); setFo(ns.split('\n').length - 1); };
   const refs = useRef<any[]>([]);
-  const edScroll = useRef<any>(null); const focI = useRef(0); const selR = useRef<Record<number, number>>({}); const lastLen = useRef(0);
+  const edScroll = useRef<any>(null); const focI = useRef(0); const vh = useRef(0); const sy = useRef(0); const cardY = useRef(0); const contY = useRef(0); const rowL = useRef<Record<number, { y: number; h: number }>>({});
+  // Keep the line being typed in view without throwing the top of the note off screen.
+  const ensure = (i: number) => setTimeout(() => { const r = rowL.current[i]; if (!r || !vh.current) return; const bottom = cardY.current + 18 + contY.current + r.y + r.h; const top = bottom - r.h; if (bottom > sy.current + vh.current - 20) edScroll.current?.scrollTo?.({ y: Math.max(0, bottom - vh.current + 40), animated: true }); else if (top < sy.current + 10) edScroll.current?.scrollTo?.({ y: Math.max(0, top - 40), animated: true }); }, 80); const selR = useRef<Record<number, number>>({}); const lastLen = useRef(0);
   const [kb, setKb] = useState(0);
+  const ensureRef = useRef<any>(() => {}); ensureRef.current = ensure;
   const [lh, setLh] = useState<Record<number, { t: string; h: number }>>({});
   useEffect(() => {
     if (Platform.OS === 'web') return;
     let ht: any = null; let shown = false;
     // Moving to the next line briefly hides and shows the keyboard on some phones. Ignore that blink so the screen does not shake.
-    const a = Keyboard.addListener('keyboardDidShow', (e: any) => { if (ht) { clearTimeout(ht); ht = null; } setKb((k) => (k === e.endCoordinates.height ? k : e.endCoordinates.height)); if (!shown) { shown = true; setTimeout(() => edScroll.current?.scrollToEnd?.({ animated: true }), 120); } });
+    const a = Keyboard.addListener('keyboardDidShow', (e: any) => { if (ht) { clearTimeout(ht); ht = null; } setKb((k) => (k === e.endCoordinates.height ? k : e.endCoordinates.height)); if (!shown) { shown = true; ensureRef.current(focI.current); } });
     const b = Keyboard.addListener('keyboardDidHide', () => { if (ht) clearTimeout(ht); ht = setTimeout(() => { setKb(0); ht = null; shown = false; }, 350); });
     return () => { a.remove(); b.remove(); if (ht) clearTimeout(ht); };
   }, []);
@@ -171,20 +174,20 @@ export default function Notes() {
                 {!isNew && <Pressable onPress={() => setConfirmDel(true)} accessibilityLabel="Delete"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ffb3bf', fontSize: 16 }}>✕</Text></Glass></Pressable>}
                 <Pressable onPress={save}><LinearGradient colors={['#34d399', '#5ee7df']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingHorizontal: 18, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#06241d', fontSize: 14, fontWeight: '800' }}>Save</Text></LinearGradient></Pressable>
               </View>
-              <ScrollView ref={edScroll} keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 14, paddingBottom: 28 }} onContentSizeChange={(_w, h) => { if (kb > 0 && h > lastLen.current && focI.current >= (draft.s || '').split('\n').length - 1) edScroll.current?.scrollToEnd?.({ animated: false }); lastLen.current = h; }}>
-               <View style={{ borderRadius: 30, paddingHorizontal: 18, paddingTop: 18, paddingBottom: 14, backgroundColor: 'rgba(255,255,255,.17)', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 6 }}>
-                <TextInput value={draft.t} onChangeText={(v) => upd({ t: v })} placeholder="Title" placeholderTextColor="rgba(255,255,255,.62)" style={{ color: W, fontSize: 26, fontWeight: '800', outlineStyle: 'none' } as any} />
+              <ScrollView ref={edScroll} keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 14, paddingBottom: 28 }} scrollEventThrottle={32} onScroll={(e) => { sy.current = e.nativeEvent.contentOffset.y; }} onLayout={(e) => { vh.current = e.nativeEvent.layout.height; }} onContentSizeChange={() => { if (kb > 0 && focI.current >= 0) ensure(focI.current); }}>
+               <View onLayout={(e) => { cardY.current = e.nativeEvent.layout.y; }} style={{ borderRadius: 30, paddingHorizontal: 18, paddingTop: 18, paddingBottom: 14, backgroundColor: 'rgba(255,255,255,.17)', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 6 }}>
+                <TextInput onFocus={() => { focI.current = -1; edScroll.current?.scrollTo?.({ y: 0, animated: true }); }} value={draft.t} onChangeText={(v) => upd({ t: v })} placeholder="Title" placeholderTextColor="rgba(255,255,255,.62)" style={{ color: W, fontSize: 26, fontWeight: '800', outlineStyle: 'none' } as any} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} />
                   <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 12 }}>{words} {words === 1 ? 'word' : 'words'}</Text>
                 </View>
-                <View style={{ marginTop: 14, minHeight: 280 }}>
+                <View onLayout={(e) => { contY.current = e.nativeEvent.layout.y; }} style={{ marginTop: 14, minHeight: 280 }}>
                   {(draft.s ? draft.s.split('\n') : ['']).map((ln, i, all) => {
                     const ck = /^[☐☑] /.test(ln); const on = ln.startsWith('☑'); const pre = ck ? ln.slice(0, 2) : ''; const rest = ck ? ln.slice(2) : ln;
                     return (
-                      <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                      <View key={i} onLayout={(e) => { rowL.current[i] = { y: e.nativeEvent.layout.y, h: e.nativeEvent.layout.height }; }} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                         {ck ? <Pressable onPress={() => toggleLine(i)} hitSlop={8} accessibilityLabel="Toggle item" style={{ width: 30, height: 24, justifyContent: 'center' }}><Text style={{ color: on ? '#ffc46b' : W, fontSize: 20, lineHeight: 24 }}>{on ? '☑' : '☐'}</Text></Pressable> : null}
-                        <TextInput ref={(r) => { refs.current[i] = r; }} onFocus={() => { focI.current = i; }} onContentSizeChange={(e) => { const hh = Math.max(24, Math.ceil(e.nativeEvent.contentSize.height)); setLh((m) => (m[i] && m[i].t === rest && m[i].h === hh ? m : { ...m, [i]: { t: rest, h: hh } })); }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} submitBehavior="submit" onSelectionChange={(e: any) => { selR.current[i] = e.nativeEvent.selection.end; }} onSubmitEditing={() => { const c = Math.min(selR.current[i] ?? rest.length, rest.length); lineChange(i, pre, rest.slice(0, c) + '\n' + rest.slice(c)); }} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, height: lh[i] ? lh[i].h : 24, minHeight: 24, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
+                        <TextInput ref={(r) => { refs.current[i] = r; }} onFocus={() => { focI.current = i; ensure(i); }} onContentSizeChange={(e) => { const hh = Math.max(24, Math.ceil(e.nativeEvent.contentSize.height)); setLh((m) => (m[i] && m[i].t === rest && m[i].h === hh ? m : { ...m, [i]: { t: rest, h: hh } })); }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} submitBehavior="submit" onSelectionChange={(e: any) => { selR.current[i] = e.nativeEvent.selection.end; }} onSubmitEditing={() => { const c = Math.min(selR.current[i] ?? rest.length, rest.length); lineChange(i, pre, rest.slice(0, c) + '\n' + rest.slice(c)); }} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, height: lh[i] ? lh[i].h : 24, minHeight: 24, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
                       </View>
                     );
                   })}

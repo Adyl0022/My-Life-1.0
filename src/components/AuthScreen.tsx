@@ -290,7 +290,7 @@ export function AuthScreen() {
             </Animated.View>
           </View>
 
-          <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 12, fontWeight: '600', textAlign: 'center', marginTop: 18, lineHeight: 19, letterSpacing: 0.3 }}>{'Planner  ·  Prayer times  ·  Finance\nHabit & Health  ·  Motorcycle records'}</Text>
+          <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 12, fontWeight: '600', textAlign: 'center', marginTop: 18, lineHeight: 19, letterSpacing: 0.3 }}>{'Planner  ·  Budget  ·  Finance\nHabits & Health  ·  Record  ·  Islamic Hub'}</Text>
           <Text style={{ color: 'rgba(255,255,255,.4)', fontSize: 11.5, textAlign: 'center', marginTop: 12, lineHeight: 16 }}>Your life, kept private and always with you.</Text>
         </ScrollView>
       </KeyboardAvoidingView>

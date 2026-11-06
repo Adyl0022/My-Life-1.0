@@ -158,7 +158,7 @@ function Lattice() {
       <Svg width="100%" height="100%">
         <Defs>
           <Pattern id="lat" width="30" height="30" patternUnits="userSpaceOnUse">
-            <Path d="M0 15L15 0L30 15L15 30Z" fill="none" stroke="rgba(255,255,255,0.055)" strokeWidth={0.8} />
+            <Path d="M0 15L15 0L30 15L15 30Z" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
             <Circle cx="15" cy="0" r="1" fill="rgba(255,255,255,0.2)" /><Circle cx="15" cy="30" r="1" fill="rgba(255,255,255,0.2)" />
             <Circle cx="0" cy="15" r="1" fill="rgba(255,255,255,0.2)" /><Circle cx="30" cy="15" r="1" fill="rgba(255,255,255,0.2)" />
           </Pattern>
@@ -285,7 +285,7 @@ export function AuthScreen() {
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 14 }}>
             {['Planner', 'Prayer times', 'Finance', 'Habits', 'Works offline'].map((t) => <View key={t} style={{ paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)' }}><Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11.5, fontWeight: '600' }}>{t}</Text></View>)}
           </View>
-          <Text style={{ color: 'rgba(255,255,255,.4)', fontSize: 11.5, textAlign: 'center', marginTop: 12, lineHeight: 16 }}>Your data is saved on this phone first, then backed up to your account.</Text>
+          <Text style={{ color: 'rgba(255,255,255,.4)', fontSize: 11.5, textAlign: 'center', marginTop: 12, lineHeight: 16 }}>Your life, kept private and always with you.</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

@@ -283,7 +283,7 @@ export function AuthScreen() {
           </View>
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 14 }}>
-            {['Planner', 'Prayer times', 'Finance', 'Habits', 'Works offline'].map((t) => <View key={t} style={{ paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)' }}><Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11.5, fontWeight: '600' }}>{t}</Text></View>)}
+            {['Planner', 'Prayer times', 'Finance', 'Habits', 'Works offline'].map((t) => <View key={t} style={{ paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: '#2f2e70', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', borderTopColor: 'rgba(255,255,255,.32)', borderBottomColor: 'rgba(0,0,0,.35)', shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 5, shadowOffset: { width: 0, height: 3 }, elevation: 4 }}><Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 11.5, fontWeight: '600' }}>{t}</Text></View>)}
           </View>
           <Text style={{ color: 'rgba(255,255,255,.4)', fontSize: 11.5, textAlign: 'center', marginTop: 12, lineHeight: 16 }}>Your life, kept private and always with you.</Text>
         </ScrollView>

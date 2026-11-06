@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable } from 'react-native';
+import { View, Pressable, useWindowDimensions } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
@@ -39,6 +39,7 @@ const Sw = ({ on, set }: { on: boolean; set: (v: boolean) => void }) => (
 );
 
 export function MoneyLeft({ ym, income, spends }: Props) {
+  const narrow = useWindowDimensions().width < 360;
   const [debts] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
   const [bc, setBc] = useStored<BudgetCfg>('ml_budget', BUDGET_EMPTY);
   const c = calcLeft({ ym, income, commit: commitFor(debts, ym), spends });
@@ -83,7 +84,7 @@ export function MoneyLeft({ ym, income, spends }: Props) {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12 }}>{over ? 'Over by' : 'Left to spend'}</Text>
-          <Text style={{ color: income <= 0 ? 'rgba(255,255,255,.5)' : over ? COL.over : W, fontSize: 28, fontWeight: '800', letterSpacing: -0.5, marginTop: 1 }} numberOfLines={1} adjustsFontSizeToFit>RM {money(income <= 0 ? 0 : Math.abs(left))}</Text>
+          <Text style={{ color: income <= 0 ? 'rgba(255,255,255,.5)' : over ? COL.over : W, fontSize: narrow ? 21 : 28, fontWeight: '800', letterSpacing: -0.5, marginTop: 1 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>RM {money(income <= 0 ? 0 : Math.abs(left))}</Text>
           <Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginTop: 2 }}>{income > 0 ? 'from RM ' + money(income) + ' income' : 'No income saved yet'}</Text>
         </View>
       </View>

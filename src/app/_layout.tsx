@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { trackModule } from '../lib/modules';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationBar } from 'expo-navigation-bar';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { usePrayer } from '../lib/prayer';
 import { useStored, encryptExisting } from '../lib/store';
 import { useLockWatcher } from '../lib/lock';
@@ -40,5 +40,5 @@ function Tracker() { const p = usePathname(); useEffect(() => { trackModule(p); 
 export default function Root() {
   useLockWatcher();
   useEffect(() => { encryptExisting(); }, []);
-  return (<><Tracker /><StatusBar style="light" />{Platform.OS === 'android' ? <NavigationBar hidden style="light" /> : null}<PrayerSync /><DebtSync /><AlertSync /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0f2c' }, animation: 'slide_from_right' }} /><LockScreen /></>);
+  return (<><Tracker /><StatusBar style="light" />{Platform.OS === 'android' ? <NavigationBar hidden style="light" /> : null}<PrayerSync /><DebtSync /><AlertSync /><View style={{ flex: 1, backgroundColor: '#0a0f2c', alignItems: 'center' }}><View style={{ flex: 1, width: '100%', maxWidth: 520, overflow: 'hidden' }}><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0f2c' }, animation: 'slide_from_right' }} /><LockScreen /></View></View></>);
 }

@@ -69,7 +69,6 @@ function Comet({ radius, ms, start = 0, rev, color, size = 12, star }: any) {
           </View>
         ))}
         <View style={{ position: 'absolute', width: D, height: D, alignItems: 'center' }}>
-          <View style={{ position: 'absolute', top: -size * 0.9, width: size * 2.8, height: size * 2.8, borderRadius: size * 1.4, backgroundColor: color, opacity: 0.16 }} />
           {star ? <Svg width={size} height={size} viewBox="-1 -1 2 2" style={{ marginTop: -size / 2 }}><Path d={SP} fill="#fff" /><Path d={SP} fill={color} opacity={0.55} transform="scale(.6)" /></Svg>
             : <View style={{ marginTop: -size / 2, width: size, height: size, borderRadius: size / 2, backgroundColor: '#fff' }} />}
         </View>

@@ -157,10 +157,10 @@ function Lattice() {
     <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
       <Svg width="100%" height="100%">
         <Defs>
-          <Pattern id="lat" width="64" height="64" patternUnits="userSpaceOnUse">
-            <Path d="M0 32L32 0L64 32L32 64Z" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
-            <Circle cx="32" cy="0" r="1.6" fill="rgba(255,255,255,0.18)" /><Circle cx="32" cy="64" r="1.6" fill="rgba(255,255,255,0.18)" />
-            <Circle cx="0" cy="32" r="1.6" fill="rgba(255,255,255,0.18)" /><Circle cx="64" cy="32" r="1.6" fill="rgba(255,255,255,0.18)" />
+          <Pattern id="lat" width="30" height="30" patternUnits="userSpaceOnUse">
+            <Path d="M0 15L15 0L30 15L15 30Z" fill="none" stroke="rgba(255,255,255,0.055)" strokeWidth={0.8} />
+            <Circle cx="15" cy="0" r="1" fill="rgba(255,255,255,0.2)" /><Circle cx="15" cy="30" r="1" fill="rgba(255,255,255,0.2)" />
+            <Circle cx="0" cy="15" r="1" fill="rgba(255,255,255,0.2)" /><Circle cx="30" cy="15" r="1" fill="rgba(255,255,255,0.2)" />
           </Pattern>
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#lat)" />

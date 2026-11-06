@@ -183,7 +183,7 @@ export function AuthScreen() {
   const [kb, setKb] = useState(false);
   // Same starting height on sign in and register, a little lower on taller phones.
   const { height: winH } = useWindowDimensions();
-  const top = Math.max(34, Math.min(110, Math.round(winH * 0.09)));
+  const top = Math.max(40, Math.min(150, Math.round(winH * 0.135)));
   useEffect(() => {
     const a = Keyboard.addListener('keyboardDidShow', () => setKb(true)); const b = Keyboard.addListener('keyboardDidHide', () => setKb(false));
     return () => { a.remove(); b.remove(); };
@@ -290,9 +290,7 @@ export function AuthScreen() {
             </Animated.View>
           </View>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 14 }}>
-            {['Planner', 'Prayer times', 'Finance', 'Habits', 'Works offline'].map((t) => <View key={t} style={{ paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: '#2f2e70', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', borderTopColor: 'rgba(255,255,255,.32)', borderBottomColor: 'rgba(0,0,0,.35)', shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 5, shadowOffset: { width: 0, height: 3 }, elevation: 4 }}><Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 11.5, fontWeight: '600' }}>{t}</Text></View>)}
-          </View>
+          <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 12, fontWeight: '600', textAlign: 'center', marginTop: 18, lineHeight: 19, letterSpacing: 0.3 }}>{'Planner  ·  Prayer times  ·  Finance\nHabits  ·  Works offline'}</Text>
           <Text style={{ color: 'rgba(255,255,255,.4)', fontSize: 11.5, textAlign: 'center', marginTop: 12, lineHeight: 16 }}>Your life, kept private and always with you.</Text>
         </ScrollView>
       </KeyboardAvoidingView>

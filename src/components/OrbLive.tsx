@@ -40,18 +40,14 @@ function Pulse({ size, delay }: any) {
   return <Animated.View pointerEvents="none" style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, borderWidth: 1.5, borderColor: 'rgba(143,233,226,.7)', opacity: t.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }), transform: [{ scale: t.interpolate({ inputRange: [0, 1], outputRange: [1, 1.9] }) }] }} />;
 }
 
-// The assistant orb, alive: the four-point star turns, the colours swirl, small sparkles float and orbit around it.
+// The assistant orb, alive: the four colour lights swirl inside while the star stays still, small sparkles float and orbit around it.
 export function OrbLive({ size = 92 }: { size?: number }) {
   const W = size * 3.1, H = size * 2.1, cx = W / 2, cy = H / 2;
-  const spin = useRef(new Animated.Value(0)).current;
-  const swirl = useRef(new Animated.Value(0)).current;
-  const beat = useRef(new Animated.Value(0)).current;
+    const swirl = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    const a = Animated.loop(Animated.timing(spin, { toValue: 1, duration: 9000, easing: Easing.linear, useNativeDriver: true }));
-    const b = Animated.loop(Animated.timing(swirl, { toValue: 1, duration: 14000, easing: Easing.linear, useNativeDriver: true }));
-    const c = loop(beat, 1700);
-    a.start(); b.start();
-    return () => { a.stop(); b.stop(); c.stop(); };
+    const b = Animated.loop(Animated.timing(swirl, { toValue: 1, duration: 7000, easing: Easing.linear, useNativeDriver: true }));
+    b.start();
+    return () => { b.stop(); };
   }, []);
   const deg = (v: Animated.Value, rev = false) => v.interpolate({ inputRange: [0, 1], outputRange: rev ? ['360deg', '0deg'] : ['0deg', '360deg'] });
   const R = size / 2;
@@ -69,9 +65,9 @@ export function OrbLive({ size = 92 }: { size?: number }) {
         <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: '#ffd27a' }} />
       </Orbit>
       <View style={{ width: size, height: size }}>
-        <Animated.View style={{ position: 'absolute', left: 0, top: 0, transform: [{ rotate: deg(swirl, true) }] }}><OrbPart size={size} uid="lv-a" part="base" /></Animated.View>
+        <Animated.View style={{ position: 'absolute', left: 0, top: 0, transform: [{ rotate: deg(swirl) }] }}><OrbPart size={size} uid="lv-a" part="base" /></Animated.View>
         <View style={{ position: 'absolute', left: 0, top: 0 }}><OrbPart size={size} uid="lv-z" part="top2" /></View>
-        <Animated.View style={{ position: 'absolute', left: 0, top: 0, transform: [{ rotate: deg(spin) }, { scale: beat.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.08] }) }] }}><OrbPart size={size} uid="lv-s" part="star" /></Animated.View>
+        <View style={{ position: 'absolute', left: 0, top: 0 }}><OrbPart size={size} uid="lv-s" part="star" /></View>
       </View>
       <Spark x={cx - size * 1.15} y={cy - size * 0.55} s={6} c="#8fe9e2" ms={1900} delay={0} />
       <Spark x={cx + size * 1.2} y={cy - size * 0.7} s={8} c="#fff" ms={2300} delay={400} />

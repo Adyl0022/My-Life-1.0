@@ -1,105 +1,227 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My Life 1.0 · Your life, all in one place</title><link rel="icon" href="icon.png">
-<meta name="description" content="My Life 1.0 is one private app for your day: planner, prayer times, money, motorcycle records and habits. Everything stays on your phone.">
+<meta name="description" content="My Life 1.0 is one private app for your day: planner, prayer times and Quran, money, motorcycle records and habits. Your data stays on your phone.">
+<meta name="theme-color" content="#0a0f2c">
 <style>
-:root{--bg:#0a0f2c;--tx:#f1f2ff;--dim:#a9b0d8;--line:rgba(255,255,255,.12);--g1:#7c9cff;--g2:#b794ff;--ok:#34d399}
-*{box-sizing:border-box}html{scroll-behavior:smooth}
-body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--tx);background:var(--bg);overflow-x:hidden}
-body:before{content:"";position:fixed;inset:0;z-index:-2;background:linear-gradient(160deg,#0b1030,#231452 50%,#0b2c46)}
-.blob{position:fixed;z-index:-1;border-radius:50%;filter:blur(80px);opacity:.45}.b1{width:380px;height:380px;right:-130px;top:-90px;background:#ffb45e}.b2{width:380px;height:380px;left:-150px;top:520px;background:#5b7cff}
-nav{position:sticky;top:0;z-index:5;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(10,15,44,.7);border-bottom:1px solid var(--line)}
-nav div{max-width:960px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:8px}
-nav b{margin-right:auto;font-size:15px;display:flex;align-items:center;gap:10px}nav b img{width:28px;height:28px;border-radius:8px}
-nav a{color:var(--dim);text-decoration:none;font-size:13.5px;padding:6px 12px;border-radius:999px}nav a:hover{color:#fff;background:rgba(255,255,255,.1)}
-main{max-width:960px;margin:0 auto;padding:0 20px 60px}
-.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:30px;align-items:center;padding:56px 0 30px}
-.tag{display:inline-block;font-size:12px;letter-spacing:1.6px;font-weight:700;color:#d6c9ff;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.07)}
-h1{margin:16px 0 10px;font-size:clamp(34px,6vw,54px);letter-spacing:-1.4px;line-height:1.08}
-h1 span{background:linear-gradient(120deg,#9db4ff,#d2b3ff 60%,#ffc98a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.lead{color:var(--dim);font-size:17px;max-width:480px;margin:0 0 24px}
+:root{--bg:#070b24;--tx:#f3f4ff;--dim:#a7aed6;--mute:#7f87b8;--line:rgba(255,255,255,.1);--glass:rgba(255,255,255,.06);--v:#8b7bff;--b:#5b8cff;--t:#34d3b0;--o:#ffb45e;--p:#ff7fb0}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--tx);background:var(--bg);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body:before{content:"";position:fixed;inset:0;z-index:-3;background:radial-gradient(1200px 700px at 85% -10%,rgba(139,123,255,.28),transparent 60%),radial-gradient(900px 600px at -10% 30%,rgba(91,140,255,.2),transparent 60%),radial-gradient(900px 700px at 60% 110%,rgba(52,211,176,.14),transparent 60%),linear-gradient(180deg,#0a0f2c,#070b24)}
+.grain{position:fixed;inset:0;z-index:-2;opacity:.5;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:26px 26px;mask-image:linear-gradient(180deg,#000,transparent 70%);-webkit-mask-image:linear-gradient(180deg,#000,transparent 70%)}
+.orb{position:fixed;z-index:-1;border-radius:50%;filter:blur(90px);opacity:.4;animation:drift 18s ease-in-out infinite alternate}
+.o1{width:360px;height:360px;right:-120px;top:80px;background:#ff9a5c}.o2{width:420px;height:420px;left:-180px;top:640px;background:#5b6cff;animation-delay:-6s}
+@keyframes drift{to{transform:translate(40px,60px) scale(1.12)}}
+a{color:inherit}
+nav{position:sticky;top:0;z-index:20;backdrop-filter:saturate(1.4) blur(16px);-webkit-backdrop-filter:saturate(1.4) blur(16px);background:rgba(7,11,36,.66);border-bottom:1px solid var(--line)}
+nav div{max-width:1080px;margin:0 auto;padding:11px 20px;display:flex;align-items:center;gap:4px}
+nav b{margin-right:auto;font-size:15px;display:flex;align-items:center;gap:10px;letter-spacing:-.2px}nav b img{width:30px;height:30px;border-radius:9px;box-shadow:0 4px 14px rgba(139,123,255,.45)}
+nav a{color:var(--dim);text-decoration:none;font-size:13.5px;padding:7px 12px;border-radius:999px;transition:.2s}nav a:hover{color:#fff;background:rgba(255,255,255,.09)}
+nav a.dl{color:#06241d;background:linear-gradient(135deg,#34d399,#5ee7df);font-weight:800;margin-left:6px}nav a.dl:hover{color:#06241d;filter:brightness(1.08)}
+main{max-width:1080px;margin:0 auto;padding:0 20px 40px}
+section{position:relative}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:20px;align-items:center;padding:64px 0 30px}
+.tag{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;letter-spacing:1.8px;font-weight:700;color:#d8ceff;padding:7px 15px;border-radius:999px;border:1px solid var(--line);background:var(--glass)}
+.tag i{width:7px;height:7px;border-radius:50%;background:var(--t);box-shadow:0 0 0 4px rgba(52,211,176,.2)}
+h1{margin:18px 0 14px;font-size:clamp(38px,6.4vw,66px);letter-spacing:-2px;line-height:1.02;font-weight:800}
+.grad{background:linear-gradient(110deg,#9fb6ff,#cdb6ff 45%,#ffc48a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:18px;max-width:500px;margin:0 0 28px}
 .cta{display:flex;flex-wrap:wrap;gap:12px}
-.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 24px;border-radius:999px;text-decoration:none;font-weight:800;font-size:15px}
-.btn.p{background:linear-gradient(135deg,#34d399,#5ee7df);color:#06241d;box-shadow:0 12px 30px rgba(52,211,153,.3)}
-.btn.s{color:#fff;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08)}
-.note{margin:14px 0 0;font-size:12.5px;color:#8c93c0}
-.phones{position:relative;height:520px}
-.ph{position:absolute;width:210px;border-radius:30px;border:6px solid #0d1233;box-shadow:0 30px 60px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.16);overflow:hidden;background:#0a0f2c}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:15px 26px;border-radius:999px;text-decoration:none;font-weight:800;font-size:15px;transition:transform .2s,box-shadow .2s,filter .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn.p{background:linear-gradient(135deg,#34d399,#5ee7df);color:#06241d;box-shadow:0 14px 34px rgba(52,211,153,.32)}
+.btn.s{border:1px solid rgba(255,255,255,.26);background:var(--glass);backdrop-filter:blur(10px)}
+.note{margin:16px 0 0;font-size:13px;color:var(--mute)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}.chips span{font-size:12.5px;color:#cfd4f6;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--glass)}
+.phones{position:relative;height:560px}
+.ph{position:absolute;width:228px;border-radius:34px;border:7px solid #0e1338;box-shadow:0 40px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.18),0 0 60px rgba(139,123,255,.25);overflow:hidden;background:#0a0f2c}
 .ph img{display:block;width:100%}
-.p1{left:2%;top:36px;transform:rotate(-6deg)}.p2{right:0;top:0;transform:rotate(5deg)}
-h2{margin:60px 0 6px;font-size:30px;letter-spacing:-.7px;text-align:center}h2+p{margin:0 auto 26px;text-align:center;color:var(--dim);max-width:520px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.f{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:22px;padding:20px;backdrop-filter:blur(10px)}
-.f i{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;margin-bottom:12px;font-style:normal;font-size:22px}
-.f b{display:block;font-size:16px;margin-bottom:4px}.f span{font-size:13.5px;color:var(--dim)}
-.shots{display:flex;gap:16px;overflow-x:auto;padding:6px 4px 20px;scroll-snap-type:x mandatory}
-.shots figure{margin:0;flex:0 0 200px;scroll-snap-align:center}
-.shots img{width:200px;border-radius:26px;border:5px solid #0d1233;box-shadow:0 18px 40px rgba(0,0,0,.45)}
-.shots figcaption{text-align:center;font-size:13px;color:var(--dim);margin-top:10px}
-.priv{margin-top:56px;padding:28px 24px;border-radius:26px;background:linear-gradient(135deg,rgba(124,156,255,.22),rgba(183,148,255,.16));border:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:12px 28px}
-.priv h2{grid-column:1/-1;margin:0;text-align:left;font-size:24px}
-.priv p{margin:0;color:#dfe2ff;font-size:14.5px}.priv p:before{content:"✓ ";color:var(--ok);font-weight:800}
-.steps{counter-reset:s;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.steps div{counter-increment:s;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:22px;padding:20px}
-.steps div:before{content:counter(s);display:grid;place-items:center;width:32px;height:32px;border-radius:11px;background:linear-gradient(135deg,var(--g1),var(--g2));font-weight:800;margin-bottom:10px}
-.steps b{display:block;margin-bottom:4px}.steps span{font-size:13.5px;color:var(--dim)}
-.end{margin-top:56px;text-align:center;padding:34px 22px;border-radius:26px;background:linear-gradient(135deg,rgba(52,211,153,.2),rgba(94,231,223,.14));border:1px solid var(--line)}
-.end h2{margin:0 0 6px}.end p{margin:0 0 18px;color:#d9f3ee}
-footer{text-align:center;color:#7f86b3;font-size:12.5px;margin-top:34px}footer a{color:#aab2e6}
-@media(max-width:760px){.hero{grid-template-columns:1fr;padding-top:34px}.phones{height:430px}.ph{width:170px}.grid,.steps,.priv{grid-template-columns:1fr}nav a.h{display:none}}
-</style></head><body><div class="blob b1"></div><div class="blob b2"></div>
-<nav><div><b><img src="icon.png" alt="">My Life 1.0</b><a class="h" href="#features">Features</a><a class="h" href="#install">Install</a><a href="privacy.html">Privacy</a></div></nav>
+.p1{left:0;top:48px;transform:rotate(-7deg);animation:fl1 7s ease-in-out infinite}.p2{right:0;top:0;transform:rotate(6deg);animation:fl2 8s ease-in-out infinite}
+@keyframes fl1{50%{transform:rotate(-7deg) translateY(-12px)}}@keyframes fl2{50%{transform:rotate(6deg) translateY(12px)}}
+.band{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:34px 0 0;border-radius:24px;overflow:hidden;border:1px solid var(--line);background:var(--line)}
+.band div{background:rgba(10,15,44,.8);padding:20px;text-align:center}.band b{display:block;font-size:24px;letter-spacing:-.6px}.band span{font-size:12.5px;color:var(--mute)}
+.eyebrow{display:block;text-align:center;margin:84px 0 8px;font-size:12px;letter-spacing:2.2px;font-weight:800;color:var(--v)}
+h2{margin:0 0 10px;font-size:clamp(28px,4.4vw,42px);letter-spacing:-1.2px;line-height:1.1;text-align:center}
+.sub{margin:0 auto 34px;text-align:center;color:var(--dim);max-width:560px}
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.f{grid-column:span 2;position:relative;overflow:hidden;background:var(--glass);border:1px solid var(--line);border-radius:26px;padding:24px;backdrop-filter:blur(12px);transition:transform .25s,border-color .25s}
+.f:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.25)}
+.f.w{grid-column:span 3}
+.f:before{content:"";position:absolute;width:180px;height:180px;right:-60px;top:-60px;border-radius:50%;background:var(--c);opacity:.28;filter:blur(40px)}
+.f i{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;margin-bottom:16px;font-style:normal;font-size:24px;background:var(--c);box-shadow:0 8px 20px rgba(0,0,0,.3)}
+.f b{display:block;font-size:18px;margin-bottom:6px;letter-spacing:-.3px}.f span{display:block;font-size:14px;color:var(--dim)}
+.f ul{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}.f li{font-size:12px;color:#d6dafa;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.08)}
+.shots{display:flex;gap:18px;overflow-x:auto;padding:10px 6px 26px;scroll-snap-type:x mandatory;scrollbar-width:none}.shots::-webkit-scrollbar{display:none}
+.shots figure{margin:0;flex:0 0 218px;scroll-snap-align:center}
+.shots img{width:218px;border-radius:30px;border:6px solid #0e1338;box-shadow:0 22px 50px rgba(0,0,0,.5);display:block}
+.shots figcaption{text-align:center;font-size:13px;color:var(--dim);margin-top:12px}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;counter-reset:s}
+.how div{counter-increment:s;background:var(--glass);border:1px solid var(--line);border-radius:26px;padding:26px}
+.how div:before{content:counter(s);display:grid;place-items:center;width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,var(--b),var(--v));font-weight:800;margin-bottom:14px}
+.how b{display:block;font-size:17px;margin-bottom:4px}.how span{font-size:14px;color:var(--dim)}
+.sec{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px;align-items:stretch}
+.shield{border-radius:28px;padding:30px;background:linear-gradient(145deg,rgba(139,123,255,.3),rgba(52,211,176,.16));border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.shield h3{margin:0 0 8px;font-size:26px;letter-spacing:-.7px;line-height:1.15}.shield p{margin:0;color:#dfe3ff;font-size:15px}
+.lock{font-size:44px;margin-bottom:12px}
+.pl{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pl div{background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:18px}
+.pl b{display:block;font-size:15px;margin-bottom:3px}.pl b:before{content:"✓";display:inline-grid;place-items:center;width:20px;height:20px;border-radius:7px;margin-right:8px;font-size:12px;background:rgba(52,211,176,.22);color:var(--t)}
+.pl span{font-size:13.5px;color:var(--dim)}
+.perm{width:100%;border-collapse:separate;border-spacing:0;margin-top:20px;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:var(--glass)}
+.perm th,.perm td{text-align:left;padding:14px 18px;font-size:14px;border-bottom:1px solid var(--line);vertical-align:top}
+.perm th{font-size:12px;letter-spacing:1.4px;color:var(--mute);background:rgba(255,255,255,.04)}.perm tr:last-child td{border-bottom:0}.perm td:first-child{font-weight:700;white-space:nowrap}.perm td:last-child{color:var(--dim)}
+.docs{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+details{background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:0 20px;transition:.2s}
+details[open]{border-color:rgba(139,123,255,.5);background:rgba(139,123,255,.08)}
+summary{cursor:pointer;list-style:none;padding:17px 0;font-weight:700;font-size:15.5px;display:flex;justify-content:space-between;gap:14px;align-items:center}
+summary::-webkit-details-marker{display:none}summary:after{content:"+";font-size:22px;color:var(--v);font-weight:400;transition:.2s}details[open] summary:after{transform:rotate(45deg)}
+details p{margin:0 0 18px;color:var(--dim);font-size:14.5px}
+.faq{display:grid;gap:10px;max-width:800px;margin:0 auto}
+.install{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--glass);border:1px solid var(--line);border-radius:26px;padding:26px}
+.card h3{margin:0 0 6px;font-size:19px;letter-spacing:-.4px}.card ol{margin:10px 0 0;padding-left:20px;color:var(--dim);font-size:14.5px}.card li{margin:5px 0}
+.end{margin-top:84px;text-align:center;padding:52px 24px;border-radius:34px;background:radial-gradient(600px 300px at 50% 0,rgba(52,211,176,.28),transparent 70%),linear-gradient(135deg,rgba(139,123,255,.28),rgba(91,140,255,.18));border:1px solid var(--line)}
+.end h2{margin-bottom:8px}.end p{margin:0 auto 24px;color:#dbe0ff;max-width:480px}
+footer{margin-top:44px;border-top:1px solid var(--line);padding:34px 0 10px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:20px;font-size:13.5px;color:var(--mute)}
+footer b{display:block;color:#dfe2ff;margin-bottom:8px;font-size:14px}footer a{display:block;color:var(--mute);text-decoration:none;padding:3px 0}footer a:hover{color:#fff}
+.copy{grid-column:1/-1;text-align:center;margin-top:10px;font-size:12.5px}
+.rv{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.ph,.orb{animation:none}}
+@media(max-width:860px){.hero{grid-template-columns:1fr;padding-top:36px}.phones{height:470px;margin:0 auto;width:100%;max-width:420px}.ph{width:190px}.band{grid-template-columns:1fr 1fr}.bento{grid-template-columns:1fr 1fr}.f,.f.w{grid-column:span 1}.how,.sec,.docs,.install{grid-template-columns:1fr}footer{grid-template-columns:1fr 1fr}footer>div:first-child{grid-column:1/-1}nav a.h{display:none}}
+@media(max-width:560px){.bento{grid-template-columns:1fr}.pl{grid-template-columns:1fr}.perm td:first-child{white-space:normal}.perm th:nth-child(2),.perm td:nth-child(2){display:none}h1{letter-spacing:-1.4px}}
+</style></head><body><div class="grain"></div><div class="orb o1"></div><div class="orb o2"></div>
+<nav><div><b><img src="icon.png" alt="">My Life 1.0</b><a class="h" href="#features">Features</a><a class="h" href="#privacy">Privacy</a><a class="h" href="#faq">FAQ</a><a class="h" href="#install">Install</a><a class="dl" href="https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest">Download</a></div></nav>
 <main>
+
 <section class="hero">
   <div>
-    <span class="tag">YOUR LIFE, ALL IN ONE PLACE</span>
-    <h1>One app for <span>your whole day</span></h1>
-    <p class="lead">Plan your tasks, keep prayer times, track your money, record your motorcycle and build healthy habits. Private, and it stays on your phone.</p>
+    <span class="tag"><i></i>YOUR LIFE, ALL IN ONE PLACE</span>
+    <h1>One app for<br><span class="grad">your whole day</span></h1>
+    <p class="lead">Plan your tasks, keep prayer times, track your money, record your motorcycle and build healthy habits. One calm, private app that lives on your phone.</p>
     <div class="cta">
       <a class="btn p" href="https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest">⬇ Download for Android</a>
       <a class="btn s" href="./">Open web version</a>
     </div>
-    <p class="note">Android APK · free · iPhone: open the web version and use “Add to Home Screen”.</p>
+    <p class="note">Free · No ads · iPhone: open the web version and tap “Add to Home Screen”.</p>
+    <div class="chips"><span>🔒 Encrypted on your phone</span><span>🚫 No ads</span><span>📴 Works offline</span></div>
   </div>
-  <div class="phones"><div class="ph p1"><img src="welcome/home.jpg" alt="Home screen"></div><div class="ph p2"><img src="welcome/planner.jpg" alt="Daily Planner"></div></div>
+  <div class="phones"><div class="ph p1"><img src="welcome/home.jpg" alt="My Life home screen"></div><div class="ph p2"><img src="welcome/planner.jpg" alt="Daily Planner"></div></div>
 </section>
 
-<h2 id="features">Everything you need, together</h2><p>Five tools in one place, so you do not need five different apps.</p>
-<section class="grid">
-  <div class="f"><i style="background:linear-gradient(135deg,#ffb45e,#ff7a5c)">🗓</i><b>Daily Planner</b><span>Tasks, events with reminders, notes, and big Malaysian holidays that update by themselves.</span></div>
-  <div class="f"><i style="background:linear-gradient(135deg,#34d399,#22b8d8)">🕌</i><b>Islamic Hub</b><span>Prayer times for where you are, qibla, the full Quran, zikir, tasbih and a fasting log.</span></div>
-  <div class="f"><i style="background:linear-gradient(135deg,#7c9cff,#5b7cff)">💰</i><b>My Finance</b><span>Spending, income, monthly commitments, debts and savings goals, with money left this month.</span></div>
-  <div class="f"><i style="background:linear-gradient(135deg,#ff8fb1,#ff5d8f)">🏍</i><b>My Record</b><span>Mileage, service, fuel and spare parts for your motorcycle, with a PDF report.</span></div>
-  <div class="f"><i style="background:linear-gradient(135deg,#b794ff,#7c5cff)">🌿</i><b>Habit and Health</b><span>Steps, sleep, mood, water and fasting streaks, all in one daily score.</span></div>
-  <div class="f"><i style="background:linear-gradient(135deg,#5ee7df,#34d399)">✨</i><b>Stats, Insights, Assistant</b><span>See your trends and ask the built-in Assistant questions about your own data.</span></div>
+<div class="band rv">
+  <div><b>6</b><span>tools in one app</span></div>
+  <div><b>114</b><span>Quran surahs inside</span></div>
+  <div><b>0</b><span>ads, ever</span></div>
+  <div><b>100%</b><span>of data kept on your phone</span></div>
+</div>
+
+<section id="features">
+  <span class="eyebrow rv">FEATURES</span><h2 class="rv">Everything you need, together</h2><p class="sub rv">Stop switching between five apps. Everything for your day is here, and it all talks to each other.</p>
+  <div class="bento">
+    <div class="f w rv" style="--c:linear-gradient(135deg,#ffb45e,#ff7a5c)"><i>🗓</i><b>Daily Planner</b><span>Tasks with priorities and due dates, events with reminders, and colourful notes with checklists. Big Malaysian holidays such as Hari Raya and Deepavali appear by themselves and update over time.</span><ul><li>Tasks</li><li>Events</li><li>Notes</li><li>Overdue alerts</li><li>Malaysia holidays</li></ul></div>
+    <div class="f w rv" style="--c:linear-gradient(135deg,#34d399,#22b8d8)"><i>🕌</i><b>Islamic Hub</b><span>Prayer times that follow your location with JAKIM zones, a live qibla compass, the full Quran, daily zikir, Al-Ma'thurat, Tahlil, tasbih and a fasting log for Ramadan and sunnah fasts.</span><ul><li>Prayer times</li><li>Qibla</li><li>Quran</li><li>Zikir</li><li>Fasting</li></ul></div>
+    <div class="f rv" style="--c:linear-gradient(135deg,#7c9cff,#5b7cff)"><i>💰</i><b>My Finance</b><span>Spending, income, monthly commitments and debts, savings goals, and how much money is left this month.</span></div>
+    <div class="f rv" style="--c:linear-gradient(135deg,#ff8fb1,#ff5d8f)"><i>🏍</i><b>My Record</b><span>Mileage, service, fuel, spare parts, road tax and insurance dates, receipts, and a PDF report for your motorcycle.</span></div>
+    <div class="f rv" style="--c:linear-gradient(135deg,#b794ff,#7c5cff)"><i>🌿</i><b>Habit and Health</b><span>Steps, sleep, mood, water and fasting streaks, rolled into one daily score.</span></div>
+    <div class="f w rv" style="--c:linear-gradient(135deg,#5ee7df,#34d399)"><i>📊</i><b>Stats and Insights</b><span>See how your week compares with last week, where your money goes, and gentle suggestions based on your own data.</span></div>
+    <div class="f w rv" style="--c:linear-gradient(135deg,#ffd27d,#ffb45e)"><i>✨</i><b>Assistant and Search</b><span>Type things like “I spent RM10 on lunch” and the Assistant saves it after you confirm. Search jumps to any feature or setting. Both answer from your own data on your phone.</span></div>
+  </div>
 </section>
 
-<h2>A look inside</h2><p>Dark glass design, made for the phone.</p>
-<section class="shots">
-  <figure><img src="welcome/home.jpg" alt=""><figcaption>Home</figcaption></figure>
-  <figure><img src="welcome/planner.jpg" alt=""><figcaption>Planner</figcaption></figure>
-  <figure><img src="welcome/islamic.jpg" alt=""><figcaption>Islamic Hub</figcaption></figure>
-  <figure><img src="welcome/finance.jpg" alt=""><figcaption>My Finance</figcaption></figure>
-  <figure><img src="welcome/habit.jpg" alt=""><figcaption>Habit and Health</figcaption></figure>
+<section>
+  <span class="eyebrow rv">A LOOK INSIDE</span><h2 class="rv">Calm, glassy and made for your phone</h2><p class="sub rv">The look changes softly with the time of day. Swipe to see more.</p>
+  <div class="shots rv">
+    <figure><img src="welcome/home.jpg" alt="" loading="lazy"><figcaption>Home</figcaption></figure>
+    <figure><img src="welcome/planner.jpg" alt="" loading="lazy"><figcaption>Planner</figcaption></figure>
+    <figure><img src="welcome/islamic.jpg" alt="" loading="lazy"><figcaption>Islamic Hub</figcaption></figure>
+    <figure><img src="welcome/finance.jpg" alt="" loading="lazy"><figcaption>My Finance</figcaption></figure>
+    <figure><img src="welcome/habit.jpg" alt="" loading="lazy"><figcaption>Habit and Health</figcaption></figure>
+  </div>
 </section>
 
-<section class="priv">
-  <h2>Private by design</h2>
-  <p>Your data is saved and encrypted on your own phone.</p>
-  <p>Optional app lock with PIN or fingerprint.</p>
-  <p>No ads and no selling your data.</p>
-  <p>Export or back up everything whenever you like.</p>
+<section>
+  <span class="eyebrow rv">HOW IT WORKS</span><h2 class="rv">Simple from the first minute</h2><p class="sub rv">No sign-up needed. Open the app and start.</p>
+  <div class="how">
+    <div class="rv"><b>Open and set up</b><span>Allow the permissions you want. Prayer times work out your zone from your location, and you can set your name in Settings.</span></div>
+    <div class="rv"><b>Use what you need</b><span>Add a task, log your spending, read zikir, or record a fill-up. Everything you add is saved on your phone.</span></div>
+    <div class="rv"><b>See the bigger picture</b><span>Stats and Insights turn your entries into trends, so you can see how your days are really going.</span></div>
+  </div>
 </section>
 
-<h2 id="install">Install in 3 steps</h2><p>Android, about one minute.</p>
-<section class="steps">
-  <div><b>Download</b><span>Tap “Download for Android”, then download the APK file on the release page.</span></div>
-  <div><b>Allow install</b><span>Open the file. If asked, allow installing apps from your browser or Files app.</span></div>
-  <div><b>Open My Life</b><span>Allow notifications and location so prayer times and reminders work.</span></div>
+<section id="privacy">
+  <span class="eyebrow rv">PRIVACY AND SECURITY</span><h2 class="rv">Your life is yours alone</h2><p class="sub rv">My Life is built so your information stays with you. Here is the plain version.</p>
+  <div class="sec">
+    <div class="shield rv"><div class="lock">🔐</div><h3>Stored on your phone, and encrypted there.</h3><p>Nothing you enter is sent to a server. If account sync is added later, this policy will be updated first and sync will only start with your consent.</p></div>
+    <div class="pl">
+      <div class="rv"><b>What we store</b><span>Only what you enter: notes, events, finance entries, records and habits. App-use stats stay on your device for 30 days.</span></div>
+      <div class="rv"><b>What we never do</b><span>No ads, no tracking across other apps, no selling or sharing your data.</span></div>
+      <div class="rv"><b>Location</b><span>Used only to work out prayer times. It is not saved or sent anywhere, except to the prayer-time service to look up your zone.</span></div>
+      <div class="rv"><b>App lock</b><span>Optional PIN or fingerprint. Your PIN is kept on your phone in scrambled form. Nobody can see it or reset it for you.</span></div>
+      <div class="rv"><b>Your control</b><span>Export everything to Excel, PDF, CSV or a backup file, or reset all your data, any time from Settings.</span></div>
+      <div class="rv"><b>Delete anytime</b><span>Removing the app from your phone removes its data.</span></div>
+    </div>
+  </div>
+  <table class="perm rv"><thead><tr><th>PERMISSION</th><th>WHY IT IS ASKED</th></tr></thead><tbody>
+    <tr><td>Notifications</td><td>Prayer time alerts, Planner event reminders, daily zikir, and debt due dates. Each one has its own switch in Settings.</td></tr>
+    <tr><td>Location</td><td>To find your prayer zone and the qibla direction.</td></tr>
+    <tr><td>Fingerprint or face</td><td>Only if you turn on App lock.</td></tr>
+    <tr><td>Photos or files</td><td>Only when you attach a receipt or document to a record, or choose a backup file to restore.</td></tr>
+    <tr><td>Steps (Health Connect)</td><td>Optional. Lets My Life read your daily steps from your health app.</td></tr>
+  </tbody></table>
 </section>
 
-<section class="end">
-  <h2>Ready to try My Life?</h2><p>Free to use. Tell me what you think so it keeps getting better.</p>
+<section id="terms">
+  <span class="eyebrow rv">TERMS OF USE</span><h2 class="rv">The short version</h2><p class="sub rv">Fair and simple. The full text is always in the app under Settings.</p>
+  <div class="docs">
+    <details class="rv"><summary>Using My Life</summary><p>My Life is a personal organiser for your own use. Keep your phone and your PIN private. You are responsible for what is done on your device.</p></details>
+    <details class="rv"><summary>Your content</summary><p>Everything you add belongs to you. The app only stores it and shows it back to you.</p></details>
+    <details class="rv"><summary>Religious content</summary><p>Quran text, zikir and prayer times are provided as a convenience. Prayer times follow JAKIM. Please confirm with your local authority where it matters.</p></details>
+    <details class="rv"><summary>The Assistant</summary><p>My Life Assistant answers from your own data. It is not a financial, medical or religious adviser.</p></details>
+    <details class="rv"><summary>No warranty</summary><p>The app is provided as is. Keep a backup with Export. We are not liable for loss of data.</p></details>
+    <details class="rv"><summary>Changes</summary><p>These terms may change as the app grows. The latest version is always in the app under Settings, About.</p></details>
+  </div>
+  <p class="sub rv" style="margin-top:22px">Read the full document: <a href="privacy.html" style="color:#b9acff">Privacy Policy and Terms of Use</a></p>
+</section>
+
+<section id="faq">
+  <span class="eyebrow rv">FAQ</span><h2 class="rv">Questions people ask</h2><p class="sub rv">Quick answers before you install.</p>
+  <div class="faq">
+    <details class="rv"><summary>Is My Life free?</summary><p>Yes. It is free to use and has no ads.</p></details>
+    <details class="rv"><summary>Do I need an account?</summary><p>No. You can use everything without signing up. Your data lives on your phone.</p></details>
+    <details class="rv"><summary>Does it work without internet?</summary><p>Yes, almost everything works offline. Internet is only used for things like looking up your prayer zone or refreshing the list of Malaysian holidays.</p></details>
+    <details class="rv"><summary>What if I change or lose my phone?</summary><p>Save a backup file from Settings, Export, and keep it somewhere safe. On the new phone, restore it from Settings. Without a backup, data cannot be recovered because it is only on your phone.</p></details>
+    <details class="rv"><summary>Is there an iPhone version?</summary><p>Not as an app yet. iPhone users can open the web version in Safari and use “Add to Home Screen”. Some features, such as reliable notifications and automatic steps, work best on Android.</p></details>
+    <details class="rv"><summary>Why does Android say it is an unknown app?</summary><p>The app is installed from a file instead of the Play Store, so Android asks you to allow it once. Download only from the official link on this page.</p></details>
+    <details class="rv"><summary>Are the prayer times accurate?</summary><p>They follow JAKIM zones for Malaysia. Please confirm with your local authority where it matters.</p></details>
+    <details class="rv"><summary>Is the Assistant real AI?</summary><p>It is a built-in helper that answers from your own data on your phone. Your questions are not sent to any server.</p></details>
+    <details class="rv"><summary>How do I delete my data?</summary><p>Go to Settings and reset your data, or remove the app from your phone.</p></details>
+    <details class="rv"><summary>How do I report a problem or share an idea?</summary><p>Use “Report a problem” in Settings, or write to the contact address below.</p></details>
+  </div>
+</section>
+
+<section id="install">
+  <span class="eyebrow rv">GET THE APP</span><h2 class="rv">Install in a minute</h2><p class="sub rv">Pick your phone.</p>
+  <div class="install">
+    <div class="card rv"><h3>🤖 Android</h3><ol><li>Tap “Download for Android” and open the release page.</li><li>Download the APK file.</li><li>Open it. If asked, allow installing from your browser or Files app.</li><li>Open My Life, then allow notifications and location.</li></ol><div style="margin-top:18px"><a class="btn p" href="https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest">⬇ Download for Android</a></div></div>
+    <div class="card rv"><h3>🍎 iPhone</h3><ol><li>Open the web version in Safari.</li><li>Tap the Share button.</li><li>Choose “Add to Home Screen”.</li><li>Open My Life from your home screen.</li></ol><div style="margin-top:18px"><a class="btn s" href="./">Open web version</a></div></div>
+  </div>
+</section>
+
+<section class="end rv">
+  <h2>Make every day a little calmer</h2><p>One app, one place, and your data stays yours. Try My Life today.</p>
   <a class="btn p" href="https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest">⬇ Download for Android</a>
 </section>
-<footer>© 2026 Adli Syahmi. All rights reserved. · <a href="privacy.html">Privacy Policy and Terms</a> · <a href="mailto:adlisyahmi324@gmail.com">Contact</a></footer>
-</main></body></html>
+
+<footer>
+  <div><b>My Life 1.0</b>Your life, all in one place. A private app for planning, faith, money, records and habits.</div>
+  <div><b>Explore</b><a href="#features">Features</a><a href="#privacy">Privacy</a><a href="#faq">FAQ</a><a href="#install">Install</a></div>
+  <div><b>Legal and contact</b><a href="privacy.html">Privacy Policy and Terms</a><a href="mailto:adlisyahmi324@gmail.com">Contact support</a><a href="./">Web version</a></div>
+  <div class="copy">© 2026 My Life 1.0. All rights reserved.</div>
+</footer>
+</main>
+<script>
+(function(){var els=[].slice.call(document.querySelectorAll('.rv'));
+if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return}
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12,rootMargin:'0px 0px -40px 0px'});
+els.forEach(function(e,i){e.style.transitionDelay=(i%3)*70+'ms';io.observe(e)})})();
+</script>
+</body></html>

@@ -131,8 +131,8 @@ export function MoneyLeft({ ym, income, spends, goal, setGoal }: Props) {
       <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12.5, lineHeight: 18, marginTop: 10 }}>{tip}</Text>
 
       {income > 0 ? (
-        <View style={{ marginTop: 12 }}>
-          <Text style={{ color: 'rgba(255,255,255,.68)', fontSize: 11.5, marginBottom: 6 }}>Keep part of your income aside as savings</Text>
+        <View style={{ marginTop: 18 }}>
+          <Text style={{ color: 'rgba(255,255,255,.68)', fontSize: 11.5, lineHeight: 16, marginBottom: 12 }}>Keep part of your income aside as savings</Text>
           <View style={{ flexDirection: 'row', gap: 6 }}>
             {GOALS.map((g) => (
               <Pressable key={g} onPress={() => setGoal(g)} style={{ flex: 1, paddingVertical: 7, borderRadius: 999, alignItems: 'center', borderWidth: 1, borderColor: goal === g ? 'transparent' : 'rgba(255,255,255,.2)', backgroundColor: goal === g ? COL.save : 'rgba(255,255,255,.08)' }}>

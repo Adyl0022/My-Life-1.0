@@ -1,0 +1,105 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Life 1.0 · Your life, all in one place</title><link rel="icon" href="icon.png">
+<meta name="description" content="My Life 1.0 is one private app for your day: planner, prayer times, money, motorcycle records and habits. Everything stays on your phone.">
+<style>
+:root{--bg:#0a0f2c;--tx:#f1f2ff;--dim:#a9b0d8;--line:rgba(255,255,255,.12);--g1:#7c9cff;--g2:#b794ff;--ok:#34d399}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--tx);background:var(--bg);overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;z-index:-2;background:linear-gradient(160deg,#0b1030,#231452 50%,#0b2c46)}
+.blob{position:fixed;z-index:-1;border-radius:50%;filter:blur(80px);opacity:.45}.b1{width:380px;height:380px;right:-130px;top:-90px;background:#ffb45e}.b2{width:380px;height:380px;left:-150px;top:520px;background:#5b7cff}
+nav{position:sticky;top:0;z-index:5;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(10,15,44,.7);border-bottom:1px solid var(--line)}
+nav div{max-width:960px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:8px}
+nav b{margin-right:auto;font-size:15px;display:flex;align-items:center;gap:10px}nav b img{width:28px;height:28px;border-radius:8px}
+nav a{color:var(--dim);text-decoration:none;font-size:13.5px;padding:6px 12px;border-radius:999px}nav a:hover{color:#fff;background:rgba(255,255,255,.1)}
+main{max-width:960px;margin:0 auto;padding:0 20px 60px}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:30px;align-items:center;padding:56px 0 30px}
+.tag{display:inline-block;font-size:12px;letter-spacing:1.6px;font-weight:700;color:#d6c9ff;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.07)}
+h1{margin:16px 0 10px;font-size:clamp(34px,6vw,54px);letter-spacing:-1.4px;line-height:1.08}
+h1 span{background:linear-gradient(120deg,#9db4ff,#d2b3ff 60%,#ffc98a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:17px;max-width:480px;margin:0 0 24px}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 24px;border-radius:999px;text-decoration:none;font-weight:800;font-size:15px}
+.btn.p{background:linear-gradient(135deg,#34d399,#5ee7df);color:#06241d;box-shadow:0 12px 30px rgba(52,211,153,.3)}
+.btn.s{color:#fff;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08)}
+.note{margin:14px 0 0;font-size:12.5px;color:#8c93c0}
+.phones{position:relative;height:520px}
+.ph{position:absolute;width:210px;border-radius:30px;border:6px solid #0d1233;box-shadow:0 30px 60px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.16);overflow:hidden;background:#0a0f2c}
+.ph img{display:block;width:100%}
+.p1{left:2%;top:36px;transform:rotate(-6deg)}.p2{right:0;top:0;transform:rotate(5deg)}
+h2{margin:60px 0 6px;font-size:30px;letter-spacing:-.7px;text-align:center}h2+p{margin:0 auto 26px;text-align:center;color:var(--dim);max-width:520px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.f{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:22px;padding:20px;backdrop-filter:blur(10px)}
+.f i{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;margin-bottom:12px;font-style:normal;font-size:22px}
+.f b{display:block;font-size:16px;margin-bottom:4px}.f span{font-size:13.5px;color:var(--dim)}
+.shots{display:flex;gap:16px;overflow-x:auto;padding:6px 4px 20px;scroll-snap-type:x mandatory}
+.shots figure{margin:0;flex:0 0 200px;scroll-snap-align:center}
+.shots img{width:200px;border-radius:26px;border:5px solid #0d1233;box-shadow:0 18px 40px rgba(0,0,0,.45)}
+.shots figcaption{text-align:center;font-size:13px;color:var(--dim);margin-top:10px}
+.priv{margin-top:56px;padding:28px 24px;border-radius:26px;background:linear-gradient(135deg,rgba(124,156,255,.22),rgba(183,148,255,.16));border:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:12px 28px}
+.priv h2{grid-column:1/-1;margin:0;text-align:left;font-size:24px}
+.priv p{margin:0;color:#dfe2ff;font-size:14.5px}.priv p:before{content:"✓ ";color:var(--ok);font-weight:800}
+.steps{counter-reset:s;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.steps div{counter-increment:s;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:22px;padding:20px}
+.steps div:before{content:counter(s);display:grid;place-items:center;width:32px;height:32px;border-radius:11px;background:linear-gradient(135deg,var(--g1),var(--g2));font-weight:800;margin-bottom:10px}
+.steps b{display:block;margin-bottom:4px}.steps span{font-size:13.5px;color:var(--dim)}
+.end{margin-top:56px;text-align:center;padding:34px 22px;border-radius:26px;background:linear-gradient(135deg,rgba(52,211,153,.2),rgba(94,231,223,.14));border:1px solid var(--line)}
+.end h2{margin:0 0 6px}.end p{margin:0 0 18px;color:#d9f3ee}
+footer{text-align:center;color:#7f86b3;font-size:12.5px;margin-top:34px}footer a{color:#aab2e6}
+@media(max-width:760px){.hero{grid-template-columns:1fr;padding-top:34px}.phones{height:430px}.ph{width:170px}.grid,.steps,.priv{grid-template-columns:1fr}nav a.h{display:none}}
+</style></head><body><div class="blob b1"></div><div class="blob b2"></div>
+<nav><div><b><img src="icon.png" alt="">My Life 1.0</b><a class="h" href="#features">Features</a><a class="h" href="#install">Install</a><a href="privacy.html">Privacy</a></div></nav>
+<main>
+<section class="hero">
+  <div>
+    <span class="tag">YOUR LIFE, ALL IN ONE PLACE</span>
+    <h1>One app for <span>your whole day</span></h1>
+    <p class="lead">Plan your tasks, keep prayer times, track your money, record your motorcycle and build healthy habits. Private, and it stays on your phone.</p>
+    <div class="cta">
+      <a class="btn p" href="https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest">⬇ Download for Android</a>
+      <a class="btn s" href="./">Open web version</a>
+    </div>
+    <p class="note">Android APK · free · iPhone: open the web version and use “Add to Home Screen”.</p>
+  </div>
+  <div class="phones"><div class="ph p1"><img src="welcome/home.jpg" alt="Home screen"></div><div class="ph p2"><img src="welcome/planner.jpg" alt="Daily Planner"></div></div>
+</section>
+
+<h2 id="features">Everything you need, together</h2><p>Five tools in one place, so you do not need five different apps.</p>
+<section class="grid">
+  <div class="f"><i style="background:linear-gradient(135deg,#ffb45e,#ff7a5c)">🗓</i><b>Daily Planner</b><span>Tasks, events with reminders, notes, and big Malaysian holidays that update by themselves.</span></div>
+  <div class="f"><i style="background:linear-gradient(135deg,#34d399,#22b8d8)">🕌</i><b>Islamic Hub</b><span>Prayer times for where you are, qibla, the full Quran, zikir, tasbih and a fasting log.</span></div>
+  <div class="f"><i style="background:linear-gradient(135deg,#7c9cff,#5b7cff)">💰</i><b>My Finance</b><span>Spending, income, monthly commitments, debts and savings goals, with money left this month.</span></div>
+  <div class="f"><i style="background:linear-gradient(135deg,#ff8fb1,#ff5d8f)">🏍</i><b>My Record</b><span>Mileage, service, fuel and spare parts for your motorcycle, with a PDF report.</span></div>
+  <div class="f"><i style="background:linear-gradient(135deg,#b794ff,#7c5cff)">🌿</i><b>Habit and Health</b><span>Steps, sleep, mood, water and fasting streaks, all in one daily score.</span></div>
+  <div class="f"><i style="background:linear-gradient(135deg,#5ee7df,#34d399)">✨</i><b>Stats, Insights, Assistant</b><span>See your trends and ask the built-in Assistant questions about your own data.</span></div>
+</section>
+
+<h2>A look inside</h2><p>Dark glass design, made for the phone.</p>
+<section class="shots">
+  <figure><img src="welcome/home.jpg" alt=""><figcaption>Home</figcaption></figure>
+  <figure><img src="welcome/planner.jpg" alt=""><figcaption>Planner</figcaption></figure>
+  <figure><img src="welcome/islamic.jpg" alt=""><figcaption>Islamic Hub</figcaption></figure>
+  <figure><img src="welcome/finance.jpg" alt=""><figcaption>My Finance</figcaption></figure>
+  <figure><img src="welcome/habit.jpg" alt=""><figcaption>Habit and Health</figcaption></figure>
+</section>
+
+<section class="priv">
+  <h2>Private by design</h2>
+  <p>Your data is saved and encrypted on your own phone.</p>
+  <p>Optional app lock with PIN or fingerprint.</p>
+  <p>No ads and no selling your data.</p>
+  <p>Export or back up everything whenever you like.</p>
+</section>
+
+<h2 id="install">Install in 3 steps</h2><p>Android, about one minute.</p>
+<section class="steps">
+  <div><b>Download</b><span>Tap “Download for Android”, then download the APK file on the release page.</span></div>
+  <div><b>Allow install</b><span>Open the file. If asked, allow installing apps from your browser or Files app.</span></div>
+  <div><b>Open My Life</b><span>Allow notifications and location so prayer times and reminders work.</span></div>
+</section>
+
+<section class="end">
+  <h2>Ready to try My Life?</h2><p>Free to use. Tell me what you think so it keeps getting better.</p>
+  <a class="btn p" href="https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest">⬇ Download for Android</a>
+</section>
+<footer>© 2026 Adli Syahmi. All rights reserved. · <a href="privacy.html">Privacy Policy and Terms</a> · <a href="mailto:adlisyahmi324@gmail.com">Contact</a></footer>
+</main></body></html>

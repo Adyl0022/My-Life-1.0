@@ -295,7 +295,7 @@ export function think(A, q, lang) {
     if (!G.length) return done(mk(L('You have no savings goal yet. Open My Finance, Savings Goals, then tap New goal.', 'Awak belum ada tabung. Buka My Finance, Savings Goals, kemudian tekan New goal.'), FIN), {}, null, {intent:'goals'});
     const AL = { kahwin: 'wedding', nikah: 'wedding', kereta: 'car', rumah: 'house', motosikal: 'motor', cuti: 'travel', kecemasan: 'emergency', perubatan: 'medical' }; const pick = G.filter((g) => qn.split(' ').some((w) => w.length > 3 && g.name.toLowerCase().indexOf(AL[w] || w) >= 0));
     const use = pick.length ? pick : G;
-    const rows = use.map((g) => { const pc = g.target > 0 ? Math.min(100, Math.round(g.saved / g.target * 100)) : 0; return '• ' + g.name + (g.place ? ' (' + g.place + ')' : '') + ': ' + rm(g.saved) + ' / ' + rm(g.target) + ' (' + pc + '%)' + (g.saved >= g.target ? L(', reached', ', tercapai') : L(', ' + rm(g.target - g.saved) + ' to go', ', baki ' + rm(g.target - g.saved))); });
+    const rows = use.map((g) => { const pc = g.target > 0 ? Math.min(100, Math.round(g.saved / g.target * 100)) : 0; return '• ' + g.name + (g.place ? ' (' + g.place + ')' : '') + ': ' + rm(g.saved) + (g.target > 0 ? ' / ' + rm(g.target) + ' (' + pc + '%)' : '') + (!(g.target > 0) ? L(' (no target set yet)', ' (belum ada sasaran)') : g.saved >= g.target ? L(', reached', ', tercapai') : L(', ' + rm(g.target - g.saved) + ' to go', ', baki ' + rm(g.target - g.saved))); });
     const tot = G.reduce((a, g) => a + g.saved, 0);
     return done(mk(L('Your savings goals:\n', 'Tabung awak:\n') + rows.join('\n') + (use.length > 1 ? L('\nTotal saved: ', '\nJumlah simpanan: ') + rm(tot) : ''), FIN), {}, null, {intent:'goals'});
   }

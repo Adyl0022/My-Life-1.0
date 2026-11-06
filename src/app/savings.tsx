@@ -110,7 +110,7 @@ export default function Savings() {
             <LinearGradient colors={['rgba(94,231,181,.3)', 'rgba(124,156,255,.16)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: -1 }} />
             <Text style={{ color: '#bff5df', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>TOTAL SAVED</Text>
             <Text style={{ color: W, fontSize: 30, fontWeight: '800', marginTop: 3, letterSpacing: -0.5 }}>RM {money(totS)}</Text>
-            <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12.5, marginTop: 2 }}>{goals.length === 0 ? 'No goals yet. Tap New goal to start your first one.' : 'across ' + goals.length + (goals.length === 1 ? ' goal' : ' goals') + ' · target RM ' + rnd(totT) + ' · ' + totP + '%'}</Text>
+            <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12.5, marginTop: 2 }}>{goals.length === 0 ? 'No goals yet. Tap New goal to start your first one.' : 'across ' + goals.length + (goals.length === 1 ? ' goal' : ' goals') + (totT > 0 ? ' · target RM ' + rnd(totT) + ' · ' + totP + '%' : '')}</Text>
             {goals.length > 0 ? <View style={{ marginTop: 10, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,.14)', overflow: 'hidden' }}><View style={{ width: totP + '%', height: '100%', borderRadius: 4, backgroundColor: '#5ee7b5' }} /></View> : null}
           </Glass>
 
@@ -140,7 +140,7 @@ export default function Savings() {
 
           {goals.map((g) => {
             const k = kindOf(g.kind); const s = saved(g); const left = Math.max(0, g.target - s); const pct = g.target > 0 ? Math.min(100, Math.round((s / g.target) * 100)) : 0;
-            const done = s >= g.target; const pm = perMonth(g, s); const mu = g.due ? monthsUntil(g.due) : null;
+            const noT = !(g.target > 0); const done = !noT && s >= g.target; const pm = perMonth(g, s); const mu = g.due ? monthsUntil(g.due) : null;
             const isOpen = open === g.id; const lines = isOpen && mode === 'hist' ? goalLines(g, spends, debts) : [];
             const linked = (debts.debts || []).filter((x: any) => x.goal === g.id);
             return (
@@ -152,15 +152,15 @@ export default function Savings() {
                     <Text style={{ color: W, fontSize: 16, fontWeight: '800' }} numberOfLines={2}>{g.name}</Text>
                     <Text style={{ color: dimC, fontSize: 12, marginTop: 1 }}>{g.place ? 'Kept in ' + g.place : 'No place set'}{g.due ? ' · by ' + nice(g.due) : ''}</Text>
                   </View>
-                  {done ? <View style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, backgroundColor: '#5ee7b5' }}><Text style={{ color: '#0c2a28', fontSize: 11, fontWeight: '800' }}>Reached</Text></View> : <Text style={{ color: k.color, fontSize: 16, fontWeight: '800' }}>{pct}%</Text>}
+                  {noT ? null : done ? <View style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, backgroundColor: '#5ee7b5' }}><Text style={{ color: '#0c2a28', fontSize: 11, fontWeight: '800' }}>Reached</Text></View> : <Text style={{ color: k.color, fontSize: 16, fontWeight: '800' }}>{pct}%</Text>}
                 </View>
                 <View style={{ marginTop: 12, height: 10, borderRadius: 5, backgroundColor: 'rgba(255,255,255,.14)', overflow: 'hidden' }}><View style={{ width: pct + '%', height: '100%', borderRadius: 5, backgroundColor: done ? '#5ee7b5' : k.color }} /></View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
                   <Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>RM {money(s)}</Text>
-                  <Text style={{ color: dimC, fontSize: 13 }}>of RM {money(g.target)}</Text>
+                  <Text style={{ color: dimC, fontSize: 13 }}>{noT ? 'No target yet' : 'of RM ' + money(g.target)}</Text>
                 </View>
                 <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12.5, marginTop: 4 }}>
-                  {done ? 'You have reached this goal. Well done.' : 'RM ' + money(left) + ' to go' + (pm ? ' · save about RM ' + rnd(pm) + ' a month to finish by ' + nice(g.due) : mu !== null && mu < 0 ? ' · the target date has passed' : '')}
+                  {noT ? 'Tap Edit and set a target amount to see your progress.' : done ? 'You have reached this goal. Well done.' : 'RM ' + money(left) + ' to go' + (pm ? ' · save about RM ' + rnd(pm) + ' a month to finish by ' + nice(g.due) : mu !== null && mu < 0 ? ' · the target date has passed' : '')}
                 </Text>
                 {linked.length > 0 ? <Text style={{ color: '#bff5df', fontSize: 11.5, marginTop: 4 }}>{'Monthly commitment linked: ' + linked.map((x: any) => x.name + ' RM ' + rnd(x.monthly)).join(', ')}</Text> : null}
 

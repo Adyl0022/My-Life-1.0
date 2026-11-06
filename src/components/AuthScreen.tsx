@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Keyboard, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, Animated, Easing } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, Defs, Pattern } from 'react-native-svg';
 import { GP, W } from './Ui';
 import { Blob } from './Bg';
 import { signIn, signUp, verifyCode, resendSignup, sendReset, setNewPassword } from '../lib/auth';
@@ -151,6 +151,24 @@ export function Logo() {
   );
 }
 
+// Faint diamond lattice with a dot on every corner, like the sign-in design.
+function Lattice() {
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
+      <Svg width="100%" height="100%">
+        <Defs>
+          <Pattern id="lat" width="64" height="64" patternUnits="userSpaceOnUse">
+            <Path d="M0 32L32 0L64 32L32 64Z" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+            <Circle cx="32" cy="0" r="1.6" fill="rgba(255,255,255,0.18)" /><Circle cx="32" cy="64" r="1.6" fill="rgba(255,255,255,0.18)" />
+            <Circle cx="0" cy="32" r="1.6" fill="rgba(255,255,255,0.18)" /><Circle cx="64" cy="32" r="1.6" fill="rgba(255,255,255,0.18)" />
+          </Pattern>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#lat)" />
+      </Svg>
+    </View>
+  );
+}
+
 export function AuthScreen() {
   const [mode, setMode] = useState<Mode>('in');
   const [name, setName] = useState(''); const [email, setEmail] = useState('');
@@ -209,6 +227,7 @@ export function AuthScreen() {
       <Drift size={420} color="rgba(106,77,240,0.6)" x={-160} y={-110} dx={50} dy={40} dur={7000} />
       <Drift size={340} color="rgba(94,231,223,0.32)" x={150} y={250} dx={-45} dy={50} dur={9000} />
       <Drift size={320} color="rgba(255,143,224,0.26)" x={-130} y={520} dx={55} dy={-40} dur={8000} />
+      <Lattice />
       <Sky />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {kb ? null : (

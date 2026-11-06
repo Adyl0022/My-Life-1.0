@@ -8,13 +8,14 @@ export type SavData = { goals: Goal[]; nextId: number };
 export const SAV_EMPTY: SavData = { goals: [], nextId: 1 };
 
 export const KINDS: { k: string; label: string; name: string; color: string }[] = [
-  { k: 'motor', label: 'Motorcycle', name: 'Motorcycle down payment', color: '#ff8fab' },
-  { k: 'car', label: 'Car', name: 'Car down payment', color: '#7c9cff' },
-  { k: 'house', label: 'House', name: 'House down payment', color: '#ffc46b' },
+  { k: 'motor', label: 'Motorcycle', name: 'Motorcycle', color: '#ff8fab' },
+  { k: 'car', label: 'Car', name: 'Car', color: '#7c9cff' },
+  { k: 'house', label: 'House', name: 'House', color: '#ffc46b' },
   { k: 'wedding', label: 'Wedding', name: 'Wedding fund', color: '#ff9db5' },
   { k: 'travel', label: 'Travel', name: 'Travel fund', color: '#5ee7df' },
   { k: 'emergency', label: 'Emergency', name: 'Emergency savings', color: '#ffb36b' },
   { k: 'medical', label: 'Medical', name: 'Medical savings', color: '#7df0c6' },
+  { k: 'hajj', label: 'Hajj / Umrah', name: 'Hajj / Umrah', color: '#8fe9a8' },
   { k: 'other', label: 'Other', name: '', color: '#b794ff' },
 ];
 export const kindOf = (k: string) => KINDS.find((x) => x.k === k) || KINDS[KINDS.length - 1];

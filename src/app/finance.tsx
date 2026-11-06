@@ -90,7 +90,7 @@ export default function Finance() {
     setD({ ...d, limits: lm }); setLimKey(''); setLimVal('');
   };
   // Goal choices for the Savings category: ready-made goals first, your own in the middle, Wedding last.
-  const PRE = ['motor', 'car', 'house', 'emergency', 'medical'];
+  const PRE = ['motor', 'car', 'house', 'emergency', 'medical', 'travel', 'hajj'];
   const opts: { key: string; id: number; name: string; kind: string }[] = [];
   PRE.forEach((k) => { const ex = sav.goals.filter((g) => g.kind === k); if (ex.length) ex.forEach((g) => opts.push({ key: 'g' + g.id, id: g.id, name: g.name, kind: k })); else opts.push({ key: 'p' + k, id: 0, name: kindOf(k).name, kind: k }); });
   sav.goals.filter((g) => PRE.indexOf(g.kind) < 0 && g.kind !== 'wedding').forEach((g) => opts.push({ key: 'g' + g.id, id: g.id, name: g.name, kind: g.kind }));
@@ -135,7 +135,7 @@ export default function Finance() {
           <Pressable onPress={() => router.push('/savings')}>
             <Glass radius={24} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
               <LinearGradient colors={['rgba(94,231,181,.32)', 'rgba(124,156,255,.16)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: -1 }} />
-              <View style={{ width: 46, height: 46, borderRadius: 16, backgroundColor: 'rgba(94,231,181,.25)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 22 }}>🐷</Text></View>
+              <View style={{ width: 46, height: 46, borderRadius: 16, backgroundColor: 'rgba(94,231,181,.25)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 22 }}>💰</Text></View>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>Savings Goals</Text>
                 <Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, marginTop: 1 }}>{sav.goals.length === 0 ? 'Save for a motorcycle, wedding, travel and more' : 'RM ' + rnd(sav.goals.reduce((a, g) => a + goalSaved(g, d.spends, dbt), 0)) + ' saved across ' + sav.goals.length + (sav.goals.length === 1 ? ' goal' : ' goals')}</Text>

@@ -13,7 +13,7 @@ import { DEBT_EMPTY, DebtData } from '../lib/debts';
 import { SAV_EMPTY, SavData, Goal, KINDS, kindOf, goalLines, goalSaved, perMonth, monthsUntil } from '../lib/savings';
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const ICON: Record<string, string> = { motor: '🏍️', car: '🚗', house: '🏠', wedding: '💍', travel: '✈️', emergency: '🛟', medical: '🩺', other: '⭐' };
+const ICON: Record<string, string> = { motor: '🏍️', car: '🚗', house: '🏠', wedding: '💍', travel: '✈️', hajj: '🕋', emergency: '🛟', medical: '🩺', other: '⭐' };
 const money = (n: number) => n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const rnd = (n: number) => Math.round(n).toLocaleString('en-MY');
 const dimC = 'rgba(255,255,255,.65)';
@@ -43,7 +43,7 @@ export default function Savings() {
 
   // new goal form
   const [adding, setAdding] = useState(false);
-  const [kind, setKind] = useState('motor'); const [name, setName] = useState('Motorcycle down payment');
+  const [kind, setKind] = useState('motor'); const [name, setName] = useState('Motorcycle');
   const [target, setTarget] = useState(''); const [place, setPlace] = useState(''); const [start, setStart] = useState(''); const [due, setDue] = useState('');
   const [msg, setMsg] = useState('');
   // per goal panel: which goal is open and in what mode

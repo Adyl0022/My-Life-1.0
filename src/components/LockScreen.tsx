@@ -5,6 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { usePathname } from 'expo-router';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import { Blob } from './Bg';
+import { Inp } from './Ui';
+import { checkPassword, getSession } from '../lib/auth';
 import { useName } from '../lib/store';
 import { useLock, checkPin, unlock, bioAuth, bioReady, wipeEverything, setPin, SENSITIVE } from '../lib/lock';
 
@@ -111,7 +113,8 @@ export function PinDialog({ mode, onClose, onOk, bio }: { mode: 'new' | 'verify'
 export function LockScreen() {
   const { cfg, locked } = useLock();
   const path = usePathname();
-  const [err, setErr] = useState(''); const [shake, setShake] = useState(0); const [forgot, setForgot] = useState<'' | 'menu' | 'erase' | 'newpin'>('');
+  const [err, setErr] = useState(''); const [shake, setShake] = useState(0); const [forgot, setForgot] = useState<'' | 'menu' | 'erase' | 'newpin' | 'pw'>('');
+  const [pw, setPw] = useState(''); const [pwErr, setPwErr] = useState(''); const [pwBusy, setPwBusy] = useState(false);
   const [bioOk, setBioOk] = useState(false); const tried = useRef(false);
   const guard = locked && (cfg.scope === 'all' || SENSITIVE.some((p) => path.startsWith(p)));
   useEffect(() => { bioReady().then((b) => setBioOk(b && cfg.bio)); }, [cfg.bio]);
@@ -136,13 +139,23 @@ export function LockScreen() {
         <View style={{ width: 300, gap: 10 }}>
           <Text style={{ color: W, fontSize: 20, fontWeight: '800', textAlign: 'center' }}>Forgot your PIN?</Text>
           {bioOk ? <Pressable onPress={async () => { if (await bioAuth('Confirm it is you to set a new PIN')) setForgot('newpin'); }} style={BTN}><Text style={BT}>Use fingerprint, then set a new PIN</Text></Pressable> : null}
+          {getSession() ? <Pressable onPress={() => { setPw(''); setPwErr(''); setForgot('pw'); }} style={BTN}><Text style={BT}>Use my account password</Text></Pressable> : null}
           <Pressable onPress={() => setForgot('erase')} style={[BTN, { backgroundColor: 'rgba(255,107,129,.25)' }]}><Text style={[BT, { color: '#ffb3bf' }]}>Erase app data and start fresh</Text></Pressable>
           <Pressable onPress={() => setForgot('')} style={{ alignSelf: 'center', padding: 8 }}><Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 13.5 }}>Back</Text></Pressable>
+        </View>
+      ) : forgot === 'pw' ? (
+        <View style={{ width: 300, gap: 10 }}>
+          <Text style={{ color: W, fontSize: 20, fontWeight: '800', textAlign: 'center' }}>Account password</Text>
+          <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 13, lineHeight: 19, textAlign: 'center' }}>Enter the password of {getSession()?.user?.email}. Then you can set a new PIN. Your data is kept.</Text>
+          <Inp value={pw} onChangeText={setPw} placeholder="Password" secureTextEntry autoCapitalize="none" autoCorrect={false} />
+          {pwErr ? <Text style={{ color: '#ffb3bf', fontSize: 12.5, textAlign: 'center' }}>{pwErr}</Text> : null}
+          <Pressable onPress={async () => { if (pwBusy || !pw) return; setPwBusy(true); const ok = await checkPassword(pw); setPwBusy(false); if (ok) setForgot('newpin'); else setPwErr('Wrong password, or no internet.'); }} style={BTN}><Text style={BT}>{pwBusy ? 'Checking…' : 'Continue'}</Text></Pressable>
+          <Pressable onPress={() => setForgot('menu')} style={{ alignSelf: 'center', padding: 8 }}><Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 13.5 }}>Back</Text></Pressable>
         </View>
       ) : forgot === 'erase' ? (
         <View style={{ width: 300, gap: 10 }}>
           <Text style={{ color: W, fontSize: 20, fontWeight: '800', textAlign: 'center' }}>Erase everything?</Text>
-          <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 13, lineHeight: 19, textAlign: 'center' }}>All your notes, finance, records and habits on this phone will be deleted for good, and the lock is removed. This cannot be undone.</Text>
+          <Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 13, lineHeight: 19, textAlign: 'center' }}>All your notes, finance, records and habits on this phone will be deleted, and the lock is removed. If you are signed in, your saved copy online stays and comes back on the next sync.</Text>
           <Pressable onPress={async () => { await wipeEverything(); setForgot(''); }} style={[BTN, { backgroundColor: 'rgba(255,107,129,.35)' }]}><Text style={[BT, { color: '#ffb3bf' }]}>Yes, erase everything</Text></Pressable>
           <Pressable onPress={() => setForgot('menu')} style={{ alignSelf: 'center', padding: 8 }}><Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 13.5 }}>Keep my data</Text></Pressable>
         </View>

@@ -8,12 +8,12 @@ export const WHATS_NEW: Sec[] = [
   { h: 'Made to be calm', p: 'A glass look that changes with the time of day, and no ads.' },
 ];
 export const PRIVACY: Sec[] = [
-  { h: 'What we store', p: 'Only what you enter yourself: your name, notes, events, finance entries, records and habits. Stats about how long you use the app are kept on your device for 30 days.' },
-  { h: 'Where it lives', p: 'Right now everything is stored only on your phone and encrypted there. Nothing is sent to a server. If account sync is added later, this policy will be updated first and sync will only start with your consent.' },
-  { h: 'What we never do', p: 'We do not show ads, track you across other apps, sell your data or share it with anyone.' },
+  { h: 'What we store', p: 'Your account (name, email and a password that we only keep in scrambled form), and what you enter yourself: notes, events, finance entries, records and habits. Stats about how long you use the app are kept on your device for 30 days.' },
+  { h: 'Where it lives', p: 'Your data lives first on your phone, encrypted there. When you are signed in, a copy is also saved to your account on our server (Supabase, hosted in Singapore) so you can use it on other phones and get it back if you lose this one. Each account can only read its own data. Receipt photos stay on the phone and are not uploaded.' },
+  { h: 'What we never do', p: 'We do not show ads, track you across other apps, sell your data or share it with anyone. The server stores your data so the app can sync it; it is not end-to-end encrypted, so the developer could technically access it, but does not read it.' },
   { h: 'Location', p: 'Prayer times use your location only to work out the times. It is not saved or sent anywhere except to the prayer-time service to look up your zone.' },
   { h: 'App lock', p: 'If you turn on App lock, your PIN is stored only on your phone in scrambled (hashed) form. We cannot see it or reset it for you.' },
-  { h: 'Your control', p: 'You can export everything at any time from Settings, or reset all your data. Removing the app from your phone removes its data.' },
+  { h: 'Your control', p: 'You can export everything at any time from Settings, reset all your data (this also erases the online copy), or delete your account in Settings, which permanently removes your account and everything saved online. Removing the app from your phone removes only the data on that phone.' },
   { h: 'Contact', p: 'Questions about privacy go to the developer, Adli Syahmi.' },
 ];
 export const TERMS: Sec[] = [
@@ -40,9 +40,10 @@ export const HOWTO: Sec[] = [
   { h: '7. Keep it safe', p: 'Turn on App lock in Settings, Security. Save a backup now and then from Settings, Export.' },
 ];
 export const FAQ: Sec[] = [
-  { h: 'Where is my data?', p: 'Only on your phone, encrypted. Nothing is sent to a server.' },
+  { h: 'Where is my data?', p: 'On your phone, encrypted, and backed up to your account online when you are signed in. Only you can read your own data.' },
+  { h: 'Can I use it on a new phone?', p: 'Yes. Install My Life, sign in with the same email and password, and your data comes back. Receipt photos are not included.' },
   { h: 'I changed phone. How do I move my data?', p: 'On the old phone, go to Settings, Export, choose Backup (JSON) and keep the file. On the new phone, open Settings, Security, Backup and restore, then Restore from a file. Photos such as receipts are not included.' },
-  { h: 'I forgot my PIN.', p: 'On the lock screen tap Forgot PIN. You can use your fingerprint to set a new PIN, or erase the app data and start fresh.' },
+  { h: 'I forgot my PIN.', p: 'On the lock screen tap Forgot PIN. You can use your fingerprint or your account password to set a new PIN, or erase the app data and start fresh.' },
   { h: 'Notifications do not ring.', p: 'Use Settings, General, Send a test notification. If nothing shows, allow notifications for My Life in your phone settings and turn off battery saving for the app.' },
   { h: 'Prayer times look wrong.', p: 'Open Islamic Hub and refresh your location. Times follow JAKIM. Please confirm with your local authority.' },
 ];

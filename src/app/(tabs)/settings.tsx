@@ -13,6 +13,8 @@ import { Glass } from '../../components/Glass';
 import { Blob } from '../../components/Bg';
 import { SettingsBg } from '../../components/SettingsBg';
 import { useStored, clearMine, DEFAULT_NAME } from '../../lib/store';
+import { useSession, signOut, checkPassword, setNewPassword, deleteAccount } from '../../lib/auth';
+import { syncNow, syncState, wipeCloud } from '../../lib/sync';
 import { PRIVACY, TERMS, COPYRIGHT, WHATS_NEW, LICENCES, HOWTO, FAQ, SUPPORT_EMAIL, PRIVACY_URL, Sec } from '../../lib/legal';
 import { TOP } from '../../lib/layout';
 import { useLock, setPin, patchLock, disableLock, bioReady, AFTER } from '../../lib/lock';
@@ -176,13 +178,20 @@ export default function Settings() {
   const isDel = dlg === 'delete';
   const canGo = isDel ? typed.trim().toUpperCase() === 'DELETE' && pwv.length > 0 : typed.trim().toUpperCase() === 'RESET';
 
-  const savePw = () => {
+  const [sess] = useSession(); const [busy, setBusy] = useState(false); const [synced, setSynced] = useState(syncState.last);
+  const savePw = async () => {
+    if (busy) return;
     if (!p1) return setPwErr('Enter your current password.');
     if (p2.length < 8) return setPwErr('New password must be at least 8 characters.');
     if (p2 !== p3) return setPwErr('The two new passwords do not match.');
     if (p2 === p1) return setPwErr('Choose a password different from the current one.');
+    setBusy(true);
+    if (!(await checkPassword(p1))) { setBusy(false); return setPwErr('Your current password is wrong, or there is no internet.'); }
+    const r = await setNewPassword(p2); setBusy(false);
+    if (!r.ok) return setPwErr(r.err);
     close(); say('Password updated');
   };
+  const doSync = async () => { if (busy) return; setBusy(true); const ok = await syncNow(); setBusy(false); setSynced(syncState.last); say(ok ? 'Synced' : 'Could not sync. Check your internet'); };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0f2c' }}>
@@ -234,7 +243,7 @@ export default function Settings() {
             <View style={{ gap: 12, marginTop: 14 }}>
               <Glass style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <Dot c="rgba(94,231,181,.4)" />
-                <View style={{ flex: 1 }}><Ttl t="Your data stays on your phone" /><Lbl t="Stored on this phone only. Account sync is coming soon." /></View>
+                <View style={{ flex: 1 }}><Ttl t="Your data stays on your phone" /><Lbl t={sess ? 'Saved on this phone first, and backed up to ' + (sess.user.email || 'your account') + '.' : 'Stored on this phone.'} /></View>
               </Glass>
               <Glass style={{ paddingHorizontal: 16, paddingVertical: 6 }}>
                 <Row k="pw" t="App lock" sub={lk.on ? 'On. Asks for ' + (lk.bio ? 'fingerprint or PIN' : 'your PIN') : 'Ask for a PIN or fingerprint to open the app'} last={!lk.on} onPress={() => setLkd(lk.on ? 'off' : 'set')} right={<Sw on={lk.on} />} />
@@ -252,8 +261,12 @@ export default function Settings() {
                 ) : null}
               </Glass>
               <Glass style={{ padding: 16 }}>
-                <Ttl t="Password, devices and sign-in alerts" />
-                <Lbl t="Coming soon, together with accounts and sync. Until then, your App lock protects your data." />
+                <Ttl t="Your account" />
+                <Lbl t={(sess?.user?.email || '') + (synced ? '  ·  Last synced ' + new Date(synced).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '')} style={{ marginBottom: 10 }} />
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <Btn t={busy ? 'Syncing…' : 'Sync now'} kind="primary" onPress={doSync} />
+                  <Btn t="Change password" onPress={() => { setP1(''); setP2(''); setP3(''); setPwErr(''); setDlg('pw'); }} />
+                </View>
               </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
                 <Row k="bk" t="Backup reminder" sub={(bkLast ? 'Last backup ' + new Date(bkLast).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'You have not saved a backup yet') + (bkRem ? '. Reminds every 30 days' : '')} last onPress={() => setBkRem(!bkRem)} right={<Sw on={!!bkRem} />} />
@@ -393,8 +406,8 @@ export default function Settings() {
         {dlg === 'out' && (
           <Overlay onClose={close}><View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
             <Text style={{ color: W, fontSize: 17, fontWeight: '800' }}>Log out of My Life?</Text>
-            <Text style={{ color: DIM, fontSize: 13, lineHeight: 19, marginTop: 6 }}>You will need your email and password to sign back in on this device.</Text>
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}><Btn t="Cancel" onPress={close} /><Btn t="Log out" kind="danger" onPress={() => { close(); say('Sign-in screens are being built'); }} /></View>
+            <Text style={{ color: DIM, fontSize: 13, lineHeight: 19, marginTop: 6 }}>Your data is backed up first. You will need your email and password to sign back in on this device.</Text>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}><Btn t="Cancel" onPress={close} /><Btn t="Log out" kind="danger" onPress={async () => { await syncNow(); close(); await signOut(); }} /></View>
           </View></Overlay>
         )}
         {dlg === 'pw' && (
@@ -412,13 +425,24 @@ export default function Settings() {
         {(dlg === 'reset' || dlg === 'delete') && (
           <Overlay onClose={close}><View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
             <Text style={{ color: W, fontSize: 17, fontWeight: '800' }}>{isDel ? 'Delete your account?' : 'Reset all your data?'}</Text>
-            <Text style={{ color: DIM, fontSize: 12.5, lineHeight: 18, marginTop: 6 }}>{isDel ? 'This permanently deletes your account and everything in it: planner, notes, finance, records and habits, on all your devices. This cannot be undone. Export your data first if you want a copy.' : 'This erases ALL your data: planner, notes, finance, records and habits. Your account and login stay. This cannot be undone. Export your data first if you want a copy.'}</Text>
+            <Text style={{ color: DIM, fontSize: 12.5, lineHeight: 18, marginTop: 6 }}>{isDel ? 'This permanently deletes your account and everything in it: planner, notes, finance, records and habits, on all your devices. This cannot be undone. Export your data first if you want a copy.' : 'This erases ALL your data: planner, notes, finance, records and habits. Your account and login stay, and the saved copy online is erased too. This cannot be undone. Export your data first if you want a copy.'}</Text>
             <Text style={{ color: W, fontSize: 12.5, fontWeight: '700', marginTop: 12, marginBottom: 6 }}>{isDel ? 'Type DELETE to confirm' : 'Type RESET to confirm'}</Text>
             <Inp autoCapitalize="characters" value={typed} onChangeText={setTyped} />
             {isDel && (<><Text style={{ color: W, fontSize: 12.5, fontWeight: '700', marginTop: 10, marginBottom: 6 }}>Enter your password</Text><Inp secureTextEntry value={pwv} onChangeText={setPwv} /></>)}
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
               <Btn t="Cancel" onPress={close} />
-              {canGo ? <Btn t={isDel ? 'Delete forever' : 'Reset everything'} kind="danger" onPress={async () => { Keyboard.dismiss(); await clearMine(!isDel); close(); setDoneMsg(isDel ? 'Your account data has been deleted from this phone.' : 'All your data has been erased from this phone. The app is now like new.'); setDlg('done'); }} />
+              {canGo ? <Btn t={isDel ? 'Delete forever' : 'Reset everything'} kind="danger" onPress={async () => {
+                Keyboard.dismiss(); if (busy) return; setBusy(true);
+                if (isDel) {
+                  if (!(await checkPassword(pwv))) { setBusy(false); say('Wrong password, or no internet.'); return; }
+                  const r = await deleteAccount(); if (!r.ok) { setBusy(false); say(r.err); return; }
+                  await clearMine(false);
+                } else {
+                  if (!(await wipeCloud())) { setBusy(false); say('Could not reach the server. Check your internet.'); return; }
+                  await clearMine(true); syncNow();
+                }
+                setBusy(false); close(); setDoneMsg(isDel ? 'Your account and all its data have been deleted.' : 'All your data has been erased. The app is now like new.'); setDlg('done');
+              }} />
                 : <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: 'rgba(255,255,255,.45)', fontSize: 12.5 }}>{isDel ? 'Fill both fields' : 'Type RESET'}</Text></View>}
             </View>
           </View></Overlay>

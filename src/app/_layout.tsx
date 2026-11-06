@@ -8,6 +8,9 @@ import { usePrayer } from '../lib/prayer';
 import { useStored, encryptExisting } from '../lib/store';
 import { useLockWatcher } from '../lib/lock';
 import { LockScreen } from '../components/LockScreen';
+import { AuthScreen } from '../components/AuthScreen';
+import { useSession } from '../lib/auth';
+import { startSync, syncNow } from '../lib/sync';
 import { DEBT_EMPTY, DebtData, syncDebtAlerts } from '../lib/debts';
 import { syncEventAlerts, syncZikirAlerts, syncBackupAlert, PEvent } from '../lib/alerts';
 import { TG_DEFAULT, Toggles } from '../lib/adhan';
@@ -36,9 +39,16 @@ function AlertSync() {
   useEffect(() => { if (okb && okc && Platform.OS !== 'web') syncBackupAlert(!!bo, bk); }, [okb, okc, bk, bo]);
   return null;
 }
+// Starts syncing as soon as the user is signed in, and again when the app comes back to the front.
+function SyncRunner() {
+  const [sess] = useSession();
+  useEffect(() => { if (sess) { startSync(); syncNow(); } }, [sess?.user?.id]);
+  return null;
+}
 function Tracker() { const p = usePathname(); useEffect(() => { trackModule(p); }, [p]); return null; }
 export default function Root() {
   useLockWatcher();
+  const [sess, authReady] = useSession();
   useEffect(() => { encryptExisting(); }, []);
-  return (<><Tracker /><StatusBar style="light" />{Platform.OS === 'android' ? <NavigationBar hidden style="light" /> : null}<PrayerSync /><DebtSync /><AlertSync /><View style={{ flex: 1, backgroundColor: '#0a0f2c', alignItems: 'center' }}><View style={{ flex: 1, width: '100%', maxWidth: 520, overflow: 'hidden' }}><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0f2c' }, animation: 'slide_from_right' }} /><LockScreen /></View></View></>);
+  return (<><Tracker /><StatusBar style="light" />{Platform.OS === 'android' ? <NavigationBar hidden style="light" /> : null}<SyncRunner /><PrayerSync /><DebtSync /><AlertSync /><View style={{ flex: 1, backgroundColor: '#0a0f2c', alignItems: 'center' }}><View style={{ flex: 1, width: '100%', maxWidth: 520, overflow: 'hidden' }}><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0f2c' }, animation: 'slide_from_right' }} /><LockScreen />{authReady && !sess ? <AuthScreen /> : null}</View></View></>);
 }

@@ -10,7 +10,13 @@ export async function getItem<T>(k: string, d: T): Promise<T> {
 export async function setItem(k: string, v: unknown) {
   try { await AsyncStorage.setItem(k, await seal(JSON.stringify(v))); } catch (e) {}
   listeners.forEach((f) => f());
+  import('./sync').then((m) => m.markDirty(k)).catch(() => {});
   if (k === 'ml_finance' || k === 'ml_debts') import('./budgetAlert').then((m) => m.checkBudget()).catch(() => {});
+}
+// Writes a value that came from the cloud: saved like normal but not marked as a local edit.
+export async function applyRemote(k: string, v: unknown) {
+  try { await AsyncStorage.setItem(k, await seal(JSON.stringify(v))); } catch (e) {}
+  listeners.forEach((f) => f());
 }
 // Raw readable JSON text of a saved key (used by Export).
 export async function getText(k: string): Promise<string | null> {
@@ -31,6 +37,7 @@ export async function clearMine(keepName: boolean) {
     const ks = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith('ml_') && !(keepName && k === 'ml_name'));
     await AsyncStorage.multiRemove(ks);
   } catch (e) {}
+  try { await (await import('./sync')).forgetSyncState(); } catch (e) {}
   listeners.forEach((f) => f());
 }
 export function useStored<T>(k: string, d: T): [T, (v: T) => void, boolean] {

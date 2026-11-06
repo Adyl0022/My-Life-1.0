@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, ScrollView, Pressable } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, ScrollView, Pressable, Animated } from 'react-native';
 import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,6 +26,14 @@ const PB: any = { High: 'rgba(255,143,171,.18)', Medium: 'rgba(255,196,107,.18)'
 const dueText = (d: string) => { const p = (d || '').split('-'); return p.length === 3 ? parseInt(p[2], 10) + ' ' + Mn[parseInt(p[1], 10) - 1] : ''; };
 const cyc = (a: string[], v: string) => a[(a.indexOf(v) + 1) % a.length];
 
+// One Malaysia-event card. It slides/fades in when it appears and fades/collapses out when its day has passed.
+const MyRow = ({ leaving, fresh, children }: { leaving: boolean; fresh: boolean; children: React.ReactNode }) => {
+  const p = useRef(new Animated.Value(fresh ? 0 : 1)).current;
+  useEffect(() => { Animated.timing(p, { toValue: leaving ? 0 : 1, duration: 500, useNativeDriver: false }).start(); }, [leaving]);
+  return (
+    <Animated.View style={{ height: p.interpolate({ inputRange: [0, 1], outputRange: [0, 46] }), marginBottom: p.interpolate({ inputRange: [0, 1], outputRange: [0, 8] }), opacity: p, overflow: 'hidden', transform: [{ translateX: p.interpolate({ inputRange: [0, 1], outputRange: [leaving ? 40 : -40, 0] }) }] }}>{children}</Animated.View>
+  );
+};
 const Sec = ({ t, hint, right, c = '#8ea8ff', n }: { t: string; hint: string; right?: React.ReactNode; c?: string; n?: number }) => (
   <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, marginBottom: 8, marginHorizontal: 2 }}>
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingLeft: 10, paddingRight: 12, borderRadius: 999, backgroundColor: c + '30', borderWidth: 1, borderColor: c + '66' }}>
@@ -61,7 +69,8 @@ export default function Planner() {
   const [add, setAdd] = useState<any>(null);
   const [toast, setToast] = useState('');
   const say = (t: string) => { setToast(t); setTimeout(() => setToast(''), 1800); };
-  const today = todayStr();
+  const [today, setToday] = useState(todayStr());
+  useEffect(() => { const i = setInterval(() => { const t = todayStr(); setToday((p) => (p === t ? p : t)); }, 15000); return () => clearInterval(i); }, []);
   const curCat = d.cats[cat] || 'Tasks';
 
   const openAdd = () => { setEdit(null); setAdd(tab === 'events' ? { kind: 'event', name: '', date: today, remind: '1 day before' } : { kind: 'task', name: '', note: '', prio: 'Medium', due: '', cat: curCat }); };
@@ -137,6 +146,19 @@ export default function Planner() {
   const [mc, setMc, mcOk] = useStored<MyCache>('ml_myevents', EMPTY_CACHE);
   useEffect(() => { if (!mcOk) return; fetchMy(mc, today).then((n) => { if (n) setMc(n); }); }, [mcOk, today]);
   const my = upcomingMy(today, 5, mc);
+  const mk = (e: any) => e.date + '|' + e.name;
+  const [shown, setShown] = useState<{ e: any; leaving: boolean; fresh: boolean }[]>(() => my.map((e) => ({ e, leaving: false, fresh: false })));
+  const myKey = my.map(mk).join(',');
+  useEffect(() => {
+    setShown((prev) => {
+      const now = new Set(my.map(mk)); const had = new Set(prev.filter((x) => !x.leaving).map((x) => mk(x.e)));
+      const kept = prev.filter((x) => !x.leaving || !now.has(mk(x.e))).map((x) => (now.has(mk(x.e)) ? { e: my.find((m) => mk(m) === mk(x.e)), leaving: false, fresh: false } : { ...x, leaving: true }));
+      const added = my.filter((e) => !had.has(mk(e)) && !kept.some((x) => mk(x.e) === mk(e))).map((e) => ({ e, leaving: false, fresh: true }));
+      return [...kept, ...added].sort((a, b) => (a.e.date < b.e.date ? -1 : a.e.date > b.e.date ? 1 : 0));
+    });
+    const t = setTimeout(() => setShown((prev) => prev.filter((x) => !x.leaving)), 700);
+    return () => clearTimeout(t);
+  }, [myKey]);
   const rank: any = { High: 0, Medium: 1, Low: 2 };
   const inCat = d.tasks.filter((x) => (x.cat || 'Tasks') === curCat);
   const byP = (a: Tk, b: Tk) => rank[a.prio] - rank[b.prio];
@@ -182,13 +204,14 @@ export default function Planner() {
           {tab === 'events' ? (
             <View style={{ gap: 8 }}>
               <Sec t="Malaysia events" hint="auto · official calendar" c="#ffd27d" n={my.length} />
-              <Glass radius={22} style={{ padding: 12, gap: 8 }}>
-                {my.map((e) => {
+              <Glass radius={22} style={{ padding: 12, paddingBottom: 4 }}>
+                {shown.map((sx) => {
+                  const e = sx.e;
                   const added = d.events.some((y) => y.date === e.date && y.name === e.name);
                   const c = e.kind === 'islam' ? '#7df0a0' : e.kind === 'national' ? '#8ea8ff' : '#ffd27d';
                   const pp = e.date.split('-');
                   return (
-                    <View key={e.date + e.name} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <MyRow key={e.date + e.name} leaving={sx.leaving} fresh={sx.fresh}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                       <View style={{ width: 44, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.08)', borderWidth: 1, borderColor: c }}>
                         <Text style={{ color: c, fontSize: 9.5, fontWeight: '700' }}>{MON[+pp[1] - 1]}</Text><Text style={{ color: W, fontSize: 16, fontWeight: '800' }}>{pp[2]}</Text>
                       </View>
@@ -199,7 +222,7 @@ export default function Planner() {
                       <Pressable disabled={added} onPress={() => { setD({ ...d, nextId: d.nextId + 1, events: [...d.events, { id: d.nextId, name: e.name, date: e.date, remind: '1 day before', done: false }] }); say('Added to your events'); }}>
                         <View style={{ paddingHorizontal: 11, paddingVertical: 7, borderRadius: 14, backgroundColor: added ? 'rgba(125,240,160,.18)' : 'rgba(255,255,255,.14)' }}><Text style={{ color: W, fontSize: 12, fontWeight: '700' }}>{added ? 'Added' : '+ Add'}</Text></View>
                       </Pressable>
-                    </View>
+                    </View></MyRow>
                   );
                 })}
               </Glass>

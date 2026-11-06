@@ -182,8 +182,6 @@ export default function Finance() {
             </View>
           </Glass>
 
-          <MoneyLeft ym={ym} income={total} spends={d.spends} goal={d.save || 0} setGoal={(g) => setD({ ...d, save: g })} />
-
           {/* Spending tracker */}
           <Glass radius={24} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
             <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Spending Tracker</Text>
@@ -232,6 +230,8 @@ export default function Finance() {
               ))}
             </View>
           </Glass>
+
+          <MoneyLeft ym={ym} income={total} spends={d.spends} goal={d.save || 0} setGoal={(g) => setD({ ...d, save: g })} />
 
           {/* By category */}
           <Glass radius={24} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>

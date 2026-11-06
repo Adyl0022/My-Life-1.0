@@ -216,7 +216,7 @@ export function AuthScreen() {
             <View style={{ width: 96, height: 96, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 170, height: 170, transform: [{ scale: 0.52 }] }}><Logo /></View></View>
             <View style={{ marginLeft: 6 }}>
               <Text style={{ color: W, fontSize: 28, fontWeight: '800', letterSpacing: 0.3 }}>My Life</Text>
-              <Text style={{ color: TEAL, fontSize: 11, fontWeight: '700', letterSpacing: 2.2, marginTop: 2 }}>YOUR DAY, ONE APP</Text>
+              <Text style={{ color: TEAL, fontSize: 11, fontWeight: '700', letterSpacing: 2.2, marginTop: 9 }}>YOUR DAY, ONE APP</Text>
             </View>
           </View>
         )}

@@ -16,7 +16,7 @@ export async function checkBudget(): Promise<void> {
     const fin: any = await getItem('ml_finance', { inc: {}, spends: [] }); const debts: any = await getItem('ml_debts', DEBT_EMPTY);
     const now = new Date(); const ym = ymKey(now);
     const income = Object.keys((fin.inc || {})[ym] || {}).reduce((a, k) => a + (fin.inc[ym][k] || 0), 0); if (!(income > 0)) return;
-    const c = calcLeft({ ym, income, commit: commitFor(debts, ym), spends: fin.spends || [], goal: fin.save || 0, now });
+    const c = calcLeft({ ym, income, commit: commitFor(debts, ym), spends: fin.spends || [], now });
     const dk = ym + '-' + String(now.getDate()).padStart(2, '0');
     const out: [string, string, string][] = [];
     if (c.over) out.push(['over:' + ym, 'Over budget this month', 'You are ' + rm(-c.left) + ' past what is left of your income. Hold off on non-essential spending.']);

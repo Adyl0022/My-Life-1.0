@@ -142,7 +142,7 @@ export function think(A, q, lang) {
   const spendIn = (from, to, cat) => spends.filter((x) => x.date >= from && x.date < to && (!cat || x.cat === cat));
   const debtLeft = () => { try { return DB.debtSummary(R.debts || DB.DEBT_EMPTY).toPay || 0; } catch (e) { return 0; } };
   const monthSpend = () => sum(spendIn(todayS.slice(0, 7) + '-01', iso(addDays(todayD, 1))), (x) => x.amt);
-  const ML = () => calcLeft({ ym: todayS.slice(0, 7), income: s.income || 0, commit: R.commit || 0, spends, goal: R.saveGoal || 0 });
+  const ML = () => calcLeft({ ym: todayS.slice(0, 7), income: s.income || 0, commit: R.commit || 0, spends });
   const free = () => ML().left;
 
   // --- safety first ---
@@ -421,7 +421,6 @@ export function think(A, q, lang) {
     if (!c.income) return mk(L('I do not see income for this month yet. Add it in My Finance, then ask again.', 'Saya belum nampak pendapatan bulan ini. Tambah dalam My Finance, kemudian tanya semula.'), FIN);
     const head = c.over ? L('You are over budget by ' + rm(-c.left) + ' this month.', 'Awak terlebih bajet ' + rm(-c.left) + ' bulan ini.') : L('You have ' + rm(c.left) + ' left to spend this month.', 'Awak ada ' + rm(c.left) + ' untuk dibelanjakan bulan ini.');
     const lines = [head, L('• Income ' + rm(c.income), '• Pendapatan ' + rm(c.income)), L('• Commitments ' + rm(c.commit), '• Komitmen ' + rm(c.commit)), L('• Spent ' + rm(c.spent), '• Belanja ' + rm(c.spent))];
-    if (c.save) lines.push(L('• Saved aside (' + c.goal + '%) ' + rm(c.save), '• Simpanan diketepikan (' + c.goal + '%) ' + rm(c.save)));
     if (!c.over && c.daysLeft > 0) lines.push(L('About ' + rm(c.allowance) + ' a day for ' + c.daysLeft + ' days.', 'Kira-kira ' + rm(c.allowance) + ' sehari untuk ' + c.daysLeft + ' hari.'));
     return mk(lines.join('\n'), Object.assign({ big: rm(Math.abs(c.left)), bigLbl: c.over ? L('over budget', 'terlebih') : L('left this month', 'baki bulan ini'), pct: Math.min(100, Math.round(c.used * 100)), color: c.over ? '#ff8fab' : '#34d399' }, FIN));
   }
@@ -430,7 +429,6 @@ export function think(A, q, lang) {
     if (!c.income) return mk(L('I need this month\'s income first. Add it in My Finance and ask again.', 'Saya perlukan pendapatan bulan ini dulu. Tambah dalam My Finance dan tanya semula.'), FIN);
     const pc = (v) => Math.round(v / c.income * 100) + '%';
     const lines = [L('Here is where your income of ' + rm(c.income) + ' went:', 'Ini ke mana pendapatan ' + rm(c.income) + ' awak pergi:'), L('• Commitments ' + rm(c.commit) + ' (' + pc(c.commit) + ')', '• Komitmen ' + rm(c.commit) + ' (' + pc(c.commit) + ')'), L('• Spending ' + rm(c.spent) + ' (' + pc(c.spent) + ')', '• Belanja ' + rm(c.spent) + ' (' + pc(c.spent) + ')')];
-    if (c.save) lines.push(L('• Savings aside ' + rm(c.save) + ' (' + c.goal + '%)', '• Simpanan ' + rm(c.save) + ' (' + c.goal + '%)'));
     const by = {}; spendIn(todayS.slice(0, 7) + '-01', iso(addDays(todayD, 1))).forEach((x) => { by[x.cat] = (by[x.cat] || 0) + x.amt; }); const top = Object.keys(by).sort((a, b) => by[b] - by[a])[0];
     if (top) lines.push(L('Biggest spending category: ' + top + ' ' + rm(by[top]) + '.', 'Kategori belanja terbesar: ' + top + ' ' + rm(by[top]) + '.'));
     if (c.oneOff > 0) lines.push(L('Bills and big one-off buys so far: ' + rm(c.oneOff) + '.', 'Bil dan belian besar setakat ini: ' + rm(c.oneOff) + '.'));
@@ -441,8 +439,8 @@ export function think(A, q, lang) {
   function budget() {
     const c = ML();
     if (!s.income) return mk(L('I do not see income for this month yet, so I cannot work out a daily budget. So far you spend about ' + rm(monthSpend() / dayNo) + ' a day. Add your income in My Finance.', 'Saya belum nampak pendapatan bulan ini, jadi tak dapat kira bajet harian. Setakat ini awak belanja kira-kira ' + rm(monthSpend() / dayNo) + ' sehari. Tambah pendapatan dalam My Finance.'), FIN);
-    if (c.left <= 0) return mk(L('Your income is already used up this month (commitments ' + rm(c.commit) + ', spent ' + rm(c.spent) + (c.save ? ', savings ' + rm(c.save) : '') + '). Try to spend only on what is essential.', 'Pendapatan bulan ini dah habis (komitmen ' + rm(c.commit) + ', belanja ' + rm(c.spent) + (c.save ? ', simpanan ' + rm(c.save) : '') + '). Cuba belanja yang perlu sahaja.'), Object.assign({ big: rm(c.left), bigLbl: L('left', 'baki'), color: '#ff8fab' }, FIN));
-    return mk(L('After commitments ' + rm(c.commit) + (c.save ? ', savings ' + rm(c.save) : '') + ' and spending ' + rm(c.spent) + ', you have ' + rm(c.left) + ' left for ' + c.daysLeft + ' days. You can spend about ' + rm(c.allowance) + ' a day' + (c.today ? ' (today so far ' + rm(c.today) + ')' : '') + '.', 'Selepas komitmen ' + rm(c.commit) + (c.save ? ', simpanan ' + rm(c.save) : '') + ' dan belanja ' + rm(c.spent) + ', awak ada ' + rm(c.left) + ' untuk ' + c.daysLeft + ' hari. Awak boleh belanja kira-kira ' + rm(c.allowance) + ' sehari' + (c.today ? ' (hari ini setakat ini ' + rm(c.today) + ')' : '') + '.'), Object.assign({ big: rm(c.allowance), bigLbl: L('per day', 'sehari'), color: '#34d399' }, FIN));
+    if (c.left <= 0) return mk(L('Your income is already used up this month (commitments ' + rm(c.commit) + ', spent ' + rm(c.spent) + '). Try to spend only on what is essential.', 'Pendapatan bulan ini dah habis (komitmen ' + rm(c.commit) + ', belanja ' + rm(c.spent) + '). Cuba belanja yang perlu sahaja.'), Object.assign({ big: rm(c.left), bigLbl: L('left', 'baki'), color: '#ff8fab' }, FIN));
+    return mk(L('After commitments ' + rm(c.commit) + ' and spending ' + rm(c.spent) + ', you have ' + rm(c.left) + ' left for ' + c.daysLeft + ' days. You can spend about ' + rm(c.allowance) + ' a day' + (c.today ? ' (today so far ' + rm(c.today) + ')' : '') + '.', 'Selepas komitmen ' + rm(c.commit) + ' dan belanja ' + rm(c.spent) + ', awak ada ' + rm(c.left) + ' untuk ' + c.daysLeft + ' hari. Awak boleh belanja kira-kira ' + rm(c.allowance) + ' sehari' + (c.today ? ' (hari ini setakat ini ' + rm(c.today) + ')' : '') + '.'), Object.assign({ big: rm(c.allowance), bigLbl: L('per day', 'sehari'), color: '#34d399' }, FIN));
   }
   function afford(amt) {
     const left = free();
@@ -452,7 +450,7 @@ export function think(A, q, lang) {
   }
   function projection() {
     const c = ML(); if (!c.spent) return mk(L('Nothing spent yet this month, so there is nothing to project.', 'Belum ada belanja bulan ini, jadi tiada yang boleh diramal.'), FIN);
-    const tot = c.commit + c.save + c.projSpent;
+    
     const t = c.runOutDay ? L(' At this pace your money runs out around the ' + c.runOutDay + 'th.', ' Dengan kadar ini duit habis sekitar haribulan ' + c.runOutDay + '.') : '';
     return mk(L('At your usual pace of ' + rm(c.pace) + ' a day (bills and big one-off buys left out), you would spend about ' + rm(c.projSpent) + ' by the end of the month' + (s.income ? (c.projLeft < 0 ? ' and be ' + rm(-c.projLeft) + ' short after commitments.' : ' and finish with about ' + rm(c.projLeft) + ' left.') : '.') + t, 'Dengan kadar biasa awak ' + rm(c.pace) + ' sehari (bil dan belian besar sekali sahaja tidak dikira), awak akan belanja kira-kira ' + rm(c.projSpent) + ' hingga akhir bulan' + (s.income ? (c.projLeft < 0 ? ' dan kurang ' + rm(-c.projLeft) + ' selepas komitmen.' : ' dan baki kira-kira ' + rm(c.projLeft) + '.') : '.') + t), Object.assign({ big: rm(c.projLeft), bigLbl: L('at month end', 'hujung bulan'), color: c.projLeft < 0 ? '#ff8fab' : '#ffc46b' }, FIN));
   }

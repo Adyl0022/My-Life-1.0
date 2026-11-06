@@ -14,7 +14,7 @@ import { MoneyLeft } from '../components/MoneyLeft';
 import { TOP } from '../lib/layout';
 
 type Sp = { id: number; name: string; cat: string; amt: number; date: string };
-type Data = { inc: Record<string, Record<string, number>>; cnt: Record<string, Record<string, number>>; spends: Sp[]; nextId: number; save?: number };
+type Data = { inc: Record<string, Record<string, number>>; cnt: Record<string, Record<string, number>>; spends: Sp[]; nextId: number };
 const EMPTY: Data = { inc: {}, cnt: {}, spends: [], nextId: 1 };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DEFS: [string, string, string][] = [['salary', 'Basic salary', '#7c9cff'], ['overtime', 'Overtime', '#ffc46b'], ['claim', 'Claim', '#8fe9e2'], ['sunday', 'Sunday work', '#b794ff'], ['holiday', 'Public holiday work', '#ff8fab'], ['other', 'Other', '#5ee7b5']];
@@ -109,7 +109,7 @@ export default function Finance() {
             <View style={{ flex: 1 }}><Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>Track every ringgit</Text><Text style={{ color: 'rgba(255,255,255,.78)', fontSize: 12, marginTop: 1 }}>Income and spending at a glance</Text></View>
           </Glass>
 
-          <MoneyLeft ym={ym} income={total} spends={d.spends} goal={d.save || 0} setGoal={(g) => setD({ ...d, save: g })} />
+          <MoneyLeft ym={ym} income={total} spends={d.spends} />
 
           <Commitments income={sumOf(d.inc[curKey])} />
 

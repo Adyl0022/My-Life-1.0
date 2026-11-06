@@ -13,11 +13,10 @@ import { BUDGET_EMPTY, BudgetCfg, checkBudget } from '../lib/budgetAlert';
 
 const money = (n: number) => n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const rnd = (n: number) => Math.round(n).toLocaleString('en-MY');
-const GOALS = [0, 10, 20, 30];
 const COL = { commit: '#b794ff', spent: '#ffc46b', save: '#7c9cff', left: '#5ee7b5', over: '#ff7a8a' };
 const dim = 'rgba(255,255,255,.68)';
 
-type Props = { ym: string; income: number; spends: Sp[]; goal: number; setGoal: (g: number) => void };
+type Props = { ym: string; income: number; spends: Sp[] };
 
 const Row = ({ c, l, v, minus, bold }: { c?: string; l: string; v: string; minus?: boolean; bold?: boolean }) => (
   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7 }}>
@@ -39,25 +38,25 @@ const Sw = ({ on, set }: { on: boolean; set: (v: boolean) => void }) => (
   </Pressable>
 );
 
-export function MoneyLeft({ ym, income, spends, goal, setGoal }: Props) {
+export function MoneyLeft({ ym, income, spends }: Props) {
   const [debts] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
   const [bc, setBc] = useStored<BudgetCfg>('ml_budget', BUDGET_EMPTY);
-  const c = calcLeft({ ym, income, commit: commitFor(debts, ym), spends, goal });
-  const { isCur, dim: dimDays, dayNo, daysLeft, commit, spent, today, save, left, over, used, allowance, projLeft, pace, oneOff, runOutDay, state } = c;
+  const c = calcLeft({ ym, income, commit: commitFor(debts, ym), spends });
+  const { isCur, dim: dimDays, dayNo, daysLeft, commit, spent, today, left, over, used, allowance, projLeft, pace, oneOff, runOutDay, state } = c;
   const sc = state === 'over' ? COL.over : state === 'care' ? COL.spent : COL.left;
   const sl = state === 'over' ? 'Over budget' : state === 'care' ? (isCur ? 'Be careful' : 'Tight month') : 'On track';
   const R = 46, C = 2 * Math.PI * R;
   const pct = income > 0 ? Math.min(100, Math.round(used * 100)) : 0;
   const seg = (v: number) => (income > 0 ? Math.max(0, Math.min(1, v / income)) : 0);
-  const bar = [{ v: commit, c: COL.commit }, { v: spent, c: COL.spent }, { v: save, c: COL.save }, { v: Math.max(0, left), c: COL.left }];
+  const bar = [{ v: commit, c: COL.commit }, { v: spent, c: COL.spent }, { v: Math.max(0, left), c: COL.left }];
   const py = c.y, pm = c.m; const prev = new Date(py, pm - 1, 1);
   const prevYm = prev.getFullYear() + '-' + String(prev.getMonth() + 1).padStart(2, '0');
   const showSum = income > 0 && (!isCur || daysLeft <= 3);
-  const sm = showSum ? monthSummary({ ym, income, commit, spends, goal, prevYm }) : null;
+  const sm = showSum ? monthSummary({ ym, income, commit, spends, prevYm }) : null;
 
   let tip = '';
   if (state === 'none') tip = 'Add this month\'s income above and I will show how much is left after your commitments and spending.';
-  else if (state === 'over') tip = 'You have gone RM ' + rnd(-left) + ' past what you earned this month. Hold off on non-essential spending' + (goal > 0 ? ', or lower your savings target.' : '.');
+  else if (state === 'over') tip = 'You have gone RM ' + rnd(-left) + ' past what you earned this month. Hold off on non-essential spending.';
   else if (!isCur) tip = left > 0 ? 'You finished this month with RM ' + rnd(left) + ' left. Well done.' : 'This month ended exactly on budget.';
   else if (spent === 0) tip = 'No spending recorded yet. You can spend about RM ' + rnd(allowance) + ' a day and stay on track.';
   else if (projLeft < 0) tip = 'At your usual pace of RM ' + rnd(pace) + ' a day, your money runs out around the ' + (runOutDay || dimDays) + 'th. Try to keep to RM ' + rnd(allowance) + ' a day.';
@@ -99,7 +98,6 @@ export function MoneyLeft({ ym, income, spends, goal, setGoal }: Props) {
             <Row c={COL.commit} l="Commitments and debts" v={money(commit)} minus />
             <Row l="After commitments" v={money(income - commit)} bold />
             <Row c={COL.spent} l="Spent" v={money(spent)} minus />
-            {goal > 0 ? <Row c={COL.save} l={'Saved aside (' + goal + '%)'} v={money(save)} minus /> : null}
             <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,.16)', marginVertical: 4 }} />
             <Row c={over ? COL.over : COL.left} l={over ? 'Over budget' : 'Left'} v={money(Math.abs(left))} bold />
           </View>
@@ -120,7 +118,7 @@ export function MoneyLeft({ ym, income, spends, goal, setGoal }: Props) {
       {sm ? (
         <View style={{ marginTop: 14, borderRadius: 16, padding: 12, backgroundColor: 'rgba(0,0,0,.2)' }}>
           <Text style={{ color: '#ffd593', fontSize: 11, fontWeight: '700', letterSpacing: 1.2 }}>{isCur ? 'MONTH SO FAR' : 'MONTH SUMMARY'}</Text>
-          <Text style={{ color: sm.ok ? COL.left : COL.over, fontSize: 15, fontWeight: '800', marginTop: 6 }}>{sm.ok ? 'Saved RM ' + money(sm.saved) + (isCur ? ' so far' : '') : 'Overspent by RM ' + money(-sm.saved)}</Text>
+          <Text style={{ color: sm.ok ? COL.left : COL.over, fontSize: 15, fontWeight: '800', marginTop: 6 }}>{sm.ok ? 'Left over RM ' + money(sm.saved) + (isCur ? ' so far' : '') : 'Overspent by RM ' + money(-sm.saved)}</Text>
           {sm.topCat ? <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 12.5, marginTop: 6 }}>{'Biggest category: ' + sm.topCat + ' RM ' + rnd(sm.topAmt) + ' (' + sm.topShare + '% of spending)'}</Text> : null}
           {sm.biggest ? <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 12.5, marginTop: 3 }}>{'Biggest single spend: ' + sm.biggest.name + ' RM ' + rnd(sm.biggest.amt)}</Text> : null}
           {sm.vsPrev !== null ? <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 12.5, marginTop: 3 }}>{'Spending was ' + (sm.vsPrev === 0 ? 'the same as' : Math.abs(sm.vsPrev) + '% ' + (sm.vsPrev > 0 ? 'higher than' : 'lower than')) + ' ' + MONTHS[prev.getMonth()] + ' (RM ' + rnd(sm.prevSpent) + ').'}</Text> : null}
@@ -129,16 +127,8 @@ export function MoneyLeft({ ym, income, spends, goal, setGoal }: Props) {
       ) : null}
 
       {income > 0 ? (
-        <View style={{ marginTop: 18 }}>
-          <Text style={{ color: dim, fontSize: 11.5, lineHeight: 16, marginBottom: 12 }}>Keep part of your income aside as savings</Text>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            {GOALS.map((g) => (
-              <Pressable key={g} onPress={() => setGoal(g)} style={{ flex: 1, paddingVertical: 7, borderRadius: 999, alignItems: 'center', borderWidth: 1, borderColor: goal === g ? 'transparent' : 'rgba(255,255,255,.2)', backgroundColor: goal === g ? COL.save : 'rgba(255,255,255,.08)' }}>
-                <Text style={{ color: goal === g ? '#10163a' : W, fontSize: 12, fontWeight: '800' }}>{g === 0 ? 'None' : g + '%'}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16 }}>
+        <View style={{ marginTop: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ color: W, fontSize: 13.5, fontWeight: '700' }}>Budget alerts</Text>
               <Text style={{ color: dim, fontSize: 11.5, lineHeight: 16, marginTop: 2 }}>A notification when you use 80% of your income, go over today's limit, or go over budget.</Text>

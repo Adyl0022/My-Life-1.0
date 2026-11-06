@@ -158,7 +158,7 @@ function Lattice() {
       <Svg width="100%" height="100%">
         <Defs>
           <Pattern id="lat" width="30" height="30" patternUnits="userSpaceOnUse">
-            <Path d="M0 15L15 0L30 15L15 30Z" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+            <Path d="M0 15L15 0L30 15L15 30Z" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={1} />
             <Circle cx="15" cy="0" r="1" fill="rgba(255,255,255,0.2)" /><Circle cx="15" cy="30" r="1" fill="rgba(255,255,255,0.2)" />
             <Circle cx="0" cy="15" r="1" fill="rgba(255,255,255,0.2)" /><Circle cx="30" cy="15" r="1" fill="rgba(255,255,255,0.2)" />
           </Pattern>
@@ -241,7 +241,7 @@ export function AuthScreen() {
         )}
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', paddingHorizontal: 22, paddingTop: 6, paddingBottom: 20 }}>
 
-          <View style={{ borderRadius: 26, padding: 16, backgroundColor: 'rgba(255,255,255,.075)', borderWidth: 1, borderColor: 'rgba(255,255,255,.2)' }}>
+          <View style={{ borderRadius: 26, padding: 16, backgroundColor: '#171a55', borderWidth: 1, borderColor: 'rgba(255,255,255,.2)', overflow: 'hidden' }}>
             <LinearGradient colors={['rgba(255,255,255,.14)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 70, borderTopLeftRadius: 28, borderTopRightRadius: 28 }} />
             {tabs ? (
               <View style={{ flexDirection: 'row', padding: 4, borderRadius: 16, backgroundColor: 'rgba(0,0,0,.28)', marginBottom: 12 }}>

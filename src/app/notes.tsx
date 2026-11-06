@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ScrollView, Pressable, TextInput, Keyboard, Platform, BackHandler } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, Keyboard, Platform, BackHandler, LayoutAnimation } from 'react-native';
 import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -71,8 +71,8 @@ export default function Notes() {
     if (Platform.OS === 'web') return;
     let ht: any = null; let shown = false;
     // Moving to the next line briefly hides and shows the keyboard on some phones. Ignore that blink so the screen does not shake.
-    const a = Keyboard.addListener('keyboardDidShow', (e: any) => { if (ht) { clearTimeout(ht); ht = null; } setKb((k) => (k === e.endCoordinates.height ? k : e.endCoordinates.height)); if (!shown) { shown = true; ensureRef.current(focI.current); } });
-    const b = Keyboard.addListener('keyboardDidHide', () => { if (ht) clearTimeout(ht); ht = setTimeout(() => { setKb(0); ht = null; shown = false; }, 350); });
+    const a = Keyboard.addListener('keyboardDidShow', (e: any) => { if (ht) { clearTimeout(ht); ht = null; } setKb((k) => { if (k === e.endCoordinates.height) return k; LayoutAnimation.configureNext({ duration: 140, update: { type: 'easeInEaseOut' } }); return e.endCoordinates.height; }); if (!shown) { shown = true; ensureRef.current(focI.current); } });
+    const b = Keyboard.addListener('keyboardDidHide', () => { if (ht) clearTimeout(ht); ht = setTimeout(() => { LayoutAnimation.configureNext({ duration: 140, update: { type: 'easeInEaseOut' } }); setKb(0); ht = null; shown = false; }, 40); });
     return () => { a.remove(); b.remove(); if (ht) clearTimeout(ht); };
   }, []);
   const [fo, setFo] = useState(-1);
@@ -207,12 +207,12 @@ export default function Notes() {
               <LinearGradient colors={['rgba(255,255,255,.26)', 'rgba(255,255,255,.08)', 'rgba(255,255,255,.14)']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 26, paddingHorizontal: 12, paddingVertical: 12, gap: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', borderTopColor: 'rgba(255,255,255,.5)' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 {[['☐', 'Add checklist item', () => addLine('☐ ')], ['•', 'Add bullet', () => addLine('• ')], ['1.', 'Add numbered item', numLine], ['Date', 'Insert date and time', stamp]].map(([t, l, f]: any) => (
-                  <Pressable key={l} accessibilityLabel={l} onPress={f} style={{ minWidth: 36, height: 36, paddingHorizontal: t === 'Date' ? 8 : 0, borderRadius: 13, backgroundColor: 'rgba(255,255,255,.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,.12)', borderTopColor: 'rgba(255,255,255,.5)', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 4 }, elevation: 4, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: t.length > 1 ? 12.5 : 18, fontWeight: t.length > 1 ? '700' : '400' }}>{t}</Text></Pressable>
+                  <Pressable key={l} accessibilityLabel={l} onPress={f} style={{ minWidth: 36, height: 36, paddingHorizontal: t === 'Date' ? 8 : 0, borderRadius: 13, backgroundColor: 'rgba(255,255,255,.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,.12)', borderTopColor: 'rgba(255,255,255,.5)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: t.length > 1 ? 12.5 : 18, fontWeight: t.length > 1 ? '700' : '400' }}>{t}</Text></Pressable>
                 ))}
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 6 }}>
                   {COL.map((c, i) => (
-                    <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c, shadowColor: '#000', shadowOpacity: draft.c === i ? 0.5 : 0.35, shadowRadius: draft.c === i ? 9 : 6, shadowOffset: { width: 0, height: draft.c === i ? 6 : 4 }, elevation: draft.c === i ? 9 : 5 }}>
+                    <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c }}>
                       <LinearGradient colors={['rgba(255,255,255,.55)', 'rgba(255,255,255,.08)', 'rgba(0,0,0,.18)']} locations={[0, 0.5, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1, borderRadius: 15, borderWidth: draft.c === i ? 2.5 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.3)', borderTopColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.7)' }} />
                     </Pressable>
                   ))}

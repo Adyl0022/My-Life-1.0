@@ -9,6 +9,7 @@ export const ROUTES: Record<string, string> = {
   'Planner.dc.html': '/planner',
   'Notes.dc.html': '/notes',
   'Finance.dc.html': '/finance',
+  'Savings.dc.html': '/savings',
   'Record.dc.html': '/record',
   'Habit.dc.html': '/habit',
   'HabitHistory.dc.html': '/habit-history',

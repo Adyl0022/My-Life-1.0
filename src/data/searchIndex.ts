@@ -375,5 +375,85 @@ export const SEARCH_INDEX: SearchItem[] = [
   "c": "#5ee7df",
   "h": "Settings.dc.html",
   "k": "about version versi developer licence lesen"
+ },
+ {
+  "t": "Money Left",
+  "s": "See what is left to spend this month",
+  "m": "Finance",
+  "c": "#ffc46b",
+  "h": "Finance.dc.html",
+  "k": "money left baki tinggal duit left to spend gaji income belanja sehari per day month end projection akhir bulan"
+ },
+ {
+  "t": "Savings Goals",
+  "s": "Save for a motorcycle, car, house, wedding, travel and more",
+  "m": "Finance",
+  "c": "#ffc46b",
+  "h": "Savings.dc.html",
+  "k": "savings goals tabung simpanan matlamat goal kahwin wedding motor motorcycle kereta car rumah house travel emergency medical hospital hajj umrah maybank"
+ },
+ {
+  "t": "Add money to a savings goal",
+  "s": "From the Spending Tracker (Savings) or a monthly commitment",
+  "m": "Finance",
+  "c": "#ffc46b",
+  "h": "Savings.dc.html",
+  "k": "tambah simpanan masuk duit tabung add money take out keluarkan history sejarah rename tempat simpanan bank"
+ },
+ {
+  "t": "Category limits",
+  "s": "Set a monthly limit for Food, Petrol, Shopping and more",
+  "m": "Finance",
+  "c": "#ffc46b",
+  "h": "Finance.dc.html",
+  "k": "had kategori category limit budget bajet set limit food petrol shopping bills kuning merah"
+ },
+ {
+  "t": "Spending by Category",
+  "s": "Each category for the selected month, with its limit",
+  "m": "Finance",
+  "c": "#ffc46b",
+  "h": "Finance.dc.html",
+  "k": "spending by category kategori belanja bar limit had"
+ },
+ {
+  "t": "Budget alerts",
+  "s": "Notification when you reach 80% or go over budget",
+  "m": "Finance",
+  "c": "#ffc46b",
+  "h": "Finance.dc.html",
+  "k": "budget alert amaran notifikasi notification 80% over budget lebih bajet had harian daily limit"
+ },
+ {
+  "t": "Month summary",
+  "s": "How the month went, top category and a tip",
+  "m": "Finance",
+  "c": "#ffc46b",
+  "h": "Finance.dc.html",
+  "k": "month summary ringkasan bulan top category tip lebih kurang compare"
+ },
+ {
+  "t": "Link a commitment to a savings goal",
+  "s": "Paid amounts also count as saved",
+  "m": "Finance",
+  "c": "#ffc46b",
+  "h": "Finance.dc.html",
+  "k": "commitment goal tabung monthly komitmen link sambung simpanan auto"
+ },
+ {
+  "t": "Copyright and licence",
+  "s": "Copyright notice and what is not allowed",
+  "m": "System",
+  "c": "#5ee7df",
+  "h": "Settings.dc.html",
+  "k": "copyright hak cipta licence lesen larangan salin copy notice about"
+ },
+ {
+  "t": "Ask the Assistant about money",
+  "s": "Money left, budget, savings goals and spending",
+  "m": "System",
+  "c": "#5ee7df",
+  "h": "Assistant.dc.html",
+  "k": "assistant tanya baki tabung belanja bajet money left savings goal how much left"
  }
 ];

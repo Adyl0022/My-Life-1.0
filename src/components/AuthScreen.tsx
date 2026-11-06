@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, Animated, Easing } from 'react-native';
+import { View, Keyboard, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, Animated, Easing } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
@@ -156,6 +156,12 @@ export function AuthScreen() {
   const [name, setName] = useState(''); const [email, setEmail] = useState('');
   const [pw, setPw] = useState(''); const [pw2, setPw2] = useState(''); const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [info, setInfo] = useState('');
+  // The logo stays pinned at the top; it hides while the keyboard is open so the form always has room.
+  const [kb, setKb] = useState(false);
+  useEffect(() => {
+    const a = Keyboard.addListener('keyboardDidShow', () => setKb(true)); const b = Keyboard.addListener('keyboardDidHide', () => setKb(false));
+    return () => { a.remove(); b.remove(); };
+  }, []);
   const enter = useRef(new Animated.Value(0)).current;
   useEffect(() => { enter.setValue(0); Animated.timing(enter, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(); }, [mode]);
   const go = (m: Mode) => { setMode(m); setErr(''); setInfo(''); setCode(''); };
@@ -205,12 +211,14 @@ export function AuthScreen() {
       <Drift size={320} color="rgba(255,143,224,0.26)" x={-130} y={520} dx={55} dy={-40} dur={8000} />
       <Sky />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', paddingHorizontal: 22, paddingTop: 62, paddingBottom: 28 }}>
-          <View style={{ alignItems: 'center', marginBottom: 10 }}>
-            <View style={{ width: 128, height: 100, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 170, height: 170, transform: [{ scale: 0.75 }] }}><Logo /></View></View>
-            <Text style={{ color: W, fontSize: 30, fontWeight: '800', marginTop: 20, letterSpacing: 0.3 }}>My Life</Text>
-            <Text style={{ color: TEAL, fontSize: 12, fontWeight: '700', letterSpacing: 2.4, marginTop: 2 }}>YOUR DAY, ONE APP</Text>
-          </View>
+        {kb ? null : (
+          <View style={{ alignItems: 'center', paddingTop: 62, paddingBottom: 6 }}>
+    <View style={{ width: 128, height: 100, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 170, height: 170, transform: [{ scale: 0.75 }] }}><Logo /></View></View>
+    <Text style={{ color: W, fontSize: 30, fontWeight: '800', marginTop: 20, letterSpacing: 0.3 }}>My Life</Text>
+    <Text style={{ color: TEAL, fontSize: 12, fontWeight: '700', letterSpacing: 2.4, marginTop: 2 }}>YOUR DAY, ONE APP</Text>
+  </View>
+        )}
+        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', paddingHorizontal: 22, paddingTop: 6, paddingBottom: 28 }}>
 
           <View style={{ borderRadius: 28, padding: 18, backgroundColor: 'rgba(255,255,255,.075)', borderWidth: 1, borderColor: 'rgba(255,255,255,.2)' }}>
             <LinearGradient colors={['rgba(255,255,255,.14)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 70, borderTopLeftRadius: 28, borderTopRightRadius: 28 }} />

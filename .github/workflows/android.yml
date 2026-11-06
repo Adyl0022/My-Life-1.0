@@ -23,6 +23,21 @@ jobs:
           distribution: temurin
           java-version: 17
       - run: npm ci
+      - name: Prepare signing key
+        env:
+          KS_B64: ${{ secrets.MYLIFE_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.MYLIFE_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ] && [ -n "$KS_PASS" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/mylife-release.jks"
+            echo "MYLIFE_KEYSTORE_FILE=$RUNNER_TEMP/mylife-release.jks" >> "$GITHUB_ENV"
+            echo "MYLIFE_KEYSTORE_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
+            echo "MYLIFE_KEY_ALIAS=mylife" >> "$GITHUB_ENV"
+            echo "MYLIFE_KEY_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
+            echo "Using the permanent release key."
+          else
+            echo "No signing secrets found, using the default debug key."
+          fi
       - name: Generate native Android project
         run: npx expo prebuild --platform android --no-install
       - name: Build release APK (arm64)

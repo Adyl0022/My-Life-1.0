@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, Animated, Easing } from 'react-native';
+import { View, Image, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, Animated, Easing } from 'react-native';
 import { Text } from './Txt';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { GP, W } from './Ui';
 import { Blob } from './Bg';
-import { OrbLive } from './OrbLive';
 import { signIn, signUp, verifyCode, resendSignup, sendReset, setNewPassword } from '../lib/auth';
 
 type Mode = 'in' | 'up' | 'verify' | 'forgot' | 'reset';
@@ -159,7 +158,9 @@ export function AuthScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 28 }}>
           <View style={{ alignItems: 'center', marginBottom: 20 }}>
-            <OrbLive size={92} />
+            <View style={{ width: 104, height: 104, borderRadius: 30, shadowColor: '#8a7bff', shadowOpacity: 0.85, shadowRadius: 26, shadowOffset: { width: 0, height: 8 }, elevation: 14 }}>
+              <Image source={require('../../assets/icon.png')} style={{ width: 104, height: 104, borderRadius: 30, borderWidth: 1, borderColor: 'rgba(255,255,255,.28)' }} />
+            </View>
             <Text style={{ color: W, fontSize: 30, fontWeight: '800', marginTop: 14, letterSpacing: 0.3 }}>My Life</Text>
             <Text style={{ color: TEAL, fontSize: 12, fontWeight: '700', letterSpacing: 2.4, marginTop: 2 }}>YOUR DAY, ONE APP</Text>
           </View>

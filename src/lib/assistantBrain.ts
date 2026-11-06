@@ -293,6 +293,12 @@ export function think(A, q, lang) {
   if (has(['baki hutang', 'hutang tinggal', 'hutang saya', 'berapa hutang', 'debt left', 'how much debt', 'my debt', 'my debts'])) {
     try { const ds = DB.debtSummary(R.debts || DB.DEBT_EMPTY); return done(mk(ds.totalLeft > 0 ? L('Your debt balance left is ' + rm(ds.totalLeft) + '. This month you still have ' + rm(ds.toPay) + ' of commitments to pay.', 'Baki hutang awak ' + rm(ds.totalLeft) + '. Bulan ini awak masih ada ' + rm(ds.toPay) + ' komitmen untuk dibayar.') : L('You have no debt balance. This month you still have ' + rm(ds.toPay) + ' of commitments to pay.', 'Awak tiada baki hutang. Bulan ini masih ada ' + rm(ds.toPay) + ' komitmen untuk dibayar.'), Object.assign({ big: rm(ds.totalLeft), bigLbl: L('debt left', 'baki hutang'), color: '#ff8fab' }, FIN))); } catch (e) { /* fall through */ }
   }
+  if (has(['had', 'limit', 'limits', 'bajet kategori', 'budget kategori', 'category budget', 'budget limit']) && !has(['sehari', 'daily', 'hari ini']) && (cat || has(['kategori', 'category', 'semua', 'all']))) {
+    const LM = R.limits || {}; const m0 = todayS.slice(0, 7) + '-01'; const cur = spendIn(m0, iso(addDays(todayD, 1)));
+    const cats = cat ? [cat] : Object.keys(LM);
+    const rows = cats.filter((k) => LM[k] > 0).map((k) => { const t = sum(cur.filter((x) => x.cat === k), (x) => x.amt); const r = t / LM[k]; return '• ' + k + ': ' + rm(t) + ' / ' + rm(LM[k]) + (r > 1 ? L(' (over by ' + rm(t - LM[k]) + ')', ' (lebih ' + rm(t - LM[k]) + ')') : L(' (' + rm(LM[k] - t) + ' left)', ' (baki ' + rm(LM[k] - t) + ')')); });
+    return done(rows.length ? mk(L('Your category limits this month:\n', 'Had kategori awak bulan ini:\n') + rows.join('\n'), FIN) : mk(L('No category limit is set yet. Open My Finance, Spending by Category, and tap Set limit.', 'Belum ada had kategori. Buka My Finance, Spending by Category, dan tekan Set limit.'), FIN), {}, null, { intent: 'spend' });
+  }
   const blockL = has(['hutang', 'debt', 'odometer', 'servis', 'service', 'langkah', 'steps', 'solat', 'prayer', 'tugasan', 'task', 'gelas', 'minum', 'quran', 'puasa']);
   const moneyW = has(['duit', 'wang', 'gaji', 'income', 'pendapatan', 'money', 'belanja', 'bulan', 'month', 'rm', 'spend', 'baki', 'komitmen']);
   if (!blockL && moneyW && has(['kenapa', 'why', 'sebab']) && has(['baki', 'tinggal', 'left', 'money', 'duit', 'wang']) && has(['rendah', 'kurang', 'sikit', 'low', 'habis', 'little', 'cepat', 'less', 'small', 'tak banyak'])) return done(whyLow(), {}, null, { intent: 'left' });

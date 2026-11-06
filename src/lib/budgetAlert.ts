@@ -15,14 +15,23 @@ export async function checkBudget(): Promise<void> {
     const cfg = await getItem<BudgetCfg>('ml_budget', BUDGET_EMPTY); if (!cfg.on) return;
     const fin: any = await getItem('ml_finance', { inc: {}, spends: [] }); const debts: any = await getItem('ml_debts', DEBT_EMPTY);
     const now = new Date(); const ym = ymKey(now);
-    const income = Object.keys((fin.inc || {})[ym] || {}).reduce((a, k) => a + (fin.inc[ym][k] || 0), 0); if (!(income > 0)) return;
-    const c = calcLeft({ ym, income, commit: commitFor(debts, ym), spends: fin.spends || [], now });
+    const income = Object.keys((fin.inc || {})[ym] || {}).reduce((a, k) => a + (fin.inc[ym][k] || 0), 0);
     const dk = ym + '-' + String(now.getDate()).padStart(2, '0');
     const out: [string, string, string][] = [];
+    const lims: Record<string, number> = fin.limits || {};
+    Object.keys(lims).forEach((cat) => {
+      const lim = lims[cat]; if (!(lim > 0)) return;
+      const t = (fin.spends || []).filter((p: any) => p.cat === cat && (p.date || '').slice(0, 7) === ym).reduce((a: number, p: any) => a + p.amt, 0);
+      if (t > lim) out.push(['cat100:' + ym + ':' + cat, cat + ' is over its limit', 'You spent ' + rm(t) + ' on ' + cat + ' this month, ' + rm(t - lim) + ' over your limit of ' + rm(lim) + '.']);
+      else if (t >= lim * 0.8) out.push(['cat80:' + ym + ':' + cat, cat + ' is close to its limit', rm(lim - t) + ' left of your ' + rm(lim) + ' ' + cat + ' limit this month.']);
+    });
+    if (income > 0) {
+    const c = calcLeft({ ym, income, commit: commitFor(debts, ym), spends: fin.spends || [], now });
     if (c.over) out.push(['over:' + ym, 'Over budget this month', 'You are ' + rm(-c.left) + ' past what is left of your income. Hold off on non-essential spending.']);
     else {
       if (c.used >= 0.8) out.push(['80:' + ym, 'You have used ' + Math.round(c.used * 100) + '% of your income', rm(c.left) + ' left for ' + c.daysLeft + ' days, about ' + rm(c.allowance) + ' a day.']);
       if (c.daysLeft > 1 && c.allowance > 0 && c.today > c.allowance) out.push(['day:' + dk, 'Over today\'s limit', 'You spent ' + rm(c.today) + ' today. Your limit is about ' + rm(c.allowance) + ' a day to stay on track.']);
+    }
     }
     const todo = out.filter((x) => !cfg.sent[x[0]]); if (!todo.length) return;
     const p = await Notifications.getPermissionsAsync(); if (p.status !== 'granted') return;

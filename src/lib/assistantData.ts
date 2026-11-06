@@ -21,7 +21,7 @@ export type Real = {
   P: [string, number, number][]; // prayer times today, empty when the place is not known yet
   spends: { id: number; name: string; cat: string; amt: number; date: string }[]; days: Record<string, { mood: number; cups: number; sleep: number; steps: number }>;
   plTasks: { id: number; name: string; due: string; prio: string; status: string }[]; plEvents: { id: number; name: string; date: string; done: boolean }[];
-  incomeLast: number; commit: number;
+  incomeLast: number; commit: number; limits: Record<string, number>;
 };
 
 const td = () => keyOfDate(new Date());
@@ -80,7 +80,7 @@ export function useReal(P: [string, number, number][]): Real {
     spends: spends as any, days: (hd.days || {}) as any,
     plTasks: ((pl && pl.tasks) || []).map((x: any) => ({ id: x.id, name: x.name, due: x.due || '', prio: x.prio || 'Medium', status: x.status })),
     plEvents: ((pl && pl.events) || []).map((e: any) => ({ id: e.id, name: e.name, date: e.date, done: !!e.done })),
-    incomeLast: incomeLastMonth(fin), commit: commitFor(debts, ym),
+    incomeLast: incomeLastMonth(fin), commit: commitFor(debts, ym), limits: ((fin as any).limits || {}) as Record<string, number>,
   };
 }
 

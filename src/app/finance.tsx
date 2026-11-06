@@ -14,7 +14,7 @@ import { MoneyLeft } from '../components/MoneyLeft';
 import { TOP } from '../lib/layout';
 
 type Sp = { id: number; name: string; cat: string; amt: number; date: string };
-type Data = { inc: Record<string, Record<string, number>>; cnt: Record<string, Record<string, number>>; spends: Sp[]; nextId: number };
+type Data = { inc: Record<string, Record<string, number>>; cnt: Record<string, Record<string, number>>; spends: Sp[]; nextId: number; limits?: Record<string, number> };
 const EMPTY: Data = { inc: {}, cnt: {}, spends: [], nextId: 1 };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DEFS: [string, string, string][] = [['salary', 'Basic salary', '#7c9cff'], ['overtime', 'Overtime', '#ffc46b'], ['claim', 'Claim', '#8fe9e2'], ['sunday', 'Sunday work', '#b794ff'], ['holiday', 'Public holiday work', '#ff8fab'], ['other', 'Other', '#5ee7b5']];
@@ -58,6 +58,7 @@ export default function Finance() {
   const now = new Date(); const curY = now.getFullYear(); const curKey = keyOf(curY, now.getMonth());
   const [ym, setYm] = useState(curKey);
   const [editKey, setEditKey] = useState(''); const [editUnit, setEditUnit] = useState<'rm' | 'cnt'>('rm'); const [editVal, setEditVal] = useState('');
+  const [limKey, setLimKey] = useState(''); const [limVal, setLimVal] = useState('');
   const [fDate, setFDate] = useState(todayStr()); const [fName, setFName] = useState(''); const [fAmt, setFAmt] = useState(''); const [fCat, setFCat] = useState('Food');
 
   const selY = parseInt(ym.slice(0, 4), 10), selM = parseInt(ym.slice(5, 7), 10) - 1;
@@ -77,8 +78,14 @@ export default function Finance() {
   const gMax = Math.max(...gm.map((x) => x.v), 1);
   const gc = gm[5].v, gp = gm[4].v, gd = gc - gp; const gPct = gp > 0 ? Math.round(Math.abs(gd) / gp * 100) : 0;
   const spent = d.spends.reduce((a, p) => a + p.amt, 0);
+  const monthSpent = d.spends.filter((p) => (p.date || '').slice(0, 7) === ym).reduce((a, p) => a + p.amt, 0);
   const tr = [5, 4, 3, 2, 1, 0].map((b) => { const k = gk(b); return { key: k.key, label: k.label, t: sumOf(d.inc[k.key]) }; });
   const maxT = Math.max(...tr.map((x) => x.t), 1);
+  const saveLimit = (k: string) => {
+    const n = parseFloat(limVal.replace(',', '.')); const lm = { ...(d.limits || {}) };
+    if (n > 0) lm[k] = n; else delete lm[k];
+    setD({ ...d, limits: lm }); setLimKey(''); setLimVal('');
+  };
   const addSpend = () => {
     const n = parseFloat(fAmt.replace(',', '.')); if (!(n > 0)) return;
     setD({ ...d, spends: [{ id: d.nextId, name: fName.trim() || fCat, cat: fCat, amt: n, date: fDate || todayStr() }, ...d.spends], nextId: d.nextId + 1 });
@@ -235,14 +242,41 @@ export default function Finance() {
 
           {/* By category */}
           <Glass radius={24} style={{ marginTop: 12, paddingVertical: 14, paddingHorizontal: 16 }}>
-            <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Spending by Category</Text>
-            <View style={{ marginTop: 10, gap: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+              <Text style={{ color: W, fontSize: 14, fontWeight: '700' }}>Spending by Category</Text>
+              <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 12 }}>{MON[selM] + ' ' + selY}</Text>
+            </View>
+            <Text style={{ color: dim, fontSize: 11.5, marginTop: 4 }}>Set a monthly limit for a category. The bar turns yellow when you are close and red when you go over.</Text>
+            <View style={{ marginTop: 12, gap: 14 }}>
               {CATS.map(([n, c]) => {
-                const t = d.spends.filter((p) => p.cat === n).reduce((a, p) => a + p.amt, 0);
+                const t = d.spends.filter((p) => p.cat === n && (p.date || '').slice(0, 7) === ym).reduce((a, p) => a + p.amt, 0);
+                const lim = (d.limits || {})[n] || 0; const ratio = lim > 0 ? t / lim : 0;
+                const col = lim > 0 ? (ratio > 1 ? '#ff7a8a' : ratio >= 0.8 ? '#ffd24a' : c) : c;
+                const w = lim > 0 ? Math.min(100, Math.round(ratio * 100)) : monthSpent > 0 ? Math.round((t / monthSpent) * 100) : 0;
+                const editing = limKey === n;
                 return (
                   <View key={n}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Text style={{ color: W, fontSize: 12 }}>{n}</Text><Text style={{ color: 'rgba(255,255,255,.75)', fontSize: 12 }}>RM {money(t)}</Text></View>
-                    <View style={{ marginTop: 4, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,.12)', overflow: 'hidden' }}><View style={{ width: (spent > 0 ? Math.round((t / spent) * 100) : 0) + '%', height: '100%', borderRadius: 4, backgroundColor: c }} /></View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <Text style={{ color: W, fontSize: 13, fontWeight: '600' }}>{n}</Text>
+                      <Text style={{ color: lim > 0 && ratio > 1 ? '#ff9aa9' : 'rgba(255,255,255,.8)', fontSize: 12, fontWeight: '600' }}>{'RM ' + money(t) + (lim > 0 ? ' of RM ' + rnd(lim) : '')}</Text>
+                    </View>
+                    <View style={{ marginTop: 5, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,.12)', overflow: 'hidden' }}><View style={{ width: w + '%', height: '100%', borderRadius: 4, backgroundColor: col }} /></View>
+                    {editing ? (
+                      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                        <Inp style={{ flex: 1 }} autoFocus keyboardType="decimal-pad" value={limVal} onChangeText={setLimVal} placeholder={n + ' limit per month (RM)'} onSubmitEditing={() => saveLimit(n)} />
+                        <Pressable onPress={() => saveLimit(n)}><LinearGradient colors={WARM} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: 999 }}><Text style={{ color: '#2a1030', fontSize: 12, fontWeight: '800' }}>Save</Text></LinearGradient></Pressable>
+                        <Pressable accessibilityLabel="Cancel" onPress={() => { setLimKey(''); setLimVal(''); }} style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 14 }}>✕</Text></Pressable>
+                      </View>
+                    ) : (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 5 }}>
+                        <Text style={{ color: lim > 0 ? (ratio > 1 ? '#ff9aa9' : ratio >= 0.8 ? '#ffd24a' : dim) : dim, fontSize: 11.5, fontWeight: lim > 0 ? '700' : '400' }}>
+                          {lim > 0 ? (ratio > 1 ? 'RM ' + rnd(t - lim) + ' over the limit' : ratio >= 0.8 ? 'Close to the limit, RM ' + rnd(lim - t) + ' left' : 'RM ' + rnd(lim - t) + ' left · ' + Math.round(ratio * 100) + '% used') : (monthSpent > 0 ? w + '% of this month' : 'No limit set')}
+                        </Text>
+                        <Pressable onPress={() => { setLimKey(n); setLimVal(lim > 0 ? String(lim) : ''); }}>
+                          <Text style={{ color: '#ffd593', fontSize: 12, fontWeight: '800' }}>{lim > 0 ? 'Edit limit' : '+ Set limit'}</Text>
+                        </Pressable>
+                      </View>
+                    )}
                   </View>
                 );
               })}

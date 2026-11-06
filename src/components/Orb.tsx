@@ -5,7 +5,7 @@ import Svg, { Defs, RadialGradient, LinearGradient as LG, Stop, Circle, Ellipse,
 import { LinearGradient } from 'expo-linear-gradient';
 
 // Same artwork as the design: the colour blobs spin inside the sphere while the highlight, ring and star stay still.
-function OrbPart({ size, uid, part }: { size: number; uid: string; part: 'base' | 'top' }) {
+export function OrbPart({ size, uid, part }: { size: number; uid: string; part: 'base' | 'top' | 'top2' | 'star' }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48">
       <Defs>
@@ -28,7 +28,7 @@ function OrbPart({ size, uid, part }: { size: number; uid: string; part: 'base' 
           <Ellipse cx="33" cy="35" rx="12" ry="9" fill={`url(#${uid}c3)`} />
         </G>
       </>)}
-      {part === 'top' && (<>
+      {(part === 'top' || part === 'top2') && (<>
         <G clipPath={`url(#${uid}k)`}>
           <Circle cx="24" cy="24" r="22" fill={`url(#${uid}d)`} />
           <Ellipse cx="17" cy="11" rx="12" ry="6.5" fill={`url(#${uid}h)`} transform="rotate(-24 17 11)" />
@@ -36,6 +36,9 @@ function OrbPart({ size, uid, part }: { size: number; uid: string; part: 'base' 
         </G>
         <Circle cx="24" cy="24" r="21.4" fill="none" stroke={`url(#${uid}r)`} strokeWidth={1.2} />
         <Path d="M38 36a18 18 0 0 1-22 7" fill="none" stroke={`url(#${uid}e)`} strokeWidth={1.6} strokeLinecap="round" />
+        {part === 'top' && (<><Circle cx="24" cy="24" r="13" fill={`url(#${uid}sg)`} opacity={0.5} /><Path d="M24 11l3 8.2L35.2 22l-8.2 2.8L24 33l-3-8.2L12.8 22l8.2-2.8z" fill="#fff" /></>)}
+      </>)}
+      {part === 'star' && (<>
         <Circle cx="24" cy="24" r="13" fill={`url(#${uid}sg)`} opacity={0.5} />
         <Path d="M24 11l3 8.2L35.2 22l-8.2 2.8L24 33l-3-8.2L12.8 22l8.2-2.8z" fill="#fff" />
       </>)}

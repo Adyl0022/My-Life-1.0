@@ -11,6 +11,7 @@ import Svg, { Path, Circle } from 'react-native-svg';
 import { Glass } from '../components/Glass';
 import { Blob } from '../components/Bg';
 import { OrbSvg } from '../components/Orb';
+import { OrbLive } from '../components/OrbLive';
 import { AssistantBase } from '../lib/assistantBase';
 import { ROUTES } from '../lib/routes';
 import { TOP } from '../lib/layout';
@@ -84,9 +85,9 @@ class Chat extends AssistantBase {
 
         <ScrollView ref={(r) => { (this as any).scrollRef = r; }} style={{ flex: 1 }} contentContainerStyle={{ gap: 14, paddingBottom: 16, paddingTop: 16 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {empty && (
-            <View style={{ alignItems: 'center', paddingTop: 18 }}>
-              <OrbSvg size={92} uid="hero" />
-              <Text style={{ color: '#fff', fontSize: 28, fontWeight: '800', letterSpacing: -0.5, marginTop: 18 }}>{ms ? 'Hai ' : 'Hi '}{this.fn()}</Text>
+            <View style={{ alignItems: 'center', paddingTop: 0 }}>
+              <OrbLive size={92} />
+              <Text style={{ color: '#fff', fontSize: 28, fontWeight: '800', letterSpacing: -0.5, marginTop: 0 }}>{ms ? 'Hai ' : 'Hi '}{this.fn()}</Text>
               <Text style={{ color: 'rgba(255,255,255,.72)', fontSize: 15, marginTop: 6, textAlign: 'center' }}>{ms ? 'Apa awak nak tahu hari ini?' : 'What would you like to know today?'}</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 28, alignSelf: 'stretch' }}>
                 {pick.map((q: any) => (

@@ -14,7 +14,15 @@ export const SEARCH_INDEX: SearchItem[] = [
   "m": "Planner",
   "c": "#7c9cff",
   "h": "Planner.dc.html",
-  "k": "event acara reminder peringatan birthday hari lahir tarikh date"
+  "k": "event acara reminder peringatan birthday hari lahir tarikh date overdue tertunggak"
+ },
+ {
+  "t": "Malaysia events",
+  "s": "Hari Raya, Deepavali and other big Malaysian dates, updated automatically",
+  "m": "Planner",
+  "c": "#ffd27d",
+  "h": "Planner.dc.html",
+  "k": "malaysia events cuti umum public holiday hari raya aidilfitri aidiladha deepavali tahun baru cina chinese new year thaipusam merdeka maulidur rasul awal muharram ramadan krismas"
  },
  {
   "t": "Task List",

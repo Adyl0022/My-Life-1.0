@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import * as F from './fasting';
+import { upcomingMy } from './myEvents';
 import * as DB from './debts';
 import { think, fix } from './assistantBrain';
 // Answer engine. It reads the real saved data of the app, handed in through this.props.real, and saves through this.props.persist.
@@ -164,7 +165,7 @@ export class AssistantBase extends React.Component<any, any> {
       { id: 'mtc', k: ['maintenance spending', 'belanja penyelenggaraan', 'penyelenggaraan', 'maintenance', 'repair', 'baiki', 'bengkel'] },
       { id: 'tasks', k: ['tugasan', 'tugas', 'task', 'tasks', 'todo', 'to do', 'kerja'] },
       { id: 'due', k: ['hampir', 'due', 'tarikh', 'deadline', 'tamat', 'urgent', 'lewat', 'overdue'] },
-      { id: 'events', k: ['acara', 'event', 'events', 'birthday', 'hari lahir', 'kalendar', 'calendar', 'upcoming'] },
+      { id: 'events', k: ['acara', 'event', 'events', 'birthday', 'hari lahir', 'kalendar', 'calendar', 'upcoming', 'cuti', 'holiday', 'public holiday', 'hari raya', 'deepavali', 'cuti umum', 'malaysia events'] },
       { id: 'summary', k: ['ringkasan', 'summary', 'overview', 'rumusan', 'laporan', 'how am i doing', 'macam mana hari', 'my day'] },
       { id: 'advice', k: ['patut', 'should', 'cadang', 'suggest', 'nasihat', 'advice', 'buat sekarang', 'tips', 'do next', 'what next'] },
       { id: 'greet', k: ['hi', 'hello', 'hai', 'salam', 'assalamualaikum', 'hey', 'helo'] },
@@ -394,8 +395,16 @@ export class AssistantBase extends React.Component<any, any> {
           break;
         }
         case 'events': {
+          const od = D.events.filter(e => e.d && this.daysTo(e.d) < 0).sort((a, b) => this.daysTo(b.d) - this.daysTo(a.d));
           const ev = D.events.filter(e => this.daysTo(e.d) >= 0).sort((a, b) => this.daysTo(a.d) - this.daysTo(b.d));
-          m = mk(ev.length ? L('Upcoming events:\n', 'Acara akan datang:\n') + ev.map(e => '• ' + e.n + ' (' + this.dueText(e.d, L) + ')').join('\n') : L('No upcoming events.', 'Tiada acara akan datang.'), { label: L('Open Date & Events', 'Buka Date & Events'), href: 'Planner.dc.html' });
+          const t0 = new Date(); const ts = t0.getFullYear() + '-' + String(t0.getMonth() + 1).padStart(2, '0') + '-' + String(t0.getDate()).padStart(2, '0');
+          const ql2 = String(q || '').toLowerCase();
+          const want = [['raya', 'aidilfitri'], ['haji', 'adha'], ['deepavali', 'deepavali'], ['cina', 'chinese'], ['chinese', 'chinese'], ['thaipusam', 'thaipusam'], ['merdeka', 'national'], ['krismas', 'christmas'], ['christmas', 'christmas'], ['maulid', 'maulidur'], ['muharram', 'muharram'], ['ramadan', 'ramadan'], ['wesak', 'wesak'], ['tahun baru', "new year's"]].filter(w => ql2.includes(w[0])).map(w => w[1]);
+          const my = want.length ? upcomingMy(ts, 60).filter(e => want.some(w => e.name.toLowerCase().includes(w))).slice(0, 3) : upcomingMy(ts, 5);
+          const mine = (ev.length ? L('Upcoming events:\n', 'Acara akan datang:\n') + ev.map(e => '• ' + e.n + ' (' + this.dueText(e.d, L) + ')').join('\n') : L('No upcoming events.', 'Tiada acara akan datang.'))
+            + (od.length ? L('\n\nOverdue:\n', '\n\nTertunggak:\n') + od.map(e => '• ' + e.n + ' (' + this.dueText(e.d, L) + ')').join('\n') : '')
+            + L('\n\nBig Malaysia events:\n', '\n\nEvent besar Malaysia:\n') + my.map(e => '• ' + e.name + ' (' + (e.days === 0 ? L('today', 'hari ini') : e.days === 1 ? L('tomorrow', 'esok') : L('in ' + e.days + ' days', e.days + ' hari lagi')) + ')').join('\n');
+          m = mk(mine, { label: L('Open Date & Events', 'Buka Date & Events'), href: 'Planner.dc.html' });
           break;
         }
         case 'summary':

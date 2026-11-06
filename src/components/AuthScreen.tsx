@@ -26,7 +26,7 @@ const Ico = ({ n, c = 'rgba(255,255,255,.55)' }: { n: 'user' | 'mail' | 'lock' |
 function Field({ icon, secret, ...p }: any) {
   const [f, setF] = useState(false); const [show, setShow] = useState(false);
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', height: 52, borderRadius: 16, paddingHorizontal: 14, marginBottom: 11, backgroundColor: f ? '#173a4f' : '#10143d', borderWidth: 1.2, borderColor: f ? 'rgba(143,233,226,.75)' : 'rgba(255,255,255,.13)', shadowColor: TEAL, shadowOpacity: f ? 0.55 : 0, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, borderRadius: 15, paddingHorizontal: 14, marginBottom: 9, backgroundColor: f ? '#173a4f' : '#10143d', borderWidth: 1.2, borderColor: f ? 'rgba(143,233,226,.75)' : 'rgba(255,255,255,.13)', shadowColor: TEAL, shadowOpacity: f ? 0.55 : 0, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } }}>
       <Ico n={icon} c={f ? TEAL : undefined} />
       <TextInput {...p} secureTextEntry={secret && !show} onFocus={() => setF(true)} onBlur={() => setF(false)} placeholderTextColor="rgba(255,255,255,.38)" underlineColorAndroid="transparent" importantForAutofill="no" selectionColor="#8fe9e2" maxFontSizeMultiplier={1.1}
         style={[{ flex: 1, minWidth: 0, backgroundColor: 'transparent', color: W, fontSize: 15, marginLeft: 11, paddingVertical: 0, outlineStyle: 'none' } as any, p.style]} />
@@ -198,7 +198,7 @@ export function AuthScreen() {
     const r = await setNewPassword(pw); if (!r.ok) setErr(r.err);
   });
 
-  const head = { in: ['Welcome back', 'Sign in to pick up where you left off.'], up: ['Create your account', 'Your name, email and a password. Your data stays yours.'], verify: ['Check your email', 'Type the 6-digit code we sent you.'], forgot: ['Forgot password?', 'We will email you a 6-digit code.'], reset: ['New password', 'Enter the code and choose a new password.'] }[mode];
+  const head = { in: ['Welcome back', 'Sign in to pick up where you left off.'], up: ['Create your account', 'Your data stays yours.'], verify: ['Check your email', 'Type the 6-digit code we sent you.'], forgot: ['Forgot password?', 'We will email you a 6-digit code.'], reset: ['New password', 'Enter the code and choose a new password.'] }[mode];
   const main = { in: ['Sign in', doIn], up: ['Create account', doUp], verify: ['Confirm', doVerify], forgot: ['Send code', doForgot], reset: ['Save password', doReset] }[mode] as [string, () => void];
   const tabs = mode === 'in' || mode === 'up';
   const link = (t: string, f: () => void) => <Pressable onPress={f} hitSlop={8}><Text style={{ color: TEAL, fontSize: 13.5, fontWeight: '700' }}>{t}</Text></Pressable>;
@@ -212,18 +212,20 @@ export function AuthScreen() {
       <Sky />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {kb ? null : (
-          <View style={{ alignItems: 'center', paddingTop: 62, paddingBottom: 6 }}>
-    <View style={{ width: 128, height: 100, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 170, height: 170, transform: [{ scale: 0.75 }] }}><Logo /></View></View>
-    <Text style={{ color: W, fontSize: 30, fontWeight: '800', marginTop: 20, letterSpacing: 0.3 }}>My Life</Text>
-    <Text style={{ color: TEAL, fontSize: 12, fontWeight: '700', letterSpacing: 2.4, marginTop: 2 }}>YOUR DAY, ONE APP</Text>
-  </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingTop: 40, paddingBottom: 4, paddingHorizontal: 22 }}>
+            <View style={{ width: 96, height: 96, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 170, height: 170, transform: [{ scale: 0.52 }] }}><Logo /></View></View>
+            <View style={{ marginLeft: 6 }}>
+              <Text style={{ color: W, fontSize: 28, fontWeight: '800', letterSpacing: 0.3 }}>My Life</Text>
+              <Text style={{ color: TEAL, fontSize: 11, fontWeight: '700', letterSpacing: 2.2, marginTop: 2 }}>YOUR DAY, ONE APP</Text>
+            </View>
+          </View>
         )}
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', paddingHorizontal: 22, paddingTop: 6, paddingBottom: 28 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', paddingHorizontal: 22, paddingTop: 6, paddingBottom: 20 }}>
 
-          <View style={{ borderRadius: 28, padding: 18, backgroundColor: 'rgba(255,255,255,.075)', borderWidth: 1, borderColor: 'rgba(255,255,255,.2)' }}>
+          <View style={{ borderRadius: 26, padding: 16, backgroundColor: 'rgba(255,255,255,.075)', borderWidth: 1, borderColor: 'rgba(255,255,255,.2)' }}>
             <LinearGradient colors={['rgba(255,255,255,.14)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 70, borderTopLeftRadius: 28, borderTopRightRadius: 28 }} />
             {tabs ? (
-              <View style={{ flexDirection: 'row', padding: 4, borderRadius: 16, backgroundColor: 'rgba(0,0,0,.28)', marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', padding: 4, borderRadius: 16, backgroundColor: 'rgba(0,0,0,.28)', marginBottom: 12 }}>
                 {(['in', 'up'] as const).map((m) => (
                   <Pressable key={m} onPress={() => go(m)} style={{ flex: 1 }}>
                     {mode === m
@@ -234,8 +236,8 @@ export function AuthScreen() {
               </View>
             ) : null}
             <Animated.View style={{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }}>
-              <Text style={{ color: W, fontSize: 21, fontWeight: '800' }}>{head[0]}</Text>
-              <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 13, marginTop: 3, marginBottom: 16, lineHeight: 18 }}>{head[1]}</Text>
+              <Text style={{ color: W, fontSize: 20, fontWeight: '800' }}>{head[0]}</Text>
+              <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 12.5, marginTop: 2, marginBottom: 12, lineHeight: 17 }}>{head[1]}</Text>
 
               {mode === 'up' ? <Field icon="user" value={name} onChangeText={setName} placeholder="Your name" autoCapitalize="words" autoComplete="name" maxLength={30} /> : null}
               {mode !== 'verify' && mode !== 'reset' ? <Field icon="mail" value={email} onChangeText={setEmail} placeholder="Email address" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" /> : null}
@@ -248,12 +250,12 @@ export function AuthScreen() {
               {info ? <View style={{ padding: 10, borderRadius: 12, backgroundColor: 'rgba(143,233,226,.12)', borderWidth: 1, borderColor: 'rgba(143,233,226,.35)', marginBottom: 12 }}><Text style={{ color: TEAL, fontSize: 12.5, lineHeight: 17 }}>{info}</Text></View> : null}
 
               <Pressable onPress={main[1]} disabled={busy} style={{ shadowColor: '#8a7bff', shadowOpacity: 0.7, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 8, borderRadius: 18 }}>
-                <LinearGradient colors={['#7c9cff', '#9a8cff', '#b794ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', opacity: busy ? 0.75 : 1 }}>
+                <LinearGradient colors={['#7c9cff', '#9a8cff', '#b794ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 50, borderRadius: 17, alignItems: 'center', justifyContent: 'center', opacity: busy ? 0.75 : 1 }}>
                   {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: W, fontSize: 16, fontWeight: '800', letterSpacing: 0.3 }}>{main[0]}</Text>}
                 </LinearGradient>
               </Pressable>
 
-              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 22, marginTop: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 22, marginTop: 12 }}>
                 {mode === 'in' ? link('Forgot password?', () => go('forgot')) : null}
                 {mode === 'verify' ? <>{link('Resend code', doResend)}{link('Back', () => go('in'))}</> : null}
                 {mode === 'forgot' || mode === 'reset' ? link('Back to sign in', () => go('in')) : null}
@@ -261,7 +263,7 @@ export function AuthScreen() {
             </Animated.View>
           </View>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 18 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 14 }}>
             {['Planner', 'Prayer times', 'Finance', 'Habits', 'Works offline'].map((t) => <View key={t} style={{ paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,.14)' }}><Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11.5, fontWeight: '600' }}>{t}</Text></View>)}
           </View>
           <Text style={{ color: 'rgba(255,255,255,.4)', fontSize: 11.5, textAlign: 'center', marginTop: 12, lineHeight: 16 }}>Your data is saved on this phone first, then backed up to your account.</Text>

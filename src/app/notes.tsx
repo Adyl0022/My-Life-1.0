@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ScrollView, Pressable, TextInput, Keyboard, Platform } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, Keyboard, Platform, BackHandler } from 'react-native';
 import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -42,6 +42,14 @@ export default function Notes() {
   const openNew = () => { const id = data.seq; setDraft({ id, t: '', s: '', c: 6, pin: false, u: Date.now(), r: '' }); setIsNew(true); setEditId(id); setFilter(0); setQ(''); };
   const openEdit = (n: Note) => { setDraft({ ...n }); setIsNew(false); setEditId(n.id); };
   const closeEd = () => { setEditId(0); setDraft(null); setConfirmDel(false); };
+  const edOpen = useRef(false); edOpen.current = !!draft;
+  const closeRef = useRef(closeEd); closeRef.current = closeEd;
+  // Android back button: close the open note straight away instead of leaving the whole screen (that felt laggy).
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const h = BackHandler.addEventListener('hardwareBackPress', () => { if (!edOpen.current) return false; Keyboard.dismiss(); closeRef.current(); return true; });
+    return () => h.remove();
+  }, []);
   const upd = (p: Partial<Note>) => setDraft((d) => (d ? { ...d, ...p } : d));
   const save = () => {
     if (!draft) return;
@@ -195,7 +203,7 @@ export default function Notes() {
                 </View>
                </View>
               </ScrollView>
-              <Glass radius={22} style={{ marginHorizontal: 16, marginBottom: 12, padding: 10, gap: 10 }}>
+              <View style={{ marginHorizontal: 16, marginBottom: 12, paddingHorizontal: 10, paddingVertical: 8, gap: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 {[['☐', 'Add checklist item', () => addLine('☐ ')], ['•', 'Add bullet', () => addLine('• ')], ['1.', 'Add numbered item', numLine], ['Date', 'Insert date and time', stamp]].map(([t, l, f]: any) => (
                   <Pressable key={l} accessibilityLabel={l} onPress={f} style={{ minWidth: 36, height: 36, paddingHorizontal: t === 'Date' ? 8 : 0, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.12)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: t.length > 1 ? 12.5 : 18, fontWeight: t.length > 1 ? '700' : '400' }}>{t}</Text></Pressable>
@@ -204,7 +212,7 @@ export default function Notes() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 6 }}>
                   {COL.map((c, i) => <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: c, borderWidth: draft.c === i ? 2 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.25)' }} />)}
                 </View>
-              </Glass>
+              </View>
               {confirmDel && (
                 <Sheet onClose={() => setConfirmDel(false)}>
                   <View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>

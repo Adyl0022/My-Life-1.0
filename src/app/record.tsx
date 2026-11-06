@@ -74,7 +74,7 @@ const Del = ({ onPress }: { onPress: () => void }) => <Pressable accessibilityLa
 const AddB = ({ t, onPress, w = 16 }: { t: string; onPress: () => void; w?: number }) => <Pressable onPress={onPress}><LinearGradient colors={PG} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 42, paddingHorizontal: w, borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 12, fontWeight: '800' }}>{t}</Text></LinearGradient></Pressable>;
 type Bar = { label: string; sub?: string; top: string; h: number; hot: boolean; delta: string; dc: string; warm?: boolean; note?: string };
 const Bars = ({ bars, height = 158, noteH = 13 }: { bars: Bar[]; height?: number; noteH?: number }) => {
-  const filled = bars.filter((x) => !!x.top); const mxH = Math.max(...bars.map((x) => (x.top ? x.h : 0)), 0); const showTop = filled.length >= 2 && mxH > 0;
+  const filled = bars.filter((x) => !!x.top); const mxH = Math.max(...bars.map((x) => (x.top ? x.h : 0)), 0); const showTop = filled.length >= 2 && mxH > 0; const mnH = Math.min(...filled.map((x) => x.h)); const showLow = showTop && mnH < mxH;
   return (
   <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, height, marginTop: 22 }}>
     {bars.map((b, i) => {
@@ -85,7 +85,7 @@ const Bars = ({ bars, height = 158, noteH = 13 }: { bars: Bar[]; height?: number
           {b.hot ? <LinearGradient colors={b.warm ? ['#ffc46b', '#ff8fab'] : PG} style={r} /> : <View style={[r, { backgroundColor: b.warm ? (b.top ? 'rgba(255,255,255,.4)' : 'rgba(255,255,255,.18)') : 'rgba(255,255,255,.25)' }]} />}
           <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11 }}>{b.label}</Text>
           {b.sub !== undefined ? <Text style={{ color: 'rgba(255,255,255,.45)', fontSize: 9, marginTop: -3 }}>{b.sub}</Text> : null}
-          <Text numberOfLines={2} style={{ height: noteH, fontSize: 9.5, lineHeight: 12, textAlign: 'center', fontWeight: '800', color: '#ffc46b' }}>{b.note !== undefined ? b.note : (showTop && b.top && b.h === mxH ? 'Highest' : '')}</Text>
+          <Text numberOfLines={2} style={{ height: noteH, fontSize: 9.5, lineHeight: 12, textAlign: 'center', fontWeight: '800', color: showLow && b.note === undefined && b.top && b.h === mnH && b.h !== mxH ? '#7df0c6' : '#ffc46b' }}>{b.note !== undefined ? b.note : (showTop && b.top && b.h === mxH ? 'Highest' : (showLow && b.top && b.h === mnH ? 'Lowest' : ''))}</Text>
         </View>
       );
     })}

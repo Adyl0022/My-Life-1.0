@@ -210,12 +210,12 @@ export default function Finance() {
                       ? <LinearGradient colors={['#ffc46b', '#ff8fab']} style={{ width: '100%', height: Math.max(8, Math.round((x.v / gMax) * 74)), borderTopLeftRadius: 6, borderTopRightRadius: 6, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 }} />
                       : <View style={{ width: '100%', height: x.v > 0 ? Math.max(8, Math.round((x.v / gMax) * 74)) : 6, borderTopLeftRadius: 6, borderTopRightRadius: 6, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, backgroundColor: x.v > 0 ? 'rgba(255,255,255,.4)' : 'rgba(255,255,255,.18)' }} />}
                     <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11 }}>{x.label}</Text>
-                    <Text style={{ height: 13, fontSize: 9.5, fontWeight: '700', color: dd > 0 ? '#ffb3a0' : dd < 0 ? '#7df0c6' : 'rgba(255,255,255,.6)' }}>{x.v > 0 || x.prev > 0 ? (dd === 0 ? '=' : (dd > 0 ? '+' : '-') + rnd(Math.abs(dd))) : ''}</Text>
+                    <Text style={{ height: 13, fontSize: 10.5, fontWeight: '700', color: dd > 0 ? '#ffb3a0' : dd < 0 ? '#7df0c6' : 'rgba(255,255,255,.6)' }}>{x.prev > 0 && (x.v > 0 || i === 5) ? (dd === 0 ? 'same' : (dd > 0 ? '▲ ' : '▼ ') + rnd(Math.abs(dd))) : ''}</Text>
                   </View>
                 );
               })}
             </View>
-            <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 11.5, marginTop: 6 }}>Last 6 months, in RM. Orange means you spent more than the month before, green means less.</Text>
+            <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 11.5, marginTop: 6 }}>Last 6 months, in RM. Under each month: ▲ orange means you spent that much more than the month before, ▼ green means that much less.</Text>
             <DateField value={fDate} onChange={setFDate} style={{ marginTop: 12 }} />
             <Inp style={{ marginTop: 8 }} value={fName} onChangeText={setFName} placeholder="What did you buy?" />
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, alignItems: 'center' }}>

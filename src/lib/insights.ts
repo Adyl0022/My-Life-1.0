@@ -1,15 +1,17 @@
 import { useStored } from './store';
 import { PUASA_EMPTY, PuasaData, ramadanState, qadhaOwed, sunatToday, isHaram } from './fasting';
 import { DEBT_EMPTY, DebtData, remaining, isActive, ymOf, dueDay, amountDue, debtSummary, monthsLeft, yearsMonths, payoffLabel } from './debts';
+import { SAV_EMPTY, SavData, goalSaved, perMonth } from './savings';
+import { calcLeft, commitFor } from './moneyLeft';
 import { HEMPTY, HData, getDay, cupsGoal, goalPctOf, keyOfDate, dateOf, MOODS, WD, bestStreakAll } from './habit';
 
-export type Sp = { amt: number; date: string; cat?: string; name?: string };
-export type Fin = { inc: Record<string, Record<string, number>>; spends: Sp[] };
+export type Sp = { amt: number; date: string; cat?: string; name?: string; id?: number; goal?: number };
+export type Fin = { inc: Record<string, Record<string, number>>; spends: Sp[]; limits?: Record<string, number> };
 export type Tk = { name: string; due: string; status: string };
 export type Ev = { name: string; date: string; done: boolean };
 export type Pl = { events: Ev[]; tasks: Tk[] };
 export type Veh = { readings?: { date: string; odo: number }[]; fuel?: { date: string; liters: number; amt: number; odo: number }[]; parts?: { name: string; odo: number; life: number }[]; renew?: { roadtax?: string; insurance?: string; licence?: string } };
-export type Core = { hd: HData; fin: Fin; pl: Pl; rec: { data: Record<string, Veh> }; tas: { day: string; total: number }; debts: DebtData; puasa: PuasaData; off: Record<string, string>; setOff: (v: Record<string, string>) => void };
+export type Core = { hd: HData; fin: Fin; pl: Pl; rec: { data: Record<string, Veh> }; tas: { day: string; total: number }; debts: DebtData; puasa: PuasaData; sav: SavData; off: Record<string, string>; setOff: (v: Record<string, string>) => void };
 export type Part = { k: string; label: string; pct: number; detail: string; c: string };
 export type Tip = { id: string; title: string; sub: string; why: string; go: string; k: string; pri: number };
 
@@ -21,12 +23,15 @@ export const useCore = (): Core => {
   const [tas] = useStored<{ day: string; total: number }>('ml_tasbih', { day: '', total: 0 });
   const [debts] = useStored<DebtData>('ml_debts', DEBT_EMPTY);
   const [puasa] = useStored<PuasaData>('ml_puasa', PUASA_EMPTY);
+  const [sav] = useStored<SavData>('ml_savings', SAV_EMPTY);
   const [off, setOff] = useStored<Record<string, string>>('ml_tips_off', {});
-  return { hd, fin, pl, rec, tas, debts, puasa, off, setOff };
+  return { hd, fin, pl, rec, tas, debts, puasa, sav, off, setOff };
 };
 
 const tk = (o: number) => keyOfDate(dateOf(o));
-const spends = (c: Core) => (c.fin && c.fin.spends) || [];
+const allSpends = (c: Core) => (c.fin && c.fin.spends) || [];
+// Money put into savings goals is not spending, so it is left out of every spending figure.
+const spends = (c: Core) => allSpends(c).filter((x) => x.cat !== 'Savings');
 export const spendOn = (c: Core, o: number) => spends(c).filter((x) => x.date === tk(o)).reduce((a, b) => a + (b.amt || 0), 0);
 export const spendSum = (c: Core, from: number, to: number) => { let t = 0; for (let o = from; o <= to; o++) t += spendOn(c, o); return t; };
 export const hasData = (c: Core, o: number) => { const x = getDay(c.hd, o); return x.cups > 0 || x.sleep > 0 || x.steps > 0; };
@@ -178,11 +183,33 @@ export function tips(c: Core, week: boolean): Tip[] {
   if (tp > 0 && tm > 0) { const d = Math.round(((tm - tp) / tp) * 100); if (Math.abs(d) >= 10) add({ id: 'mom', title: 'Spending is ' + (d > 0 ? 'up ' : 'down ') + Math.abs(d) + '% on last month', sub: rmf(tm) + ' so far, against ' + rmf(tp) + ' last month.', why: 'Compares this month so far with the whole of last month.', go: '/finance', k: 'goal', pri: d > 0 ? 66 : 38 }); }
   const dm = now.getDate(); let nsd = 0; for (let o = -(dm - 1); o <= -1; o++) if (spendOn(c, o) === 0) nsd++;
   if (dm >= 7 && sm.length >= 1 && nsd >= 3) add({ id: 'nospend', title: nsd + ' no-spend days this month', sub: 'Keep it going. Small gaps in spending add up.', why: 'Counts days this month before today with nothing added in My Finance.', go: '/finance', k: 'badge', pri: 32 });
-  const inc = Object.values((c.fin && c.fin.inc && c.fin.inc[mk]) || {}).reduce((a: number, b: any) => a + (b || 0), 0) as number;
-  if (inc > 0) {
-    const left = inc - tm, dl = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - dm + 1;
-    if (left > 0) add({ id: 'allow', title: 'About ' + rmf(left / dl) + ' a day left to spend', sub: rmf(left) + ' of your ' + rmf(inc) + ' income remains for ' + dl + ' days.', why: 'Income entered for this month, minus spending so far, spread over the days left.', go: '/finance', k: 'goal', pri: 52 });
-    else add({ id: 'over', title: 'Spending has passed your income', sub: 'You have spent ' + rmf(tm) + ' against ' + rmf(inc) + ' income this month.', why: 'Income entered for this month is lower than spending so far.', go: '/finance', k: 'goal', pri: 88 });
+  {
+    const inc = incomeOf(c);
+    if (inc > 0) {
+      const L = calcLeft({ ym: mk, income: inc, commit: commitFor(c.debts, mk), spends: allSpends(c) as any });
+      if (L.left > 0 && L.daysLeft > 0) add({ id: 'allow', title: 'About ' + rmf(L.allowance) + ' a day left to spend', sub: rmf(L.left) + ' left this month after commitments and savings, for ' + L.daysLeft + ' days.', why: 'The same Money Left figure you see in My Finance: income minus commitments, spending and money put into savings goals.', go: '/finance', k: 'goal', pri: 52 });
+      else if (L.left <= 0) add({ id: 'over', title: 'You are over budget this month', sub: 'Commitments, spending and savings add up to ' + rmf(-L.left) + ' more than your income.', why: 'The same Money Left figure you see in My Finance.', go: '/finance', k: 'goal', pri: 88 });
+      if (L.isCur && L.projLeft < 0 && L.left > 0) add({ id: 'pace', title: 'At this pace you will run short', sub: 'Your usual daily spending would leave you about ' + rmf(-L.projLeft) + ' short by month end.', why: 'Projection from your regular daily spending, leaving out bills and big one-off buys.', go: '/finance', k: 'goal', pri: 70 });
+      // Category limits
+      const lim = (c.fin && c.fin.limits) || {};
+      Object.keys(lim).forEach((k2) => {
+        if (!(lim[k2] > 0)) return; const t = sm.filter((x) => (x.cat || 'Other') === k2).reduce((a, b) => a + (b.amt || 0), 0); const r = t / lim[k2];
+        if (r > 1) add({ id: 'lim-' + k2, title: k2 + ' is over its limit', sub: rmf(t) + ' spent against a limit of ' + rmf(lim[k2]) + '.', why: 'Compares this month\'s ' + k2 + ' spending with the limit you set in My Finance.', go: '/finance', k: 'goal', pri: 72 });
+        else if (r >= 0.8) add({ id: 'lim-' + k2, title: k2 + ' is at ' + Math.round(r * 100) + '% of its limit', sub: rmf(lim[k2] - t) + ' left before you reach ' + rmf(lim[k2]) + '.', why: 'Compares this month\'s ' + k2 + ' spending with the limit you set in My Finance.', go: '/finance', k: 'goal', pri: 60 });
+      });
+    }
+  }
+  // Savings goals
+  {
+    const goals = (c.sav && c.sav.goals) || []; const all = allSpends(c) as any;
+    const savedThisMonth = all.filter((x: any) => x.cat === 'Savings' && (x.date || '').slice(0, 7) === mk).reduce((a: number, b: any) => a + (b.amt || 0), 0);
+    goals.forEach((g) => {
+      const sv = goalSaved(g, all, c.debts); const pct = g.target > 0 ? Math.round((sv / g.target) * 100) : 0;
+      if (g.target > 0 && sv >= g.target) add({ id: 'goal-done-' + g.id, title: g.name + ' is fully saved', sub: rmf(sv) + ' saved. You reached your target.', why: 'Counted from the savings goal you set.', go: '/savings', k: 'badge', pri: 45 });
+      else if (g.target > 0 && pct >= 75) add({ id: 'goal-near-' + g.id, title: g.name + ' is ' + pct + '% saved', sub: rmf(g.target - sv) + ' to go. Almost there.', why: 'Counted from the savings goal you set.', go: '/savings', k: 'goal', pri: 44 });
+      else { const pm = perMonth(g, sv); if (pm) add({ id: 'goal-pm-' + g.id, title: 'Save about ' + rmf(pm) + ' a month for ' + g.name, sub: rmf(g.target - sv) + ' to go by ' + g.due + '.', why: 'Remaining amount spread over the months until your target date.', go: '/savings', k: 'goal', pri: 40 }); }
+    });
+    if (goals.length > 0 && savedThisMonth <= 0 && now.getDate() >= 10) add({ id: 'goal-none', title: 'Nothing saved to your goals this month', sub: 'Even a small amount keeps ' + (goals[0].name) + ' moving.', why: 'No Savings entries or linked commitments were found for this month.', go: '/savings', k: 'goal', pri: 42 });
   }
   // Debts
   const dym = ymOf(now);

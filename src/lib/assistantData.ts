@@ -55,7 +55,7 @@ export function useReal(P: [string, number, number][]): Real {
   const ready = o1 && o2 && o3 && o4 && o5 && o6 && o7 && o8 && o9;
 
   const t = getDay(hd, 0); const cg = cupsGoal(hd);
-  const core: Core = { hd, fin, pl, rec: { data: (rec.data || {}) as any }, tas, debts, puasa, off: {}, setOff: () => {} };
+  const core: Core = { hd, fin, pl, rec: { data: (rec.data || {}) as any }, tas, debts, puasa, sav: ((sav && sav.goals) ? sav : { goals: [], nextId: 1 }), off: {}, setOff: () => {} };
   const spends = (fin && fin.spends) || [];
   const ym = ymOf(new Date()); const today = td();
   let spendToday = 0, spendMonth = 0; const cats: Record<string, number> = {};

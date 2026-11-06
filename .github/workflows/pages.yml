@@ -1,7 +1,8 @@
-name: Deploy web to GitHub Pages
+name: Deploy site to GitHub Pages
 on:
   push:
     branches: [main]
+    paths: ['public/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,22 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Set base path for GitHub Pages
+      - name: Build the download site (landing page and privacy policy only)
         run: |
-          node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('app.json'));d.expo.experiments={...(d.expo.experiments||{}),baseUrl:'/My-Life-1.0'};fs.writeFileSync('app.json',JSON.stringify(d,null,2));"
-      - run: npx expo export --platform web
-      - name: Make installable and full-screen (PWA)
-        run: node scripts/postexport.js /My-Life-1.0
-      - name: SPA fallback
-        run: cp dist/index.html dist/404.html
+          mkdir site
+          cp public/welcome.html site/index.html
+          cp public/privacy.html public/icon.png site/
+          cp -r public/welcome site/welcome
+          cp site/index.html site/404.html
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: site
   deploy:
     needs: build
     runs-on: ubuntu-latest

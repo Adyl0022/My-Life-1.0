@@ -29,7 +29,7 @@ export const LICENCES: Sec[] = [
 ];
 
 export const SUPPORT_EMAIL = 'adlisyahmi324@gmail.com';
-export const PRIVACY_URL = 'https://adyl0022.github.io/My-Life-1.0/privacy.html';
+export const PRIVACY_URL = 'https://adyl0022.github.io/mylife/privacy.html';
 export const HOWTO: Sec[] = [
   { h: '1. Start on Home', p: 'The Dashboard shows your day: next prayer, tasks, spending and habits. Use the bottom bar to move between Home, Stats, Insights and Settings.' },
   { h: '2. Plan your days', p: 'Planner holds your tasks and events. Add an event and choose when to be reminded.' },

@@ -138,7 +138,7 @@ export default function Settings() {
     setUpd('busy');
     const wait = new Promise((r) => setTimeout(r, 700));
     try {
-      const r = await fetch('https://api.github.com/repos/Adyl0022/My-Life-1.0/releases/tags/apk-latest', { headers: { Accept: 'application/vnd.github+json' } });
+      const r = await fetch('https://api.github.com/repos/Adyl0022/mylife/releases/tags/apk-latest', { headers: { Accept: 'application/vnd.github+json' } });
       if (!r.ok) throw new Error('x');
       const j = await r.json(); const m = /commit ([0-9a-f]{7})/.exec(String(j.body || ''));
       await wait; lastChk.current = Date.now();
@@ -297,7 +297,7 @@ export default function Settings() {
                 <Text style={{ color: W, fontSize: 20, fontWeight: '800', marginTop: 10 }}>My Life 1.0</Text>
                 <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4, marginTop: 3 }}>YOUR LIFE, ALL IN ONE PLACE</Text>
                 <Pressable onPress={checkUpd} style={{ marginTop: 12, paddingVertical: 8, paddingHorizontal: 16, minWidth: 210, alignItems: 'center', borderRadius: 999, backgroundColor: upd === 'latest' || upd === 'web' ? 'rgba(94,231,181,.25)' : upd === 'new' ? 'rgba(124,156,255,.4)' : upd === 'err' ? 'rgba(255,196,107,.25)' : 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{upd === 'busy' ? 'Checking...' : upd === 'latest' ? "You're up to date" : upd === 'web' ? 'The web version is always the latest' : upd === 'new' ? 'A new version is available' : upd === 'err' ? 'Could not check. Tap to try again' : 'Check for updates'}</Text></Pressable>
-                {upd === 'new' ? <Pressable onPress={() => Linking.openURL('https://github.com/Adyl0022/My-Life-1.0/releases/tag/apk-latest')} style={{ marginTop: 8 }}><LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999 }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '800' }}>Download the new version</Text></LinearGradient></Pressable> : null}
+                {upd === 'new' ? <Pressable onPress={() => Linking.openURL('https://github.com/Adyl0022/mylife/releases/tag/apk-latest')} style={{ marginTop: 8 }}><LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999 }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '800' }}>Download the new version</Text></LinearGradient></Pressable> : null}
               </View>
               <Glass style={{ paddingHorizontal: 16 }}>
                 {[['Version', '1.0.0'], ['Build', '1'], ['Developed', 'November 2026'], ['Developer', 'Adli Syahmi']].map(([a, b], i) => <Row key={a} t={a} last={i === 3} right={<Text style={{ color: DIM, fontSize: 13 }}>{b}</Text>} />)}

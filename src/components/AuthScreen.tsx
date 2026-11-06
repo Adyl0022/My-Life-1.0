@@ -205,10 +205,10 @@ export function AuthScreen() {
       <Drift size={320} color="rgba(255,143,224,0.26)" x={-130} y={520} dx={55} dy={-40} dur={8000} />
       <Sky />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', paddingHorizontal: 22, paddingTop: 72, paddingBottom: 28 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', paddingHorizontal: 22, paddingTop: 62, paddingBottom: 28 }}>
           <View style={{ alignItems: 'center', marginBottom: 10 }}>
             <View style={{ width: 128, height: 100, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 170, height: 170, transform: [{ scale: 0.75 }] }}><Logo /></View></View>
-            <Text style={{ color: W, fontSize: 30, fontWeight: '800', marginTop: 10, letterSpacing: 0.3 }}>My Life</Text>
+            <Text style={{ color: W, fontSize: 30, fontWeight: '800', marginTop: 20, letterSpacing: 0.3 }}>My Life</Text>
             <Text style={{ color: TEAL, fontSize: 12, fontWeight: '700', letterSpacing: 2.4, marginTop: 2 }}>YOUR DAY, ONE APP</Text>
           </View>
 

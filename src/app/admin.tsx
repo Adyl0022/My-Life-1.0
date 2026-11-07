@@ -4,14 +4,15 @@ import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Glass } from '../components/Glass';
-import { Drift, Sky, Wallpaper } from '../components/AuthScreen';
+import Svg, { Defs, Pattern, Path, Rect } from 'react-native-svg';
+import { Drift } from '../components/AuthScreen';
 import { Inp, W } from '../components/Ui';
 import { TOP } from '../lib/layout';
 import { adminCall, useIsAdmin } from '../lib/admin';
 
 const dim = 'rgba(255,255,255,.62)';
-const GR = ['#7c9cff', '#b794ff'] as [string, string];
+const GOLD = '#f5c76b'; const EM = '#5ee7b5'; const CARD = '#14231f'; const LINE = 'rgba(245,199,107,.22)';
+const GR = ['#f5c76b', '#5ee7b5'] as [string, string];   // gold to emerald: the admin colours
 const day = (s?: string | null) => s ? new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 type Ov = { users: number; active: number; codes_unused: number; codes_used: number; new_7d: number; income: number; income_month: number; sold_month: number; free_total: number };
 type U = { id: string; email: string; name?: string; created_at: string; last_sign_in_at?: string; active: boolean; confirmed: boolean };
@@ -19,17 +20,25 @@ type C = { code: string; note?: string; price?: number | null; method?: string |
 const METHODS = ['DuitNow', 'Bank', 'Cash', 'Other'];
 const rm = (n: number) => 'RM ' + (Number(n) || 0).toLocaleString('en-MY', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const Pill = ({ t, on, onPress, c }: { t: string; on: boolean; onPress: () => void; c?: string }) => (
-  <Pressable onPress={onPress} style={{ paddingVertical: 7, paddingHorizontal: 13, borderRadius: 999, borderWidth: 1, borderColor: on ? 'transparent' : 'rgba(255,255,255,.22)', backgroundColor: on ? (c || '#7c9cff') : 'rgba(255,255,255,.06)' }}>
-    <Text style={{ color: on ? '#0a0f2c' : W, fontSize: 12.5, fontWeight: '800' }}>{t}</Text>
+  <Pressable onPress={onPress} style={{ paddingVertical: 7, paddingHorizontal: 13, borderRadius: 10, borderWidth: 1, borderColor: on ? 'transparent' : 'rgba(255,255,255,.18)', backgroundColor: on ? (c || GOLD) : 'rgba(255,255,255,.05)' }}>
+    <Text style={{ color: on ? '#0b1512' : W, fontSize: 12.5, fontWeight: '800' }}>{t}</Text>
   </Pressable>
 );
 
-const Tile = ({ l, v, c, ic }: { l: string; v: number | string; c: string; ic: string }) => (
-  <View style={{ flexBasis: '47%', flexGrow: 1, borderRadius: 20, padding: 14, backgroundColor: '#2f2e6e', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)', borderTopColor: 'rgba(255,255,255,.32)', overflow: 'hidden' }}>
-    <View style={{ position: 'absolute', right: -14, top: -14, width: 64, height: 64, borderRadius: 32, backgroundColor: c, opacity: 0.18 }} />
-    <Text style={{ fontSize: 17 }}>{ic}</Text>
-    <Text style={{ color: c, fontSize: 30, fontWeight: '800', marginTop: 6, letterSpacing: -0.5 }}>{v}</Text>
-    <Text style={{ color: dim, fontSize: 11.5, marginTop: 1 }}>{l}</Text>
+// Fine blueprint grid: nothing like the stars used in the rest of the app.
+function Grid() {
+  return (
+    <Svg pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} width="100%" height="100%">
+      <Defs><Pattern id="g" width="26" height="26" patternUnits="userSpaceOnUse"><Path d="M26 0H0V26" fill="none" stroke="rgba(255,255,255,0.055)" strokeWidth="1" /></Pattern></Defs>
+      <Rect width="100%" height="100%" fill="url(#g)" />
+    </Svg>
+  );
+}
+const Mini = ({ l, v, c, ic }: { l: string; v: number | string; c: string; ic: string }) => (
+  <View style={{ flex: 1, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)', alignItems: 'flex-start' }}>
+    <View style={{ width: 28, height: 28, borderRadius: 9, backgroundColor: c + '2e', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 14 }}>{ic}</Text></View>
+    <Text style={{ color: W, fontSize: 22, fontWeight: '800', marginTop: 8 }}>{v}</Text>
+    <Text style={{ color: dim, fontSize: 11, marginTop: 1 }}>{l}</Text>
   </View>
 );
 const initial = (u: { name?: string; email: string }) => ((u.name || u.email || '?').trim()[0] || '?').toUpperCase();
@@ -66,37 +75,53 @@ export default function Admin() {
   };
   const send = (code: string) => Share.share({ message: 'Your My Life activation code: ' + code + '\nOpen the app, sign in, then type the 8 characters after ML-.' });
   return (
-    <View style={{ flex: 1, backgroundColor: '#0a0f2c', overflow: 'hidden' }}>
-      <LinearGradient colors={['#0a0f2c', '#1b1466', '#0a0f2c']} locations={[0, 0.45, 1]} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
-      <Drift size={380} color="rgba(106,77,240,0.5)" x={-150} y={-100} dx={40} dy={30} dur={8000} />
-      <Drift size={320} color="rgba(94,231,223,0.24)" x={160} y={420} dx={-40} dy={40} dur={10000} />
-      <Wallpaper />
-      <Sky />
+    <View style={{ flex: 1, backgroundColor: '#06100d', overflow: 'hidden' }}>
+      <LinearGradient colors={['#06100d', '#0b1a16', '#090d14']} locations={[0, 0.5, 1]} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
+      <Drift size={360} color="rgba(245,199,107,0.20)" x={140} y={-120} dx={-30} dy={30} dur={9000} />
+      <Drift size={360} color="rgba(94,231,181,0.17)" x={-170} y={380} dx={40} dy={-30} dur={11000} />
+      <Grid />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={busy} onRefresh={load} tintColor="#fff" />} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 44 + TOP, paddingBottom: 80 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            <Pressable onPress={() => router.back()} accessibilityLabel="Back"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 24, marginTop: -3 }}>‹</Text></Glass></Pressable>
+            <Pressable onPress={() => router.back()} accessibilityLabel="Back"><View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: GOLD, fontSize: 24, marginTop: -3 }}>‹</Text></View></Pressable>
             <View style={{ flex: 1 }}>
               <Text style={{ color: W, fontSize: 26, fontWeight: '800', letterSpacing: -0.4 }}>Admin</Text>
-              <Text style={{ color: '#8fe9e2', fontSize: 10.5, fontWeight: '700', letterSpacing: 2, marginTop: 2 }}>USERS AND ACTIVATION CODES</Text>
+              <Text style={{ color: GOLD, fontSize: 10.5, fontWeight: '800', letterSpacing: 2.4, marginTop: 2 }}>CONTROL ROOM</Text>
             </View>
             {busy ? <ActivityIndicator color="#fff" /> : null}
           </View>
           {!isAdmin ? <Text style={{ color: dim, marginTop: 24 }}>This page is only for the app owner.</Text> : <>
             {err ? <Text style={{ color: '#ffc2cc', marginTop: 14 }}>{err}</Text> : null}
-            {ov ? <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 30 }}>
-              <Tile l="Total income" v={rm(ov.income)} c="#5ee7b5" ic="💰" /><Tile l="This month" v={rm(ov.income_month)} c="#8fe9e2" ic="📅" />
-              <Tile l="Registered users" v={ov.users} c="#b7c4ff" ic="👥" /><Tile l="Activated" v={ov.active} c="#5ee7b5" ic="✅" />
-              <Tile l="Sold this month" v={ov.sold_month} c="#ffc46b" ic="🛒" /><Tile l="Given free" v={ov.free_total} c="#ff9ecb" ic="🎁" />
-              <Tile l="New this week" v={ov.new_7d} c="#8fe9e2" ic="✨" /><Tile l="Codes not used yet" v={ov.codes_unused} c="#ffc46b" ic="🔑" />
+            {ov ? <View style={{ marginTop: 28 }}>
+              <View style={{ borderRadius: 22, padding: 18, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, overflow: 'hidden' }}>
+                <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: GOLD }} />
+                <Text style={{ color: GOLD, fontSize: 11, fontWeight: '800', letterSpacing: 2 }}>TOTAL INCOME</Text>
+                <Text style={{ color: W, fontSize: 38, fontWeight: '800', letterSpacing: -1, marginTop: 4 }}>{rm(ov.income)}</Text>
+                <View style={{ flexDirection: 'row', marginTop: 12, gap: 10 }}>
+                  <View style={{ flex: 1, borderRadius: 12, padding: 10, backgroundColor: 'rgba(245,199,107,.1)' }}><Text style={{ color: dim, fontSize: 11 }}>This month</Text><Text style={{ color: GOLD, fontSize: 17, fontWeight: '800', marginTop: 1 }}>{rm(ov.income_month)}</Text></View>
+                  <View style={{ flex: 1, borderRadius: 12, padding: 10, backgroundColor: 'rgba(94,231,181,.1)' }}><Text style={{ color: dim, fontSize: 11 }}>Sold this month</Text><Text style={{ color: EM, fontSize: 17, fontWeight: '800', marginTop: 1 }}>{ov.sold_month}</Text></View>
+                </View>
+              </View>
+              <View style={{ borderRadius: 18, padding: 14, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)', marginTop: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                  <Text style={{ color: W, fontSize: 22, fontWeight: '800' }}>{ov.active}</Text>
+                  <Text style={{ color: dim, fontSize: 13 }}>{' of ' + ov.users + ' users activated'}</Text>
+                </View>
+                <View style={{ height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,.1)', marginTop: 10, overflow: 'hidden' }}>
+                  <LinearGradient colors={GR} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 8, width: (ov.users ? Math.max(3, Math.round((ov.active / ov.users) * 100)) : 0) + '%' }} />
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                <Mini l="New this week" v={ov.new_7d} c="#8fe9e2" ic="✨" /><Mini l="Codes unused" v={ov.codes_unused} c={GOLD} ic="🔑" /><Mini l="Given free" v={ov.free_total} c="#ff9ecb" ic="🎁" />
+              </View>
             </View> : null}
 
-            <View style={{ marginTop: 22, borderRadius: 26, padding: 18, backgroundColor: '#3b3a7e', borderWidth: 1, borderColor: 'rgba(255,255,255,.2)', borderTopColor: 'rgba(255,255,255,.4)', borderBottomColor: 'rgba(0,0,0,.35)', borderBottomWidth: 2, overflow: 'hidden' }}>
-              <LinearGradient colors={['rgba(255,255,255,.2)', 'rgba(255,255,255,0)']} pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 100 }} />
+            <View style={{ marginTop: 22, borderRadius: 22, padding: 18, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, overflow: 'hidden' }}>
+              <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: EM }} />
               <Text style={{ color: W, fontSize: 18, fontWeight: '800' }}>Make activation codes</Text>
               <Text style={{ color: dim, fontSize: 12, marginTop: 3, marginBottom: 14 }}>One code works for one person, once, for life.</Text>
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
-                <Pill t="Paid" on={!free} onPress={() => setFree(false)} c="#5ee7b5" /><Pill t="Free (gift)" on={free} onPress={() => setFree(true)} c="#ff9ecb" />
+                <Pill t="Paid" on={!free} onPress={() => setFree(false)} c={EM} /><Pill t="Free (gift)" on={free} onPress={() => setFree(true)} c="#ff9ecb" />
               </View>
               <Inp value={note} onChangeText={setNote} placeholder="Who is it for? (optional)" />
               {!free ? <>
@@ -105,28 +130,28 @@ export default function Admin() {
               </> : <Text style={{ color: '#ffc2dd', fontSize: 12, marginTop: 8 }}>Free codes are not counted in your income.</Text>}
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 12, alignItems: 'center' }}>
                 <View style={{ width: 80 }}><Inp value={cnt} onChangeText={(t: string) => setCnt(t.replace(/\D/g, '').slice(0, 2))} keyboardType="number-pad" placeholder="How many" /></View>
-                <Pressable onPress={make} disabled={busy} style={{ flex: 1 }}><LinearGradient colors={GR} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 46, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 15, fontWeight: '800' }}>Make code</Text></LinearGradient></Pressable>
+                <Pressable onPress={make} disabled={busy} style={{ flex: 1 }}><LinearGradient colors={GR} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#0b1512', fontSize: 15, fontWeight: '800' }}>Make code</Text></LinearGradient></Pressable>
               </View>
               {fresh.map((c) => (
                 <View key={c} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, padding: 12, borderRadius: 14, backgroundColor: 'rgba(94,231,181,.14)', borderWidth: 1, borderColor: 'rgba(94,231,181,.4)' }}>
                   <Text selectable style={{ flex: 1, color: '#bff5df', fontSize: 18, fontWeight: '800', letterSpacing: 1.5 }}>{c}</Text>
-                  <Pressable onPress={() => send(c)} hitSlop={8}><Text style={{ color: '#8fe9e2', fontWeight: '800' }}>Send</Text></Pressable>
+                  <Pressable onPress={() => send(c)} hitSlop={8}><Text style={{ color: GOLD, fontWeight: '800' }}>Send</Text></Pressable>
                 </View>
               ))}
             </View>
 
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 26 }}>
               {(['users', 'codes'] as const).map((t) => (
-                <Pressable key={t} onPress={() => setTab(t)} style={{ paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, backgroundColor: tab === t ? '#7c9cff' : 'rgba(255,255,255,.1)' }}>
-                  <Text style={{ color: tab === t ? '#0a0f2c' : W, fontWeight: '800', fontSize: 13 }}>{t === 'users' ? 'Users (' + users.length + ')' : 'Codes (' + codes.length + ')'}</Text>
+                <Pressable key={t} onPress={() => setTab(t)} style={{ paddingVertical: 8, paddingHorizontal: 16, borderRadius: 10, backgroundColor: tab === t ? GOLD : 'rgba(255,255,255,.07)' }}>
+                  <Text style={{ color: tab === t ? '#0b1512' : W, fontWeight: '800', fontSize: 13 }}>{t === 'users' ? 'Users (' + users.length + ')' : 'Codes (' + codes.length + ')'}</Text>
                 </Pressable>
               ))}
             </View>
             {tab === 'users' ? <View style={{ marginTop: 12 }}><Inp value={q} onChangeText={setQ} placeholder="Search by name or email" autoCapitalize="none" /></View> : null}
             {tab === 'users' ? users.filter((u) => !q.trim() || (u.email + ' ' + (u.name || '')).toLowerCase().includes(q.trim().toLowerCase())).map((u) => (
-              <Pressable key={u.id} onPress={() => { setOpen(open === u.id ? '' : u.id); setAsk(''); }} style={{ marginTop: 10, padding: 12, borderRadius: 18, backgroundColor: '#2f2e6e', borderWidth: 1, borderColor: open === u.id ? 'rgba(143,233,226,.5)' : 'rgba(255,255,255,.14)' }}>
+              <Pressable key={u.id} onPress={() => { setOpen(open === u.id ? '' : u.id); setAsk(''); }} style={{ marginTop: 10, padding: 12, borderRadius: 18, backgroundColor: CARD, borderWidth: 1, borderColor: open === u.id ? 'rgba(245,199,107,.55)' : 'rgba(255,255,255,.09)' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <LinearGradient colors={GR} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: 18, fontWeight: '800' }}>{initial(u)}</Text></LinearGradient>
+                  <LinearGradient colors={GR} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#0b1512', fontSize: 18, fontWeight: '800' }}>{initial(u)}</Text></LinearGradient>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Text style={{ flex: 1, color: W, fontWeight: '700' }} numberOfLines={1}>{u.name || u.email}</Text>
@@ -147,10 +172,10 @@ export default function Admin() {
                 ) : null}
               </Pressable>
             )) : codes.map((c) => (
-              <View key={c.code} style={{ marginTop: 10, padding: 12, borderRadius: 16, backgroundColor: '#2c2b66', borderWidth: 1, borderColor: 'rgba(255,255,255,.12)' }}>
+              <View key={c.code} style={{ marginTop: 10, padding: 12, borderRadius: 16, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text selectable style={{ flex: 1, color: W, fontWeight: '800', letterSpacing: 1 }}>{c.code}</Text>
-                  {c.redeemed_at ? <Text style={{ color: dim, fontSize: 11.5, fontWeight: '800' }}>USED</Text> : <Pressable onPress={() => send(c.code)} hitSlop={8}><Text style={{ color: '#8fe9e2', fontWeight: '800' }}>Send</Text></Pressable>}
+                  {c.redeemed_at ? <Text style={{ color: dim, fontSize: 11.5, fontWeight: '800' }}>USED</Text> : <Pressable onPress={() => send(c.code)} hitSlop={8}><Text style={{ color: GOLD, fontWeight: '800' }}>Send</Text></Pressable>}
                 </View>
                 <Text style={{ color: dim, fontSize: 12, marginTop: 2 }}>{(c.note ? c.note + '  ·  ' : '') + (c.free ? 'Free  ·  ' : c.price != null ? rm(c.price) + (c.method ? ' ' + c.method : '') + '  ·  ' : '') + (c.redeemed_at ? 'Used by ' + c.used_by + ' on ' + day(c.redeemed_at) : 'Made ' + day(c.created_at))}</Text>
               </View>

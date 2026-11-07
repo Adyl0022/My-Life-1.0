@@ -114,13 +114,13 @@ function Wave({ delay }: { delay: number }) {
   useEffect(() => { const a = Animated.loop(Animated.sequence([Animated.delay(delay), Animated.timing(t, { toValue: 1, duration: 3200, easing: Easing.out(Easing.quad), useNativeDriver: true }), Animated.timing(t, { toValue: 0, duration: 0, useNativeDriver: true })])); a.start(); return () => a.stop(); }, []);
   return <Animated.View pointerEvents="none" style={{ position: 'absolute', width: 108, height: 108, borderRadius: 34, borderWidth: 1.5, borderColor: 'rgba(143,233,226,.7)', opacity: t.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.6, 0] }), transform: [{ scale: t.interpolate({ inputRange: [0, 1], outputRange: [1, 1.7] }) }] }} />;
 }
-export function Logo({ rings = true }: { rings?: boolean }) {
+export function Logo({ waves = true }: { waves?: boolean }) {
   const ring = useSpin(6000); const inner = useSpin(9000); const inner2 = useSpin(13000, true); const orbit = useSpin(7000); const orbit2 = useSpin(11000, true);
   const pulse = useRef(new Animated.Value(0)).current;
   useEffect(() => { const a = Animated.loop(Animated.sequence([Animated.timing(pulse, { toValue: 1, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }), Animated.timing(pulse, { toValue: 0, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true })])); a.start(); return () => a.stop(); }, []);
   return (
     <View style={{ width: 170, height: 170, alignItems: 'center', justifyContent: 'center' }}>
-      {rings ? <><Wave delay={0} /><Wave delay={1600} /></> : null}
+      {waves ? <><Wave delay={0} /><Wave delay={1600} /></> : null}
       <Animated.View pointerEvents="none" style={{ position: 'absolute', width: 150, height: 150, borderRadius: 75, opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.08] }) }] }}>
         <Blob size={150} color="rgba(138,123,255,0.55)" />
       </Animated.View>
@@ -131,9 +131,9 @@ export function Logo({ rings = true }: { rings?: boolean }) {
         <View style={{ position: 'absolute', left: 83, top: 160, width: 5, height: 5, borderRadius: 3, backgroundColor: '#ffd593', shadowColor: '#ffc46b', shadowOpacity: 1, shadowRadius: 7, shadowOffset: { width: 0, height: 0 } }} />
       </Animated.View>
       <View style={{ width: 112, height: 112, borderRadius: 35, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
-        {rings ? <Animated.View style={{ position: 'absolute', width: 220, height: 220, transform: [{ rotate: ring }] }}>
+        <Animated.View style={{ position: 'absolute', width: 220, height: 220, transform: [{ rotate: ring }] }}>
           <LinearGradient colors={['rgba(143,233,226,0)', '#8fe9e2', '#b794ff', '#ff8fe0', 'rgba(255,143,224,0)']} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ flex: 1 }} />
-        </Animated.View> : null}
+        </Animated.View>
         <View style={{ width: 106, height: 106, borderRadius: 32, overflow: 'hidden', backgroundColor: '#0a0f2c' }}>
           <LinearGradient colors={['#2a2a8f', '#15184f', '#0e2e4d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, width: 106, height: 106 }} />
           <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: 106, height: 106, alignItems: 'center', justifyContent: 'center' }}>

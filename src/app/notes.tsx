@@ -99,6 +99,17 @@ export default function Notes() {
     const base = m ? t.slice(0, ls) + t.slice(ls + m[0].length) : t; const cut = m ? m[0].length : 0;
     put(base.slice(0, ls) + mk + base.slice(ls), Math.max(ls, p - cut) + mk.length);
   };
+  // Tap on a checklist box: the caret lands at the start of that line, so toggle the box (no need to measure wrapped lines).
+  const tp = useRef({ x: 0, y: 0, t: 0, lx: 99 });
+  const tapStart = (e: any) => { const n = e.nativeEvent; tp.current = { x: n.pageX, y: n.pageY, t: Date.now(), lx: n.locationX }; };
+  const tapEnd = (e: any) => {
+    const n = e.nativeEvent; const d = tp.current;
+    if (Math.abs(n.pageX - d.x) > 8 || Math.abs(n.pageY - d.y) > 8 || Date.now() - d.t > 350 || d.lx > 24) return;
+    setTimeout(() => {
+      const { t, p, ls } = lineAt(); if (!/^[☐☑]/.test(t.slice(ls)) || p - ls > 1) return;
+      put(t.slice(0, ls) + (t[ls] === '☑' ? '☐' : '☑') + t.slice(ls + 1), ls + 2);
+    }, 90);
+  };
   const stamp = () => { if (!draft) return; const d = new Date(); const x = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); const t = draft.s; const p = Math.min(cur.current.s, t.length); put(t.slice(0, p) + x + t.slice(p), p + x.length); };
   const words = draft ? (draft.t + ' ' + draft.s).trim().split(/\s+/).filter(Boolean).length : 0;
 
@@ -206,7 +217,7 @@ export default function Notes() {
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} />
                   <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 12 }}>{words} {words === 1 ? 'word' : 'words'}</Text>
                 </View>
-                <TextInput ref={inp} multiline onFocus={() => { foc.current = true; }} onBlur={() => { foc.current = false; }} value={draft.s} onChangeText={onText} selection={selOv ?? undefined} onSelectionChange={(e: any) => { const sl = e.nativeEvent.selection; cur.current = { s: sl.start, e: sl.end }; }} placeholder="Start writing..." placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, marginTop: 14, color: W, fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
+                <TextInput ref={inp} multiline onTouchStart={tapStart} onTouchEnd={tapEnd} onFocus={() => { foc.current = true; }} onBlur={() => { foc.current = false; }} value={draft.s} onChangeText={onText} selection={selOv ?? undefined} onSelectionChange={(e: any) => { const sl = e.nativeEvent.selection; cur.current = { s: sl.start, e: sl.end }; }} placeholder="Start writing..." placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, marginTop: 14, color: W, fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
                </View>
               </View>
               {confirmDel && (

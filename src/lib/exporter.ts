@@ -222,7 +222,7 @@ export const PDF_CSS = '*{-webkit-print-color-adjust:exact;print-color-adjust:ex
   + '.cs{display:flex;flex-wrap:wrap;gap:12px}.c{box-sizing:border-box;width:calc(50% - 6px);border:1px solid #e3e6f5;border-radius:14px;padding:12px 14px;page-break-inside:avoid}'
   + '.blk{margin-top:22px;page-break-inside:avoid}table{border-collapse:collapse;width:100%;font-size:11px}th{background:#3b4ea8;color:#fff;text-align:left;padding:6px 7px}th:first-child{border-radius:8px 0 0 0}th:last-child{border-radius:0 8px 0 0}td{padding:5px 7px;border-bottom:1px solid #e6e9f5}tr:nth-child(even) td{background:#f6f7fd}'
   + '.f{margin-top:30px;border-top:1px solid #e3e6f5;padding-top:10px;color:#889;font-size:10.5px;text-align:center;page-break-inside:avoid}.f b{display:block;color:#3b4ea8;font-size:13px;letter-spacing:.2px;margin-bottom:3px}.f span{display:block;line-height:1.6}';
-export const pdfFooter = (name?: string) => '<div class="f"><b>My Life 1.0</b><span>' + (name ? 'Prepared for ' + esc(name) + '. ' : '') + 'Made privately on this phone and never uploaded.</span><span>Keep this file safe, it may contain personal details.</span></div>';
+export const pdfFooter = (name?: string) => '<div class="f"><b>My Life 1.0</b><span>' + (name ? 'Prepared for ' + esc(name) + '. ' : '') + 'Made privately on this phone.</span><span>Keep this file safe, it may contain personal details.</span></div>';
 export { esc as escHtml, PAL, fmtN, chartSvg };
 export function toHtml(r: Report) {
   const tcol = ['#eef1ff', '#e9fbf4', '#fff4e3', '#ffeef3', '#f3edff', '#e8fbfa'];

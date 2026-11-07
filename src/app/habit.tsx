@@ -386,7 +386,7 @@ export default function Habit() {
           <WeightGoal h={h} setH={setH} />
           <DailyNeeds h={h} setH={setH} />
           </>)}
-          <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, textAlign: 'center', marginTop: 14 }}>Your habits are saved on this device.</Text>
+          <Text style={{ color: 'rgba(255,255,255,.55)', fontSize: 11.5, textAlign: 'center', marginTop: 14 }}>Your habits are saved on this phone and backed up to your account.</Text>
         </ScrollView>
       </SafeAreaView>
     </View>

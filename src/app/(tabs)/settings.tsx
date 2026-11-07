@@ -253,7 +253,7 @@ export default function Settings() {
             <View style={{ gap: 12, marginTop: 14 }}>
               <Glass style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <Dot c="rgba(94,231,181,.4)" />
-                <View style={{ flex: 1 }}><Ttl t="Your data stays on your phone" /><Lbl t={sess ? 'Saved on this phone first, and backed up to ' + (sess.user.email || 'your account') + '.' : 'Stored on this phone.'} /></View>
+                <View style={{ flex: 1 }}><Ttl t="Saved on your phone, backed up online" /><Lbl t={sess ? 'Saved on this phone first, then backed up automatically to ' + (sess.user.email || 'your account') + '.' : 'Stored on this phone.'} /></View>
               </Glass>
               <Glass style={{ paddingHorizontal: 16, paddingVertical: 6 }}>
                 <Row k="pw" t="App lock" sub={lk.on ? 'On. Asks for ' + (lk.bio ? 'fingerprint or PIN' : 'your PIN') : 'Ask for a PIN or fingerprint to open the app'} last={!lk.on} onPress={() => setLkd(lk.on ? 'off' : 'set')} right={<Sw on={lk.on} />} />
@@ -340,7 +340,7 @@ export default function Settings() {
               </Glass>
               <Glass style={{ padding: 16 }}>
                 <Ttl t="Privacy at a glance" />
-                {['Your data stays yours. It is stored only on your phone.', 'Encrypted on your phone, with an optional PIN or fingerprint lock.', 'No ads, no tracking, never sold or shared.'].map((t) => (
+                {['Your data stays yours. It lives on your phone and is backed up to your own account.', 'Encrypted on your phone, with an optional PIN or fingerprint lock.', 'No ads, no tracking, never sold or shared.'].map((t) => (
                   <View key={t} style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}><Text style={{ color: '#5ee7df', fontSize: 13 }}>✓</Text><Text style={{ flex: 1, color: 'rgba(255,255,255,.82)', fontSize: 12.5, lineHeight: 18 }}>{t}</Text></View>
                 ))}
               </Glass>

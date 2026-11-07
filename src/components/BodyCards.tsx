@@ -191,7 +191,7 @@ export function DailyNeeds({ h, setH }: { h: HData; setH: (v: HData) => void }) 
         </View>
       ) : null}
       {body}
-      <Text style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, marginTop: 10, lineHeight: 15 }}>A rough estimate from a standard formula, not medical advice. Your age and sex stay on this device.</Text>
+      <Text style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, marginTop: 10, lineHeight: 15 }}>A rough estimate from a standard formula, not medical advice. Your age and sex are only used for this estimate.</Text>
     </Glass>
   );
 }

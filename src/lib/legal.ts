@@ -2,7 +2,7 @@ export type Sec = { h: string; p: string };
 export const WHATS_NEW: Sec[] = [
   { h: 'Version 1.0.0', p: 'The first release of My Life, with everything you need for your day in one app.' },
   { h: 'What you can do', p: '•  Plan tasks and events\n•  Prayer times, Quran and zikir\n•  Track money in Finance\n•  Keep motorcycle records\n•  Log habits, sleep and steps\n•  Ask the Assistant or use Search\n•  See progress in Stats and Insights' },
-  { h: 'Private by design', p: 'Your data stays on your phone and is encrypted there. You can add an optional PIN or fingerprint lock.' },
+  { h: 'Private by design', p: 'Your data lives on your phone and is encrypted there. When you are signed in, a private copy is backed up to your own account so you can use it on other devices. You can add an optional PIN or fingerprint lock.' },
   { h: 'Reminders', p: 'Alerts for prayer times, Planner events and daily zikir. Quiet hours mute them from 12 am to 5 am.' },
   { h: 'Your data, your control', p: 'Export your data to Excel, PDF or CSV, and back it up or restore it from a file whenever you like.' },
   { h: 'Made to be calm', p: 'A glass look that changes with the time of day, and no ads.' },

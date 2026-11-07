@@ -20,22 +20,26 @@ type C = { code: string; note?: string; price?: number | null; method?: string |
 const METHODS = ['DuitNow', 'Bank', 'Cash', 'Other'];
 const rm = (n: number) => 'RM ' + (Number(n) || 0).toLocaleString('en-MY', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const Pill = ({ t, on, onPress, c }: { t: string; on: boolean; onPress: () => void; c?: string }) => (
-  <Pressable onPress={onPress} style={{ paddingVertical: 7, paddingHorizontal: 13, borderRadius: 10, borderWidth: 1, borderColor: on ? 'transparent' : 'rgba(255,255,255,.18)', backgroundColor: on ? (c || GOLD) : 'rgba(255,255,255,.05)' }}>
+  <Pressable onPress={onPress} style={{ paddingVertical: 7, paddingHorizontal: 13, borderRadius: 10, borderWidth: 1, borderColor: on ? 'transparent' : 'rgba(255,255,255,.18)', backgroundColor: on ? (c || GOLD) : CARD, ...RAISED, elevation: on ? 0 : 3 }}>
     <Text style={{ color: on ? '#0b1512' : W, fontSize: 12.5, fontWeight: '800' }}>{t}</Text>
   </Pressable>
 );
 
-// Fine blueprint grid: nothing like the stars used in the rest of the app.
+// Wallpaper of the admin page. Different from the rest of the app on purpose (no stars, no Islamic pattern).
 function Grid() {
   return (
     <Svg pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} width="100%" height="100%">
-      <Defs><Pattern id="g" width="26" height="26" patternUnits="userSpaceOnUse"><Path d="M26 0H0V26" fill="none" stroke="rgba(255,255,255,0.055)" strokeWidth="1" /></Pattern></Defs>
-      <Rect width="100%" height="100%" fill="url(#g)" />
+      <Defs><Pattern id="s" width="18" height="18" patternUnits="userSpaceOnUse"><Path d="M-5 5L5 -5M0 18L18 0M13 23L23 13" stroke="rgba(245,199,107,0.09)" strokeWidth="1.2" /></Pattern></Defs>
+      <Rect width="100%" height="100%" fill="url(#s)" />
     </Svg>
   );
 }
+// Raised look: lighter top edge, darker bottom edge, soft shadow and a little shine.
+const RAISED = { borderTopColor: 'rgba(255,255,255,.22)', borderBottomColor: 'rgba(0,0,0,.6)', borderBottomWidth: 2.5, elevation: 5, shadowColor: '#000', shadowOpacity: 0.45, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } } as any;
+const Shine = ({ h = 54 }: { h?: number }) => <LinearGradient colors={['rgba(255,255,255,.09)', 'rgba(255,255,255,0)']} pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: h }} />;
 const Mini = ({ l, v, c, ic }: { l: string; v: number | string; c: string; ic: string }) => (
-  <View style={{ flex: 1, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)', alignItems: 'flex-start' }}>
+  <View style={{ flex: 1, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)', alignItems: 'flex-start', overflow: 'hidden', ...RAISED }}>
+    <Shine h={40} />
     <View style={{ width: 28, height: 28, borderRadius: 9, backgroundColor: c + '2e', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 14 }}>{ic}</Text></View>
     <Text style={{ color: W, fontSize: 22, fontWeight: '800', marginTop: 8 }}>{v}</Text>
     <Text style={{ color: dim, fontSize: 11, marginTop: 1 }}>{l}</Text>
@@ -83,7 +87,7 @@ export default function Admin() {
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={busy} onRefresh={load} tintColor="#fff" />} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 44 + TOP, paddingBottom: 80 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            <Pressable onPress={() => router.back()} accessibilityLabel="Back"><View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: GOLD, fontSize: 24, marginTop: -3 }}>‹</Text></View></Pressable>
+            <Pressable onPress={() => router.back()} accessibilityLabel="Back"><View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, alignItems: 'center', justifyContent: 'center', ...RAISED }}><Text style={{ color: GOLD, fontSize: 24, marginTop: -3 }}>‹</Text></View></Pressable>
             <View style={{ flex: 1 }}>
               <Text style={{ color: W, fontSize: 26, fontWeight: '800', letterSpacing: -0.4 }}>Admin</Text>
               <Text style={{ color: GOLD, fontSize: 10.5, fontWeight: '800', letterSpacing: 2.4, marginTop: 2 }}>CONTROL ROOM</Text>
@@ -93,7 +97,8 @@ export default function Admin() {
           {!isAdmin ? <Text style={{ color: dim, marginTop: 24 }}>This page is only for the app owner.</Text> : <>
             {err ? <Text style={{ color: '#ffc2cc', marginTop: 14 }}>{err}</Text> : null}
             {ov ? <View style={{ marginTop: 28 }}>
-              <View style={{ borderRadius: 22, padding: 18, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, overflow: 'hidden' }}>
+              <View style={{ borderRadius: 22, padding: 18, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, overflow: 'hidden', ...RAISED }}>
+                <Shine h={70} />
                 <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: GOLD }} />
                 <Text style={{ color: GOLD, fontSize: 11, fontWeight: '800', letterSpacing: 2 }}>TOTAL INCOME</Text>
                 <Text style={{ color: W, fontSize: 38, fontWeight: '800', letterSpacing: -1, marginTop: 4 }}>{rm(ov.income)}</Text>
@@ -102,7 +107,8 @@ export default function Admin() {
                   <View style={{ flex: 1, borderRadius: 12, padding: 10, backgroundColor: 'rgba(94,231,181,.1)' }}><Text style={{ color: dim, fontSize: 11 }}>Sold this month</Text><Text style={{ color: EM, fontSize: 17, fontWeight: '800', marginTop: 1 }}>{ov.sold_month}</Text></View>
                 </View>
               </View>
-              <View style={{ borderRadius: 18, padding: 14, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)', marginTop: 10 }}>
+              <View style={{ borderRadius: 18, padding: 14, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)', marginTop: 10, overflow: 'hidden', ...RAISED }}>
+                <Shine h={44} />
                 <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                   <Text style={{ color: W, fontSize: 22, fontWeight: '800' }}>{ov.active}</Text>
                   <Text style={{ color: dim, fontSize: 13 }}>{' of ' + ov.users + ' users activated'}</Text>
@@ -116,7 +122,8 @@ export default function Admin() {
               </View>
             </View> : null}
 
-            <View style={{ marginTop: 22, borderRadius: 22, padding: 18, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, overflow: 'hidden' }}>
+            <View style={{ marginTop: 22, borderRadius: 22, padding: 18, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, overflow: 'hidden', ...RAISED }}>
+              <Shine h={80} />
               <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: EM }} />
               <Text style={{ color: W, fontSize: 18, fontWeight: '800' }}>Make activation codes</Text>
               <Text style={{ color: dim, fontSize: 12, marginTop: 3, marginBottom: 14 }}>One code works for one person, once, for life.</Text>
@@ -142,14 +149,15 @@ export default function Admin() {
 
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 26 }}>
               {(['users', 'codes'] as const).map((t) => (
-                <Pressable key={t} onPress={() => setTab(t)} style={{ paddingVertical: 8, paddingHorizontal: 16, borderRadius: 10, backgroundColor: tab === t ? GOLD : 'rgba(255,255,255,.07)' }}>
+                <Pressable key={t} onPress={() => setTab(t)} style={{ paddingVertical: 8, paddingHorizontal: 16, borderRadius: 10, backgroundColor: tab === t ? GOLD : CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.1)', ...RAISED }}>
                   <Text style={{ color: tab === t ? '#0b1512' : W, fontWeight: '800', fontSize: 13 }}>{t === 'users' ? 'Users (' + users.length + ')' : 'Codes (' + codes.length + ')'}</Text>
                 </Pressable>
               ))}
             </View>
             {tab === 'users' ? <View style={{ marginTop: 12 }}><Inp value={q} onChangeText={setQ} placeholder="Search by name or email" autoCapitalize="none" /></View> : null}
             {tab === 'users' ? users.filter((u) => !q.trim() || (u.email + ' ' + (u.name || '')).toLowerCase().includes(q.trim().toLowerCase())).map((u) => (
-              <Pressable key={u.id} onPress={() => { setOpen(open === u.id ? '' : u.id); setAsk(''); }} style={{ marginTop: 10, padding: 12, borderRadius: 18, backgroundColor: CARD, borderWidth: 1, borderColor: open === u.id ? 'rgba(245,199,107,.55)' : 'rgba(255,255,255,.09)' }}>
+              <Pressable key={u.id} onPress={() => { setOpen(open === u.id ? '' : u.id); setAsk(''); }} style={{ marginTop: 10, padding: 12, borderRadius: 18, backgroundColor: CARD, borderWidth: 1, borderColor: open === u.id ? 'rgba(245,199,107,.55)' : 'rgba(255,255,255,.09)', overflow: 'hidden', ...RAISED }}>
+                <Shine h={36} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <LinearGradient colors={GR} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#0b1512', fontSize: 18, fontWeight: '800' }}>{initial(u)}</Text></LinearGradient>
                   <View style={{ flex: 1 }}>
@@ -172,7 +180,8 @@ export default function Admin() {
                 ) : null}
               </Pressable>
             )) : codes.map((c) => (
-              <View key={c.code} style={{ marginTop: 10, padding: 12, borderRadius: 16, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)' }}>
+              <View key={c.code} style={{ marginTop: 10, padding: 12, borderRadius: 16, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)', overflow: 'hidden', ...RAISED }}>
+                <Shine h={36} />
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text selectable style={{ flex: 1, color: W, fontWeight: '800', letterSpacing: 1 }}>{c.code}</Text>
                   {c.redeemed_at ? <Text style={{ color: dim, fontSize: 11.5, fontWeight: '800' }}>USED</Text> : <Pressable onPress={() => send(c.code)} hitSlop={8}><Text style={{ color: GOLD, fontWeight: '800' }}>Send</Text></Pressable>}

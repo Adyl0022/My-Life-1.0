@@ -13,6 +13,7 @@ import { Glass } from '../../components/Glass';
 import { Blob } from '../../components/Bg';
 import { SettingsBg } from '../../components/SettingsBg';
 import { useStored, clearMine, DEFAULT_NAME } from '../../lib/store';
+import { Logo } from '../../components/AuthScreen';
 import { useLicense } from '../../lib/license';
 import { useSession, signOut, checkPassword, setNewPassword, deleteAccount } from '../../lib/auth';
 import { syncNow, syncState, wipeCloud } from '../../lib/sync';
@@ -295,7 +296,7 @@ export default function Settings() {
           {tab === 2 && (
             <View style={{ gap: 12, marginTop: 14 }}>
               <View style={{ alignItems: 'center', paddingVertical: 8 }}>
-                <Float><LinearGradient colors={['#7c9cff', '#b794ff', '#5ee7df']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0.2 }} end={{ x: 1, y: 0.8 }} style={{ width: 72, height: 72, borderRadius: 23, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)', boxShadow: '0 14px 36px rgba(124,156,255,.5)' } as any}><Svg width={36} height={36} viewBox="0 0 30 30"><Path d="M5 24V6l10 12L25 6v18" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" /></Svg></LinearGradient></Float>
+                <View style={{ width: 110, height: 110, alignItems: 'center', justifyContent: 'center' }}><View style={{ width: 170, height: 170, transform: [{ scale: 0.62 }] }}><Logo /></View></View>
                 <Text style={{ color: W, fontSize: 20, fontWeight: '800', marginTop: 10 }}>My Life 1.0</Text>
                 <Text style={{ color: '#8fe9e2', fontSize: 11, fontWeight: '700', letterSpacing: 1.4, marginTop: 3 }}>YOUR LIFE, ALL IN ONE PLACE</Text>
                 <Pressable onPress={checkUpd} style={{ marginTop: 12, paddingVertical: 8, paddingHorizontal: 16, minWidth: 210, alignItems: 'center', borderRadius: 999, backgroundColor: upd === 'latest' || upd === 'web' ? 'rgba(94,231,181,.25)' : upd === 'new' ? 'rgba(124,156,255,.4)' : upd === 'err' ? 'rgba(255,196,107,.25)' : 'rgba(255,255,255,.12)' }}><Text style={{ color: W, fontSize: 12.5, fontWeight: '700' }}>{upd === 'busy' ? 'Checking...' : upd === 'latest' ? "You're up to date" : upd === 'web' ? 'The web version is always the latest' : upd === 'new' ? 'A new version is available' : upd === 'err' ? 'Could not check. Tap to try again' : 'Check for updates'}</Text></Pressable>

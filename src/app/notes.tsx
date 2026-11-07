@@ -189,6 +189,20 @@ export default function Notes() {
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} />
                   <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 12 }}>{words} {words === 1 ? 'word' : 'words'}</Text>
                 </View>
+                <View style={{ marginTop: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {[['☐', 'Add checklist item', () => addLine('☐ ')], ['•', 'Add bullet', () => addLine('• ')], ['1.', 'Add numbered item', numLine], ['Date', 'Insert date and time', stamp]].map(([t, l, f]: any) => (
+                  <Pressable key={l} accessibilityLabel={l} onPress={f} style={{ minWidth: 36, height: 36, paddingHorizontal: t === 'Date' ? 8 : 0, borderRadius: 13, backgroundColor: 'rgba(255,255,255,.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,.12)', borderTopColor: 'rgba(255,255,255,.5)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: t.length > 1 ? 12.5 : 18, fontWeight: t.length > 1 ? '700' : '400' }}>{t}</Text></Pressable>
+                ))}
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>
+                  {COL.map((c, i) => (
+                    <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: c }}>
+                      <LinearGradient colors={['rgba(255,255,255,.55)', 'rgba(255,255,255,.08)', 'rgba(0,0,0,.18)']} locations={[0, 0.5, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1, borderRadius: 14, borderWidth: draft.c === i ? 2.5 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.3)', borderTopColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.7)' }} />
+                    </Pressable>
+                  ))}
+                </View>
+                </View>
                 <View onLayout={(e) => { contY.current = e.nativeEvent.layout.y; }} style={{ marginTop: 14, minHeight: 280 }}>
                   {(draft.s ? draft.s.split('\n') : ['']).map((ln, i, all) => {
                     const ck = /^[☐☑] /.test(ln); const on = ln.startsWith('☑'); const pre = ck ? ln.slice(0, 2) : ''; const rest = ck ? ln.slice(2) : ln;
@@ -203,21 +217,6 @@ export default function Notes() {
                 </View>
                </View>
               </ScrollView>
-              <View style={{ marginHorizontal: 16, marginBottom: 12, borderRadius: 26, backgroundColor: 'rgba(30,36,84,.55)', shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 10 }}>
-              <LinearGradient colors={['rgba(255,255,255,.26)', 'rgba(255,255,255,.08)', 'rgba(255,255,255,.14)']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 26, paddingHorizontal: 12, paddingVertical: 12, gap: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,.14)', borderTopColor: 'rgba(255,255,255,.5)' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {[['☐', 'Add checklist item', () => addLine('☐ ')], ['•', 'Add bullet', () => addLine('• ')], ['1.', 'Add numbered item', numLine], ['Date', 'Insert date and time', stamp]].map(([t, l, f]: any) => (
-                  <Pressable key={l} accessibilityLabel={l} onPress={f} style={{ minWidth: 36, height: 36, paddingHorizontal: t === 'Date' ? 8 : 0, borderRadius: 13, backgroundColor: 'rgba(255,255,255,.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,.12)', borderTopColor: 'rgba(255,255,255,.5)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: t.length > 1 ? 12.5 : 18, fontWeight: t.length > 1 ? '700' : '400' }}>{t}</Text></Pressable>
-                ))}
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 6 }}>
-                  {COL.map((c, i) => (
-                    <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c }}>
-                      <LinearGradient colors={['rgba(255,255,255,.55)', 'rgba(255,255,255,.08)', 'rgba(0,0,0,.18)']} locations={[0, 0.5, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1, borderRadius: 15, borderWidth: draft.c === i ? 2.5 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.3)', borderTopColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.7)' }} />
-                    </Pressable>
-                  ))}
-                </View>
-              </LinearGradient></View>
               {confirmDel && (
                 <Sheet onClose={() => setConfirmDel(false)}>
                   <View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>

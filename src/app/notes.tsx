@@ -59,7 +59,7 @@ export default function Notes() {
     closeEd(); say('Note saved');
   };
   const del = (id: number) => { setData({ ...data, notes: notes.filter((x) => x.id !== id) }); };
-  const inp = useRef<any>(null); const cur = useRef({ s: 0, e: 0 });
+  const foc = useRef(false); const inp = useRef<any>(null); const cur = useRef({ s: 0, e: 0 });
   const [selOv, setSelOv] = useState<{ start: number; end: number } | null>(null);
   const [kb, setKb] = useState(0);
   useEffect(() => {
@@ -70,7 +70,7 @@ export default function Notes() {
   }, []);
   // One editor for the whole note (like Apple Notes / Keep): focus never moves, so the keyboard never blinks.
   const PRE = /^(☐|☑) |^• |^\d+\. /;
-  const put = (ns: string, caret: number) => { upd({ s: ns }); cur.current = { s: caret, e: caret }; setSelOv({ start: caret, end: caret }); setTimeout(() => setSelOv(null), 350); inp.current?.focus?.(); };
+  const put = (ns: string, caret: number) => { upd({ s: ns }); cur.current = { s: caret, e: caret }; setSelOv({ start: caret, end: caret }); setTimeout(() => setSelOv(null), 350); if (!foc.current) inp.current?.focus?.(); };
   const onText = (v: string) => {
     const old = draft?.s ?? '';
     let i = 0; while (i < old.length && i < v.length && old[i] === v[i]) i++;
@@ -206,7 +206,7 @@ export default function Notes() {
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} />
                   <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 12 }}>{words} {words === 1 ? 'word' : 'words'}</Text>
                 </View>
-                <TextInput ref={inp} multiline value={draft.s} onChangeText={onText} selection={selOv ?? undefined} onSelectionChange={(e: any) => { const sl = e.nativeEvent.selection; cur.current = { s: sl.start, e: sl.end }; }} placeholder="Start writing..." placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, marginTop: 14, color: W, fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
+                <TextInput ref={inp} multiline onFocus={() => { foc.current = true; }} onBlur={() => { foc.current = false; }} value={draft.s} onChangeText={onText} selection={selOv ?? undefined} onSelectionChange={(e: any) => { const sl = e.nativeEvent.selection; cur.current = { s: sl.start, e: sl.end }; }} placeholder="Start writing..." placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, marginTop: 14, color: W, fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
                </View>
               </View>
               {confirmDel && (

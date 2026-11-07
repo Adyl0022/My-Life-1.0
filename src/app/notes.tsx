@@ -72,7 +72,7 @@ export default function Notes() {
     let ht: any = null; let shown = false;
     // Moving to the next line briefly hides and shows the keyboard on some phones. Ignore that blink so the screen does not shake.
     const a = Keyboard.addListener('keyboardDidShow', (e: any) => { if (ht) { clearTimeout(ht); ht = null; } setKb((k) => { if (k === e.endCoordinates.height) return k; LayoutAnimation.configureNext({ duration: 140, update: { type: 'easeInEaseOut' } }); return e.endCoordinates.height; }); if (!shown) { shown = true; ensureRef.current(focI.current); } });
-    const b = Keyboard.addListener('keyboardDidHide', () => { if (ht) clearTimeout(ht); ht = setTimeout(() => { LayoutAnimation.configureNext({ duration: 140, update: { type: 'easeInEaseOut' } }); setKb(0); ht = null; shown = false; }, 40); });
+    const b = Keyboard.addListener('keyboardDidHide', () => { if (ht) clearTimeout(ht); ht = setTimeout(() => { LayoutAnimation.configureNext({ duration: 140, update: { type: 'easeInEaseOut' } }); setKb(0); ht = null; shown = false; }, 220); });
     return () => { a.remove(); b.remove(); if (ht) clearTimeout(ht); };
   }, []);
   const [fo, setFo] = useState(-1);
@@ -92,7 +92,7 @@ export default function Notes() {
   const lineKey = (i: number, pre: string, rest: string, e: any) => {
     if (e?.nativeEvent?.key !== 'Backspace' || rest !== '') return;
     const L = (draft?.s ?? '').split('\n');
-    if (pre) { L[i] = ''; setLines(L); setFo(i); } else if (i > 0) { L.splice(i, 1); setLines(L); setFo(i - 1); }
+    if (pre) { L[i] = ''; setLines(L); setFo(i); } else if (i > 0) { refs.current[i - 1]?.focus?.(); L.splice(i, 1); setLines(L); setFo(i - 1); }
   };
   const toggleLine = (i: number) => { const L = (draft?.s ?? '').split('\n'); L[i] = (L[i].startsWith('☑') ? '☐' : '☑') + L[i].slice(1); setLines(L); };
   const numLine = () => { if (!draft) return; const m = draft.s.split('\n').map((l) => l.match(/^(\d+)\.\s/)).filter(Boolean) as RegExpMatchArray[]; addLine((m.length ? +m[m.length - 1][1] + 1 : 1) + '. '); };

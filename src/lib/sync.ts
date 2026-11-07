@@ -52,6 +52,10 @@ export async function syncNow(): Promise<boolean> {
     if (error) throw error;
     const remote = new Map<string, { v: any; t: number }>();
     (data || []).forEach((r: any) => { if (SYNC_KEYS.includes(r.key)) remote.set(r.key, { v: r.value, t: new Date(r.updated_at).getTime() }); });
+    if (!remote.has('ml_name') && (await getText('ml_name')) == null) {
+      const nm = (s.user.user_metadata as any)?.name;
+      if (typeof nm === 'string' && nm.trim()) await applyRemote('ml_name', nm.trim());
+    }
     const toPush: string[] = [];
     for (const k of SYNC_KEYS) {
       const r = remote.get(k); const lt = m[k] || 0;

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
-import { setItem } from './store';
 
 let cur: Session | null = null;
 let ready = false;
@@ -11,8 +10,6 @@ const emit = () => subs.forEach((f) => f());
 supabase.auth.getSession().then(({ data }) => { cur = data.session; ready = true; emit(); }).catch(() => { ready = true; emit(); });
 supabase.auth.onAuthStateChange((ev, s) => {
   cur = s; ready = true;
-  const nm = s?.user?.user_metadata?.name;
-  if (ev === 'SIGNED_IN' && typeof nm === 'string' && nm.trim()) setItem('ml_name', nm.trim());
   emit();
 });
 

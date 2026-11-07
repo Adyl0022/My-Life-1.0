@@ -6,10 +6,11 @@ import Svg, { Path, Circle, Rect, Defs, Pattern, Stop, RadialGradient as SRG } f
 import { GP, W } from './Ui';
 import { Blob } from './Bg';
 import { CodeBoxes } from './CodeBoxes';
+import { pwLevel, PW_TEXT } from '../lib/pwstrength';
 import { signIn, signUp, verifyCode, resendSignup, sendReset, setNewPassword } from '../lib/auth';
 
 type Mode = 'in' | 'up' | 'verify' | 'forgot' | 'reset';
-const OK = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const OK = /^[^\s@.]+(\.[^\s@.]+)*@([A-Za-z0-9-]+\.)+[A-Za-z]{2,}$/;
 export const TEAL = '#8fe9e2';
 
 const Ico = ({ n, c = 'rgba(255,255,255,.55)' }: { n: 'user' | 'mail' | 'lock' | 'key' | 'eye' | 'eyeoff'; c?: string }) => (
@@ -24,12 +25,12 @@ const Ico = ({ n, c = 'rgba(255,255,255,.55)' }: { n: 'user' | 'mail' | 'lock' |
 );
 
 // One input row: icon on the left, glowing border while typing, optional show/hide for passwords.
-export function Field({ icon, secret, ...p }: any) {
+export function Field({ icon, secret, bad, ...p }: any) {
   const [f, setF] = useState(false); const [show, setShow] = useState(false);
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, borderRadius: 15, paddingHorizontal: 14, marginBottom: 9, backgroundColor: f ? '#2c5a78' : '#2e2d6c', borderWidth: 1.2, borderColor: f ? 'rgba(143,233,226,.75)' : 'rgba(255,255,255,.13)', shadowColor: TEAL, shadowOpacity: f ? 0.55 : 0, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, borderRadius: 15, paddingHorizontal: 14, marginBottom: 9, backgroundColor: f ? '#2c5a78' : '#2e2d6c', borderWidth: 1.2, borderColor: bad ? 'rgba(255,107,129,.85)' : f ? 'rgba(143,233,226,.75)' : 'rgba(255,255,255,.13)', shadowColor: TEAL, shadowOpacity: f ? 0.55 : 0, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } }}>
       <Ico n={icon} c={f ? TEAL : undefined} />
-      <TextInput {...p} secureTextEntry={secret && !show} onFocus={() => setF(true)} onBlur={() => setF(false)} placeholderTextColor="rgba(255,255,255,.38)" underlineColorAndroid="transparent" importantForAutofill="no" selectionColor="#8fe9e2" maxFontSizeMultiplier={1.1}
+      <TextInput {...p} secureTextEntry={secret && !show} onFocus={() => setF(true)} onBlur={(e: any) => { setF(false); p.onBlur && p.onBlur(e); }} placeholderTextColor="rgba(255,255,255,.38)" underlineColorAndroid="transparent" importantForAutofill="no" selectionColor="#8fe9e2" maxFontSizeMultiplier={1.1}
         style={[{ flex: 1, minWidth: 0, backgroundColor: 'transparent', color: W, fontSize: 15, marginLeft: 11, paddingVertical: 0, outlineStyle: 'none' } as any, p.style]} />
       {secret ? <Pressable onPress={() => setShow(!show)} hitSlop={10}><Ico n={show ? 'eye' : 'eyeoff'} /></Pressable> : null}
     </View>
@@ -168,10 +169,22 @@ function Geo() {
 }
 export function Wallpaper() { return <Geo />; }
 
+function PwMeter({ pw }: { pw: string }) {
+  if (!pw) return null;
+  const lv = pwLevel(pw); const col = ['#ff7a8f', '#ffc46b', '#5ee7b5'][lv];
+  return (
+    <View style={{ marginTop: -2, marginBottom: 10 }}>
+      <View style={{ flexDirection: 'row', gap: 5 }}>{[0, 1, 2].map((i) => <View key={i} style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: i <= lv ? col : 'rgba(255,255,255,.14)' }} />)}</View>
+      <Text style={{ color: col, fontSize: 11.5, lineHeight: 16, marginTop: 5, fontWeight: '600' }}>{PW_TEXT[lv]}</Text>
+    </View>
+  );
+}
+
 export function AuthScreen() {
   const [mode, setMode] = useState<Mode>('in');
   const [name, setName] = useState(''); const [email, setEmail] = useState('');
   const [pw, setPw] = useState(''); const [pw2, setPw2] = useState(''); const [code, setCode] = useState('');
+  const [emailSeen, setEmailSeen] = useState(false);
   const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [info, setInfo] = useState('');
   // The logo stays pinned at the top; it hides while the keyboard is open so the form always has room.
   const [kb, setKb] = useState(false);
@@ -184,8 +197,9 @@ export function AuthScreen() {
   }, []);
   const enter = useRef(new Animated.Value(0)).current;
   useEffect(() => { enter.setValue(0); Animated.timing(enter, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(); }, [mode]);
-  const go = (m: Mode) => { setMode(m); setErr(''); setInfo(''); setCode(''); };
+  const go = (m: Mode) => { setEmailSeen(false); setMode(m); setErr(''); setInfo(''); setCode(''); };
   const run = async (f: () => Promise<void>) => { if (busy) return; setBusy(true); setErr(''); setInfo(''); try { await f(); } finally { setBusy(false); } };
+  const emailBad = email.trim().length > 0 && !OK.test(email.trim()) && (emailSeen || email.includes('@'));
   const needEmail = () => { if (!OK.test(email.trim())) { setErr('Enter a valid email address.'); return false; } return true; };
 
   const doIn = () => run(async () => {
@@ -261,11 +275,11 @@ export function AuthScreen() {
               <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 12.5, marginTop: 2, marginBottom: 12, lineHeight: 17 }}>{head[1]}</Text>
 
               {mode === 'up' ? <Field icon="user" value={name} onChangeText={setName} placeholder="Your name" autoCapitalize="words" autoComplete="name" maxLength={30} /> : null}
-              {mode !== 'verify' && mode !== 'reset' ? <Field icon="mail" value={email} onChangeText={setEmail} placeholder="Email address" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" /> : null}
+              {mode !== 'verify' && mode !== 'reset' ? <><Field icon="mail" bad={emailBad} value={email} onChangeText={setEmail} onBlur={() => setEmailSeen(true)} placeholder="Email address" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" />{emailBad ? <Text style={{ color: '#ff9aa9', fontSize: 11.5, marginTop: -4, marginBottom: 9 }}>That does not look like a real email address.</Text> : null}</> : null}
               {mode === 'in' ? <Field icon="lock" secret value={pw} onChangeText={setPw} placeholder="Password" autoCapitalize="none" autoCorrect={false} autoComplete="current-password" /> : null}
-              {mode === 'up' ? <><Field icon="lock" secret value={pw} onChangeText={setPw} placeholder="Password (8+ characters)" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /><Field icon="lock" secret value={pw2} onChangeText={setPw2} placeholder="Repeat password" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /></> : null}
+              {mode === 'up' ? <><Field icon="lock" secret value={pw} onChangeText={setPw} placeholder="Password (8+ characters)" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /><PwMeter pw={pw} /><Field icon="lock" secret value={pw2} onChangeText={setPw2} placeholder="Repeat password" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /></> : null}
               {mode === 'verify' || mode === 'reset' ? <CodeBoxes value={code} onChange={setCode} length={6} shake={err} /> : null}
-              {mode === 'reset' ? <><Field icon="lock" secret value={pw} onChangeText={setPw} placeholder="New password (8+ characters)" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /><Field icon="lock" secret value={pw2} onChangeText={setPw2} placeholder="Repeat new password" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /></> : null}
+              {mode === 'reset' ? <><Field icon="lock" secret value={pw} onChangeText={setPw} placeholder="New password (8+ characters)" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /><PwMeter pw={pw} /><Field icon="lock" secret value={pw2} onChangeText={setPw2} placeholder="Repeat new password" autoCapitalize="none" autoCorrect={false} autoComplete="new-password" /></> : null}
 
               {err ? <View style={{ padding: 10, borderRadius: 12, backgroundColor: 'rgba(255,107,129,.16)', borderWidth: 1, borderColor: 'rgba(255,107,129,.4)', marginBottom: 12 }}><Text style={{ color: '#ffc2cc', fontSize: 12.5, lineHeight: 17 }}>{err}</Text></View> : null}
               {info ? <View style={{ padding: 10, borderRadius: 12, backgroundColor: 'rgba(143,233,226,.12)', borderWidth: 1, borderColor: 'rgba(143,233,226,.35)', marginBottom: 12 }}><Text style={{ color: TEAL, fontSize: 12.5, lineHeight: 17 }}>{info}</Text></View> : null}

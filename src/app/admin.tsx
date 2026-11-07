@@ -56,10 +56,12 @@ export default function Admin() {
   const [free, setFree] = useState(false); const [price, setPrice] = useState(''); const [method, setMethod] = useState('DuitNow');
   const [q, setQ] = useState(''); const [open, setOpen] = useState(''); const [ask, setAsk] = useState('');
   const [gate, setGate] = useState<'loading' | 'set' | 'enter' | 'open'>('loading'); const [pin, setPin] = useState(''); const [pin1, setPin1] = useState(''); const [gmsg, setGmsg] = useState('');
+  const [calm, setCalm] = useState(false);
+  useEffect(() => { const h = setTimeout(() => setCalm(true), 380); return () => clearTimeout(h); }, []);
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || !calm) return;
     adminCall<{ has_pin: boolean; unlocked: boolean }>('admin_pin_status').then((r) => { if (!r.ok) { setErr(r.err); return; } setGate(r.data.unlocked ? 'open' : r.data.has_pin ? 'enter' : 'set'); });
-  }, [isAdmin]);
+  }, [isAdmin, calm]);
   useEffect(() => {
     if (pin.length < 6 || gate === 'open' || gate === 'loading') return;
     (async () => {
@@ -106,9 +108,9 @@ export default function Admin() {
   return (
     <View style={{ flex: 1, backgroundColor: '#06100d', overflow: 'hidden' }}>
       <LinearGradient colors={['#06100d', '#0b1a16', '#090d14']} locations={[0, 0.5, 1]} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
-      <Drift size={360} color="rgba(245,199,107,0.20)" x={140} y={-120} dx={-30} dy={30} dur={9000} />
-      <Drift size={360} color="rgba(94,231,181,0.17)" x={-170} y={380} dx={40} dy={-30} dur={11000} />
-      <Grid />
+      {calm && <Drift size={360} color="rgba(245,199,107,0.20)" x={140} y={-120} dx={-30} dy={30} dur={9000} />}
+      {calm && <Drift size={360} color="rgba(94,231,181,0.17)" x={-170} y={380} dx={40} dy={-30} dur={11000} />}
+      {calm && <Grid />}
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={busy} onRefresh={load} tintColor="#fff" />} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 44 + TOP, paddingBottom: 80 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>

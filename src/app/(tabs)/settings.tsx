@@ -129,7 +129,8 @@ export default function Settings() {
   const [nameMsg, setNameMsg] = useState('');
   const [tg, setTg] = useStored<Record<string, boolean>>('ml_toggles', { ev: true, pr: true, zk: true, qh: true });
   const kb = useKb(); const sref = React.useRef<any>(null);
-  React.useEffect(() => { if (kb > 0) setTimeout(() => sref.current?.scrollToEnd({ animated: true }), 80); }, [kb]);
+  const dlgR = React.useRef(''); 
+  React.useEffect(() => { if (kb > 0 && !dlgR.current) setTimeout(() => sref.current?.scrollToEnd({ animated: true }), 80); }, [kb]);
   const [upd, setUpd] = useState<'' | 'busy' | 'latest' | 'new' | 'web' | 'err'>('');
   const lastChk = React.useRef(0);
   const checkUpd = async () => {
@@ -162,7 +163,8 @@ export default function Settings() {
       say('Sent. It will appear in 3 seconds');
     } catch (e) { say('Could not send a test notification'); }
   };
-  const [dlg, setDlg] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq' | 'copy' | 'done' | 'restore' | 'confirm'>('');
+  const [dlgState, setDlg0] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq' | 'copy' | 'done' | 'restore' | 'confirm'>('');
+  const dlg = dlgState; const setDlg = (v: typeof dlgState) => { dlgR.current = v; setDlg0(v); };
   const [bk, setBk] = useState<Backup | null>(null); const [bkErr, setBkErr] = useState('');
   const [sto, setSto] = useState<{ data: number; temp: number } | null>(null); const [stoMsg, setStoMsg] = useState('');
   React.useEffect(() => { if (tab === 2) storageInfo().then(setSto); }, [tab]);

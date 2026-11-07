@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import Svg, { Defs, Pattern, Path, Rect } from 'react-native-svg';
 import { Drift } from '../components/AuthScreen';
 import { Inp, W } from '../components/Ui';
+import { CodeBoxes } from '../components/CodeBoxes';
 import { TOP } from '../lib/layout';
 import { adminCall, useIsAdmin } from '../lib/admin';
 
@@ -54,27 +55,51 @@ export default function Admin() {
   const [fresh, setFresh] = useState<string[]>([]); const [tab, setTab] = useState<'users' | 'codes'>('users');
   const [free, setFree] = useState(false); const [price, setPrice] = useState(''); const [method, setMethod] = useState('DuitNow');
   const [q, setQ] = useState(''); const [open, setOpen] = useState(''); const [ask, setAsk] = useState('');
+  const [gate, setGate] = useState<'loading' | 'set' | 'enter' | 'open'>('loading'); const [pin, setPin] = useState(''); const [pin1, setPin1] = useState(''); const [gmsg, setGmsg] = useState('');
+  useEffect(() => {
+    if (!isAdmin) return;
+    adminCall<{ has_pin: boolean; unlocked: boolean }>('admin_pin_status').then((r) => { if (!r.ok) { setErr(r.err); return; } setGate(r.data.unlocked ? 'open' : r.data.has_pin ? 'enter' : 'set'); });
+  }, [isAdmin]);
+  useEffect(() => {
+    if (pin.length < 6 || gate === 'open' || gate === 'loading') return;
+    (async () => {
+      setBusy(true); setGmsg('');
+      if (gate === 'enter') {
+        const r = await adminCall<any>('admin_unlock', { p_pin: pin }); setBusy(false);
+        if (!r.ok) { setGmsg(r.err); setPin(''); return; }
+        if (r.data?.ok) { setPin(''); setGate('open'); return; }
+        setGmsg(r.data?.error === 'locked' ? 'Too many wrong codes. Try again in ' + Math.max(1, Math.ceil((r.data.seconds || 900) / 60)) + ' minutes.' : 'Wrong code. ' + (r.data?.tries_left ?? 0) + ' tries left.'); setPin('');
+      } else if (!pin1) { setBusy(false); setPin1(pin); setPin(''); }
+      else if (pin !== pin1) { setBusy(false); setGmsg('The two codes are not the same. Start again.'); setPin(''); setPin1(''); }
+      else {
+        const r = await adminCall<any>('admin_set_pin', { p_pin: pin }); setBusy(false);
+        if (!r.ok) { setGmsg(r.err); setPin(''); setPin1(''); return; }
+        setPin(''); setPin1(''); setGate('open');
+      }
+    })();
+  }, [pin]);
+  const lockNow = async () => { await adminCall('admin_lock'); setGate('enter'); setOv(null); setUsers([]); setCodes([]); };
   const load = useCallback(async () => {
     setErr(''); setBusy(true);
     const [a, b, c] = await Promise.all([adminCall<Ov>('admin_overview'), adminCall<U[]>('admin_users'), adminCall<C[]>('admin_codes')]);
     setBusy(false);
-    if (!a.ok) { setErr(a.err); return; }
+    if (!a.ok) { if (a.err === 'admin_locked') { setGate('enter'); setErr(''); } else setErr(a.err); return; }
     setOv(a.data); if (b.ok) setUsers(b.data); if (c.ok) setCodes(c.data);
   }, []);
-  useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
+  useEffect(() => { if (isAdmin && gate === 'open') load(); }, [isAdmin, gate]);
   const make = async () => {
     const n = Math.max(1, Math.min(50, parseInt(cnt, 10) || 1));
     const pr = parseFloat(price.replace(',', '.'));
     if (!free && !(pr > 0)) { setErr('Enter the price, or switch to Free.'); return; }
     setBusy(true);
     const r = await adminCall<string[]>('admin_make_codes', { p_count: n, p_note: note, p_price: free ? null : pr, p_method: free ? null : method, p_free: free }); setBusy(false);
-    if (!r.ok) { setErr(r.err); return; }
+    if (!r.ok) { if (r.err === 'admin_locked') { setGate('enter'); return; } setErr(r.err); return; }
     setErr(''); setFresh(r.data); setNote(''); setPrice(''); load();
   };
   const act = async (fn: string, args: Record<string, unknown>, key: string) => {
     if (ask !== key) { setAsk(key); return; }   // tap twice to confirm
     setAsk(''); setBusy(true); const r = await adminCall<boolean>(fn, args); setBusy(false);
-    if (!r.ok) { setErr(r.err.includes('cannot_revoke') ? 'You cannot remove your own access.' : r.err); return; }
+    if (!r.ok) { if (r.err === 'admin_locked') { setGate('enter'); return; } setErr(r.err.includes('cannot_revoke') ? 'You cannot remove your own access.' : r.err); return; }
     setErr(''); load();
   };
   const send = (code: string) => Share.share({ message: 'Your My Life activation code: ' + code + '\nOpen the app, sign in, then type the 8 characters after ML-.' });
@@ -93,8 +118,20 @@ export default function Admin() {
               <Text style={{ color: GOLD, fontSize: 10.5, fontWeight: '800', letterSpacing: 2.4, marginTop: 2 }}>CONTROL ROOM</Text>
             </View>
             {busy ? <ActivityIndicator color="#fff" /> : null}
+            {gate === 'open' ? <Pressable onPress={lockNow} hitSlop={8}><View style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 10, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, ...RAISED }}><Text style={{ color: GOLD, fontWeight: '800', fontSize: 12.5 }}>🔒 Lock</Text></View></Pressable> : null}
           </View>
-          {!isAdmin ? <Text style={{ color: dim, marginTop: 24 }}>This page is only for the app owner.</Text> : <>
+          {!isAdmin ? <Text style={{ color: dim, marginTop: 24 }}>This page is only for the app owner.</Text> : gate !== 'open' ? (
+            <View style={{ marginTop: 40, borderRadius: 22, padding: 20, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, overflow: 'hidden', ...RAISED }}>
+              <Shine h={80} />
+              <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: GOLD }} />
+              <Text style={{ fontSize: 28 }}>🔐</Text>
+              <Text style={{ color: W, fontSize: 20, fontWeight: '800', marginTop: 8 }}>{gate === 'set' ? (pin1 ? 'Type it again' : 'Set your admin code') : 'Enter your admin code'}</Text>
+              <Text style={{ color: dim, fontSize: 12.5, marginTop: 4, marginBottom: 16, lineHeight: 18 }}>{gate === 'set' ? (pin1 ? 'Type the same 6 digits once more to confirm.' : 'Choose 6 digits that only you know. You will need them every time you open Admin.') : 'This extra code keeps the admin page safe even if someone learns your password.'}</Text>
+              {gate === 'loading' ? <ActivityIndicator color={GOLD} /> : <CodeBoxes key={gate + (pin1 ? '2' : '1')} value={pin} onChange={setPin} length={6} mask shake={gmsg} />}
+              {gmsg ? <Text style={{ color: '#ffb3bf', fontSize: 12.5, lineHeight: 18 }}>{gmsg}</Text> : null}
+              {err ? <Text style={{ color: '#ffb3bf', fontSize: 12.5, marginTop: 6 }}>{err}</Text> : null}
+            </View>
+          ) : <>
             {err ? <Text style={{ color: '#ffc2cc', marginTop: 14 }}>{err}</Text> : null}
             {ov ? <View style={{ marginTop: 28 }}>
               <View style={{ borderRadius: 22, padding: 18, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, overflow: 'hidden', ...RAISED }}>

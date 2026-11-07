@@ -6,7 +6,7 @@ import { W } from './Ui';
 const TEAL = '#8fe9e2';
 // One box per character: for the 6-digit email code and for the activation code.
 // A single hidden input sits on top, so typing, deleting and pasting all work like a normal field.
-export function CodeBoxes({ value, onChange, length, kind = 'digits', group = 0, shake = '', autoFocus = true }: { value: string; onChange: (v: string) => void; length: number; kind?: 'digits' | 'alnum'; group?: number; shake?: string; autoFocus?: boolean }) {
+export function CodeBoxes({ value, onChange, length, kind = 'digits', group = 0, shake = '', autoFocus = true, mask = false }: { value: string; onChange: (v: string) => void; length: number; kind?: 'digits' | 'alnum'; group?: number; shake?: string; autoFocus?: boolean; mask?: boolean }) {
   const [f, setF] = useState(false);
   const blink = useRef(new Animated.Value(1)).current;
   const sh = useRef(new Animated.Value(0)).current;
@@ -32,7 +32,7 @@ export function CodeBoxes({ value, onChange, length, kind = 'digits', group = 0,
             <React.Fragment key={i}>
               {group && i > 0 && i % group === 0 ? <Text style={{ color: 'rgba(255,255,255,.45)', fontSize: 18, fontWeight: '800', width: 14, textAlign: 'center' }}>–</Text> : null}
               <View style={{ flex: 1, height: group ? 50 : 56, marginLeft: i > 0 && !(group && i % group === 0) ? (group ? 5 : 8) : 0, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: ch ? '#35347a' : on ? '#2c5a78' : '#2e2d6c', borderWidth: 1.3, borderColor: on ? TEAL : ch ? 'rgba(183,148,255,.55)' : 'rgba(255,255,255,.16)' }}>
-                {ch ? <Text style={{ color: W, fontSize: group ? 19 : 24, fontWeight: '800' }}>{ch}</Text> : on ? <Animated.View style={{ width: 2, height: 24, borderRadius: 1, backgroundColor: TEAL, opacity: blink }} /> : null}
+                {ch ? <Text style={{ color: W, fontSize: group ? 19 : 24, fontWeight: '800' }}>{mask ? '•' : ch}</Text> : on ? <Animated.View style={{ width: 2, height: 24, borderRadius: 1, backgroundColor: TEAL, opacity: blink }} /> : null}
               </View>
             </React.Fragment>
           );

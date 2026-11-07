@@ -56,7 +56,7 @@ export default function Admin() {
   const [ov, setOv] = useState<Ov | null>(null); const [users, setUsers] = useState<U[]>([]); const [codes, setCodes] = useState<C[]>([]);
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false); const [note, setNote] = useState(''); const [cnt, setCnt] = useState('1');
   const [fresh, setFresh] = useState<string[]>([]); const [tab, setTab] = useState<'users' | 'codes' | 'inbox' | 'log'>('users');
-  const [gr, setGr] = useState<Gr | null>(null); const [fb, setFb] = useState<Fb[]>([]); const [att, setAtt] = useState<At[]>([]); const [ann, setAnn] = useState(''); const [annText, setAnnText] = useState('');
+  const [gr, setGr] = useState<Gr | null>(null); const [fb, setFb] = useState<Fb[]>([]); const [att, setAtt] = useState<At[]>([]); const [ann, setAnn] = useState(''); const [tmp, setTmp] = useState<{ id: string; pw: string } | null>(null); const [annText, setAnnText] = useState('');
   const [free, setFree] = useState(false); const [price, setPrice] = useState(''); const [method, setMethod] = useState('DuitNow');
   const [q, setQ] = useState(''); const [open, setOpen] = useState(''); const [ask, setAsk] = useState('');
   const [gate, setGate] = useState<'loading' | 'set' | 'enter' | 'open'>('loading'); const [pin, setPin] = useState(''); const [pin1, setPin1] = useState(''); const [gmsg, setGmsg] = useState('');
@@ -114,6 +114,12 @@ export default function Admin() {
   const exportUsers = () => csv([['Email', 'Name', 'Joined', 'Last sign in', 'Active', 'Email confirmed'], ...users.map((u) => [u.email, u.name, day(u.created_at), day(u.last_sign_in_at), u.active ? 'yes' : 'no', u.confirmed ? 'yes' : 'no'])], 'my-life-users.csv');
   const exportCodes = () => csv([['Code', 'Note', 'Price (RM)', 'Method', 'Free', 'Made', 'Used on', 'Used by'], ...codes.map((c) => [c.code, c.note, c.price, c.method, c.free ? 'yes' : '', day(c.created_at), c.redeemed_at ? day(c.redeemed_at) : '', c.used_by])], 'my-life-codes.csv');
   const publish = async (text: string) => { setBusy(true); const r = await adminCall<boolean>('admin_announce', { p_msg: text }); setBusy(false); if (!r.ok) { if (r.err === 'admin_locked') { setGate('enter'); return; } setErr(r.err); return; } setErr(''); setAnnText(''); setAnn(text.trim().slice(0, 300)); };
+  const resetPw = async (id: string) => {
+    if (ask !== 'pw' + id) { setAsk('pw' + id); return; }
+    setAsk(''); setBusy(true); const r = await adminCall<string>('admin_reset_password', { p_user: id }); setBusy(false);
+    if (!r.ok) { if (r.err === 'admin_locked') { setGate('enter'); return; } setErr(r.err); return; }
+    setErr(''); setTmp({ id, pw: r.data });
+  };
   const send = (code: string) => Share.share({ message: 'Your My Life activation code: ' + code + '\nOpen the app, sign in, then type the 8 characters after ML-.' });
   return (
     <View style={{ flex: 1, backgroundColor: '#06100d', overflow: 'hidden' }}>
@@ -246,7 +252,17 @@ export default function Admin() {
                     {u.active
                       ? <Pill t={ask === 'off' + u.id ? 'Tap again to remove access' : 'Remove access'} on={ask === 'off' + u.id} c="#ff8fa0" onPress={() => act('admin_set_license', { p_user: u.id, p_on: false }, 'off' + u.id)} />
                       : <Pill t={ask === 'on' + u.id ? 'Tap again to activate' : 'Activate without a code'} on={ask === 'on' + u.id} c="#5ee7b5" onPress={() => act('admin_set_license', { p_user: u.id, p_on: true }, 'on' + u.id)} />}
+                    <Pill t={ask === 'pw' + u.id ? 'Tap again to reset' : 'Reset password'} on={ask === 'pw' + u.id} c="#8fb4ff" onPress={() => resetPw(u.id)} />
                     {!u.confirmed ? <Pill t={ask === 'cf' + u.id ? 'Tap again to confirm' : 'Confirm email'} on={ask === 'cf' + u.id} c="#ffc46b" onPress={() => act('admin_confirm_email', { p_user: u.id }, 'cf' + u.id)} /> : null}
+                  </View>
+                ) : null}
+                {tmp && tmp.id === u.id ? (
+                  <View style={{ marginTop: 10, padding: 12, borderRadius: 14, backgroundColor: 'rgba(143,180,255,.14)', borderWidth: 1, borderColor: 'rgba(143,180,255,.4)' }}>
+                    <Text style={{ color: dim, fontSize: 11.5 }}>Temporary password. They were signed out. Send it to them; they can change it in Settings.</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                      <Text selectable style={{ flex: 1, color: '#cfe0ff', fontSize: 17, fontWeight: '800', letterSpacing: 1 }}>{tmp.pw}</Text>
+                      <Pressable onPress={() => Share.share({ message: 'Your temporary My Life password: ' + tmp.pw + '\nSign in with it, then change it in Settings > Change password.' })} hitSlop={8}><Text style={{ color: GOLD, fontWeight: '800' }}>Send</Text></Pressable>
+                    </View>
                   </View>
                 ) : null}
               </Pressable>

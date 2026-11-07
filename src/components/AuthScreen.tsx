@@ -115,7 +115,7 @@ function Wave({ delay }: { delay: number }) {
   return <Animated.View pointerEvents="none" style={{ position: 'absolute', width: 108, height: 108, borderRadius: 34, borderWidth: 1.5, borderColor: 'rgba(143,233,226,.7)', opacity: t.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.6, 0] }), transform: [{ scale: t.interpolate({ inputRange: [0, 1], outputRange: [1, 1.7] }) }] }} />;
 }
 export function Logo({ waves = true }: { waves?: boolean }) {
-  const ring = useSpin(6000); const inner = useSpin(9000); const inner2 = useSpin(13000, true); const orbit = useSpin(7000); const orbit2 = useSpin(11000, true);
+  const inner = useSpin(9000); const inner2 = useSpin(13000, true); const orbit = useSpin(7000); const orbit2 = useSpin(11000, true);
   const pulse = useRef(new Animated.Value(0)).current;
   useEffect(() => { const a = Animated.loop(Animated.sequence([Animated.timing(pulse, { toValue: 1, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }), Animated.timing(pulse, { toValue: 0, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true })])); a.start(); return () => a.stop(); }, []);
   return (
@@ -130,22 +130,15 @@ export function Logo({ waves = true }: { waves?: boolean }) {
       <Animated.View pointerEvents="none" style={{ position: 'absolute', width: 170, height: 170, transform: [{ rotate: orbit2 }] }}>
         <View style={{ position: 'absolute', left: 83, top: 160, width: 5, height: 5, borderRadius: 3, backgroundColor: '#ffd593', shadowColor: '#ffc46b', shadowOpacity: 1, shadowRadius: 7, shadowOffset: { width: 0, height: 0 } }} />
       </Animated.View>
-      <View style={{ width: 112, height: 112, borderRadius: 35, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
-        <Animated.View style={{ position: 'absolute', width: 220, height: 220, transform: [{ rotate: ring }] }}>
-          <LinearGradient colors={['rgba(143,233,226,0)', '#8fe9e2', '#b794ff', '#ff8fe0', 'rgba(255,143,224,0)']} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ flex: 1 }} />
+      <View style={{ width: 112, height: 112, borderRadius: 34, overflow: 'hidden', backgroundColor: '#1e2255', borderWidth: 1.2, borderColor: 'rgba(255,255,255,.26)' }}>
+        <LinearGradient colors={['#4b5889', '#262962', '#1a2250', '#2f7580']} locations={[0, 0.42, 0.7, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, width: 112, height: 112 }} />
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: 112, height: 112, transform: [{ rotate: inner }] }}>
+          <View style={{ position: 'absolute', left: 60, top: -30 }}><Blob size={90} color="rgba(94,231,223,0.35)" /></View>
         </Animated.View>
-        <View style={{ width: 106, height: 106, borderRadius: 32, overflow: 'hidden', backgroundColor: '#0a0f2c' }}>
-          <LinearGradient colors={['#2a2a8f', '#15184f', '#0e2e4d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', left: 0, top: 0, width: 106, height: 106 }} />
-          <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: 106, height: 106, alignItems: 'center', justifyContent: 'center' }}>
-            <Svg width={56} height={56} viewBox="0 0 56 56" fill="none"><Path d="M12 44V13L28 33L44 13V44" stroke="#fff" strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" /></Svg>
-          </View>
-          <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: 106, height: 106, transform: [{ rotate: inner }] }}>
-            <View style={{ position: 'absolute', left: 58, top: -30 }}><Blob size={90} color="rgba(94,231,223,0.55)" /></View>
-          </Animated.View>
-          <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: 106, height: 106, transform: [{ rotate: inner2 }] }}>
-            <View style={{ position: 'absolute', left: -34, top: 60 }}><Blob size={90} color="rgba(255,143,224,0.5)" /></View>
-          </Animated.View>
-        </View>
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: 112, height: 112, transform: [{ rotate: inner2 }] }}>
+          <View style={{ position: 'absolute', left: -34, top: 62 }}><Blob size={90} color="rgba(183,148,255,0.35)" /></View>
+        </Animated.View>
+        <Svg width={112} height={112} viewBox="0 0 112 112" fill="none" style={{ position: 'absolute', left: 0, top: 0 }}><Path d="M27 82V30L56 63L85 30V82" stroke="#fff" strokeWidth={11} strokeLinecap="round" strokeLinejoin="round" /></Svg>
       </View>
     </View>
   );

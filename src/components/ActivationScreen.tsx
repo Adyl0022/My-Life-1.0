@@ -35,7 +35,7 @@ export function ActivationScreen({ email, expired }: { email: string; expired: b
             <Animated.View style={{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }}>
               <Text style={{ color: W, fontSize: 20, fontWeight: '800' }}>{expired ? 'Your access has ended' : 'Activate My Life'}</Text>
               <Text style={{ color: 'rgba(255,255,255,.62)', fontSize: 12.5, marginTop: 2, marginBottom: 12, lineHeight: 17 }}>{expired ? 'Enter a new activation code to continue.' : 'Enter the activation code you received to unlock the app.'}</Text>
-              <Text style={{ color: TEAL, fontSize: 12, fontWeight: '800', letterSpacing: 1.6, marginBottom: 8 }}>YOUR CODE  ·  ML – XXXX – XXXX</Text>
+              <Text style={{ color: TEAL, fontSize: 12, fontWeight: '800', letterSpacing: 1.6, marginBottom: 8 }}>TYPE THE 8 CHARACTERS AFTER ML-</Text>
               <CodeBoxes value={code} onChange={setCode} length={8} kind="alnum" group={4} shake={err} />
               {err ? <View style={{ padding: 10, borderRadius: 12, backgroundColor: 'rgba(255,107,129,.16)', borderWidth: 1, borderColor: 'rgba(255,107,129,.4)', marginBottom: 12 }}><Text style={{ color: '#ffc2cc', fontSize: 12.5, lineHeight: 17 }}>{err}</Text></View> : null}
               <Pressable onPress={go} disabled={busy} style={{ borderRadius: 18 }}>

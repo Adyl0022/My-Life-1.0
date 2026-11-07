@@ -262,7 +262,7 @@ export function AuthScreen() {
             {tabs ? (
               <View style={{ flexDirection: 'row', padding: 4, borderRadius: 16, backgroundColor: 'rgba(15,12,60,.45)', marginBottom: 12 }}>
                 {(['in', 'up'] as const).map((m) => (
-                  <Pressable key={m} onPress={() => go(m)} style={{ flex: 1 }}>
+                  <Pressable key={m} onPress={() => { if (m !== mode) { setPw(''); setPw2(''); } go(m); }} style={{ flex: 1 }}>
                     {mode === m
                       ? <LinearGradient colors={GP} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 10, borderRadius: 12, alignItems: 'center' }}><Text style={{ color: W, fontSize: 14, fontWeight: '800' }}>{m === 'in' ? 'Sign in' : 'Register'}</Text></LinearGradient>
                       : <View style={{ paddingVertical: 10, alignItems: 'center' }}><Text style={{ color: 'rgba(255,255,255,.6)', fontSize: 14, fontWeight: '700' }}>{m === 'in' ? 'Sign in' : 'Register'}</Text></View>}

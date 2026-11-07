@@ -25,7 +25,8 @@ export async function refreshLicense() {
   const s = getSession(); if (!s) { uid = ''; set({ status: 'unknown', expires: null }); return; }
   const u = s.user.id;
   try {
-    const { data, error } = await supabase.from('licenses').select('expires_at').eq('user_id', u).maybeSingle();
+    const q = supabase.from('licenses').select('expires_at').eq('user_id', u).maybeSingle();
+    const { data, error } = await Promise.race([q, new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))]) as any;
     if (error) throw error;
     if (data && valid(data.expires_at)) { await save(u, data.expires_at); set({ status: 'active', expires: data.expires_at }); }
     else { await save(u, '1970-01-01T00:00:00Z'); set({ status: 'locked', expires: data?.expires_at ?? null }); }
@@ -38,7 +39,8 @@ export async function refreshLicense() {
 
 export async function redeemCode(code: string): Promise<{ ok: true } | { ok: false; err: string }> {
   try {
-    const { error } = await supabase.rpc('redeem_code', { p_code: code });
+    const { data, error } = await supabase.rpc('redeem_code', { p_code: code });
+    if (!error && (data as any)?.error === 'invalid_code') return { ok: false, err: 'That code is not valid or was already used.' };
     if (error) {
       const m = error.message || '';
       if (m.includes('invalid_code')) return { ok: false, err: 'That code is not valid or was already used.' };
@@ -58,6 +60,7 @@ export function useLicense(): Lic {
   useEffect(() => {
     if (!id) { set({ status: 'unknown', expires: null }); return; }
     if (uid !== id) { uid = id; set({ status: 'unknown', expires: null }); }
+    cached(id).then((c) => { if (uid === id && cur.status === 'unknown' && c !== undefined && valid(c)) set({ status: 'active', expires: c }); });
     refreshLicense();
   }, [id]);
   return id ? cur : { status: 'unknown', expires: null };

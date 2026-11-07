@@ -48,8 +48,9 @@ begin
     where code = upper(regexp_replace(coalesce(p_code, ''), '\s', '', 'g')) and redeemed_by is null
     for update;
   if not found then
+    -- Return instead of raising, so the failed try is really saved and counted.
     insert into public.code_attempts(user_id) values (uid);
-    raise exception 'invalid_code';
+    return jsonb_build_object('error', 'invalid_code');
   end if;
   update public.activation_codes set redeemed_by = uid, redeemed_at = now() where code = c.code;
   select expires_at into cur from public.licenses where user_id = uid;

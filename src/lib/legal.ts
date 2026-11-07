@@ -40,6 +40,7 @@ export const HOWTO: Sec[] = [
   { h: '7. Keep it safe', p: 'Turn on App lock in Settings, Security. Save a backup now and then from Settings, Export.' },
 ];
 export const FAQ: Sec[] = [
+  { h: 'How do I activate the app?', p: 'Create an account, then enter the activation code you receive from the developer after payment. Each code works once and unlocks your account on all your devices.' },
   { h: 'Where is my data?', p: 'On your phone, encrypted, and backed up to your account online when you are signed in. Only you can read your own data.' },
   { h: 'Can I use it on a new phone?', p: 'Yes. Install My Life, sign in with the same email and password, and your data comes back. Receipt photos are not included.' },
   { h: 'I changed phone. How do I move my data?', p: 'On the old phone, go to Settings, Export, choose Backup (JSON) and keep the file. On the new phone, open Settings, Security, Backup and restore, then Restore from a file. Photos such as receipts are not included.' },

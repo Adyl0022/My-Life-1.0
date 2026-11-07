@@ -10,6 +10,8 @@ import { useLockWatcher } from '../lib/lock';
 import { LockScreen } from '../components/LockScreen';
 import { AuthScreen } from '../components/AuthScreen';
 import { useSession } from '../lib/auth';
+import { useLicense } from '../lib/license';
+import { ActivationScreen } from '../components/ActivationScreen';
 import { startSync, syncNow } from '../lib/sync';
 import { DEBT_EMPTY, DebtData, syncDebtAlerts } from '../lib/debts';
 import { syncEventAlerts, syncZikirAlerts, syncBackupAlert, PEvent } from '../lib/alerts';
@@ -41,14 +43,14 @@ function AlertSync() {
 }
 // Starts syncing as soon as the user is signed in, and again when the app comes back to the front.
 function SyncRunner() {
-  const [sess] = useSession();
-  useEffect(() => { if (sess) { startSync(); syncNow(); } }, [sess?.user?.id]);
+  const [sess] = useSession(); const lic = useLicense();
+  useEffect(() => { if (sess && lic.status === 'active') { startSync(); syncNow(); } }, [sess?.user?.id, lic.status]);
   return null;
 }
 function Tracker() { const p = usePathname(); useEffect(() => { trackModule(p); }, [p]); return null; }
 export default function Root() {
   useLockWatcher();
-  const [sess, authReady] = useSession();
+  const [sess, authReady] = useSession(); const lic = useLicense();
   useEffect(() => { encryptExisting(); }, []);
-  return (<><Tracker /><StatusBar style="light" />{Platform.OS === 'android' ? <NavigationBar hidden style="light" /> : null}<SyncRunner /><PrayerSync /><DebtSync /><AlertSync /><View style={{ flex: 1, backgroundColor: '#0a0f2c', alignItems: 'center' }}><View style={{ flex: 1, width: '100%', maxWidth: 520, overflow: 'hidden' }}><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0f2c' }, animation: 'slide_from_right' }} /><LockScreen />{authReady && !sess ? <AuthScreen /> : null}</View></View></>);
+  return (<><Tracker /><StatusBar style="light" />{Platform.OS === 'android' ? <NavigationBar hidden style="light" /> : null}<SyncRunner /><PrayerSync /><DebtSync /><AlertSync /><View style={{ flex: 1, backgroundColor: '#0a0f2c', alignItems: 'center' }}><View style={{ flex: 1, width: '100%', maxWidth: 520, overflow: 'hidden' }}><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a0f2c' }, animation: 'slide_from_right' }} /><LockScreen />{sess && lic.status === 'locked' ? <ActivationScreen email={sess.user.email || ''} expired={!!lic.expires} /> : null}{sess && lic.status === 'unknown' ? <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: '#0a0f2c', zIndex: 54 }} /> : null}{authReady && !sess ? <AuthScreen /> : null}</View></View></>);
 }

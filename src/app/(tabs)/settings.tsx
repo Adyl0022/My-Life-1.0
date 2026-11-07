@@ -13,6 +13,7 @@ import { Glass } from '../../components/Glass';
 import { Blob } from '../../components/Bg';
 import { SettingsBg } from '../../components/SettingsBg';
 import { useStored, clearMine, DEFAULT_NAME } from '../../lib/store';
+import { useLicense } from '../../lib/license';
 import { useSession, signOut, checkPassword, setNewPassword, deleteAccount } from '../../lib/auth';
 import { syncNow, syncState, wipeCloud } from '../../lib/sync';
 import { PRIVACY, TERMS, COPYRIGHT, WHATS_NEW, LICENCES, HOWTO, FAQ, SUPPORT_EMAIL, PRIVACY_URL, Sec } from '../../lib/legal';
@@ -178,7 +179,7 @@ export default function Settings() {
   const isDel = dlg === 'delete';
   const canGo = isDel ? typed.trim().toUpperCase() === 'DELETE' && pwv.length > 0 : typed.trim().toUpperCase() === 'RESET';
 
-  const [sess] = useSession(); const [busy, setBusy] = useState(false); const [synced, setSynced] = useState(syncState.last);
+  const [sess] = useSession(); const lic = useLicense(); const [busy, setBusy] = useState(false); const [synced, setSynced] = useState(syncState.last);
   const savePw = async () => {
     if (busy) return;
     if (!p1) return setPwErr('Enter your current password.');
@@ -262,6 +263,7 @@ export default function Settings() {
               </Glass>
               <Glass style={{ padding: 16 }}>
                 <Ttl t="Your account" />
+                <Lbl t={'Activated  ·  ' + (lic.expires ? 'until ' + new Date(lic.expires).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'lifetime')} style={{ marginBottom: 4 }} />
                 <Lbl t={(sess?.user?.email || '') + (synced ? '  ·  Last synced ' + new Date(synced).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '')} style={{ marginBottom: 10 }} />
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   <Btn t={busy ? 'Syncing…' : 'Sync now'} kind="primary" onPress={doSync} />

@@ -9,7 +9,7 @@ import { signIn, signUp, verifyCode, resendSignup, sendReset, setNewPassword } f
 
 type Mode = 'in' | 'up' | 'verify' | 'forgot' | 'reset';
 const OK = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const TEAL = '#8fe9e2';
+export const TEAL = '#8fe9e2';
 
 const Ico = ({ n, c = 'rgba(255,255,255,.55)' }: { n: 'user' | 'mail' | 'lock' | 'key' | 'eye' | 'eyeoff'; c?: string }) => (
   <Svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
@@ -23,7 +23,7 @@ const Ico = ({ n, c = 'rgba(255,255,255,.55)' }: { n: 'user' | 'mail' | 'lock' |
 );
 
 // One input row: icon on the left, glowing border while typing, optional show/hide for passwords.
-function Field({ icon, secret, ...p }: any) {
+export function Field({ icon, secret, ...p }: any) {
   const [f, setF] = useState(false); const [show, setShow] = useState(false);
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, borderRadius: 15, paddingHorizontal: 14, marginBottom: 9, backgroundColor: f ? '#2c5a78' : '#2e2d6c', borderWidth: 1.2, borderColor: f ? 'rgba(143,233,226,.75)' : 'rgba(255,255,255,.13)', shadowColor: TEAL, shadowOpacity: f ? 0.55 : 0, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } }}>
@@ -36,7 +36,7 @@ function Field({ icon, secret, ...p }: any) {
 }
 
 // A soft light that drifts slowly, so the background feels alive.
-function Drift({ size, color, x, y, dx, dy, dur }: any) {
+export function Drift({ size, color, x, y, dx, dy, dur }: any) {
   const t = useRef(new Animated.Value(0)).current;
   useEffect(() => { const a = Animated.loop(Animated.sequence([Animated.timing(t, { toValue: 1, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true }), Animated.timing(t, { toValue: 0, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true })])); a.start(); return () => a.stop(); }, []);
   return <Animated.View pointerEvents="none" style={{ position: 'absolute', left: x, top: y, transform: [{ translateX: t.interpolate({ inputRange: [0, 1], outputRange: [0, dx] }) }, { translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, dy] }) }] }}><Blob size={size} color={color} /></Animated.View>;
@@ -85,7 +85,7 @@ function Mote({ left, delay, dur, size, color }: { left: string; delay: number; 
   }, []);
   return <Animated.View pointerEvents="none" style={{ position: 'absolute', left: left as any, bottom: 20, width: size, height: size, borderRadius: size, backgroundColor: color, shadowColor: color, shadowOpacity: 0.9, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, opacity: v.interpolate({ inputRange: [0, 0.15, 0.8, 1], outputRange: [0, 0.9, 0.7, 0] }), transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -640] }) }, { translateX: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 14, -8] }) }] }} />;
 }
-function Sky() {
+export function Sky() {
   return (
     <>
       {SKY.map((t, i) => <Twinkle key={i} x={t[0]} y={t[1]} s={t[2]} i={i} />)}
@@ -172,7 +172,7 @@ function Geo() {
     </View>
   );
 }
-function Wallpaper() { return <Geo />; }
+export function Wallpaper() { return <Geo />; }
 
 export function AuthScreen() {
   const [mode, setMode] = useState<Mode>('in');

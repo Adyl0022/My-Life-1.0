@@ -14,6 +14,7 @@ import { Blob } from '../../components/Bg';
 import { SettingsBg } from '../../components/SettingsBg';
 import { useStored, clearMine, DEFAULT_NAME } from '../../lib/store';
 import { Logo } from '../../components/AuthScreen';
+import { useIsAdmin } from '../../lib/admin';
 import { useLicense } from '../../lib/license';
 import { useSession, signOut, checkPassword, setNewPassword, deleteAccount } from '../../lib/auth';
 import { syncNow, syncState, wipeCloud } from '../../lib/sync';
@@ -180,7 +181,7 @@ export default function Settings() {
   const isDel = dlg === 'delete';
   const canGo = isDel ? typed.trim().toUpperCase() === 'DELETE' && pwv.length > 0 : typed.trim().toUpperCase() === 'RESET';
 
-  const [sess] = useSession(); const lic = useLicense(); const [busy, setBusy] = useState(false); const [synced, setSynced] = useState(syncState.last);
+  const [sess] = useSession(); const lic = useLicense(); const isAdmin = useIsAdmin(); const [busy, setBusy] = useState(false); const [synced, setSynced] = useState(syncState.last);
   const savePw = async () => {
     if (busy) return;
     if (!p1) return setPwErr('Enter your current password.');
@@ -227,6 +228,13 @@ export default function Settings() {
                 {lead ? <Lbl t={'Rings ' + lead + ' minutes before each prayer'} style={{ marginTop: 8 }} /> : null}
                 <View style={{ flexDirection: 'row', marginTop: 12 }}><Btn t="Send a test notification" onPress={testNotif} /></View>
               </Glass>
+
+              {isAdmin ? <Pressable onPress={() => router.push('/admin' as any)}>
+                <Glass style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={{ flex: 1 }}><Ttl t="Admin" /><Lbl t="Users, activation codes and who has paid" /></View>
+                  <Chev />
+                </Glass>
+              </Pressable> : null}
 
               <Pressable onPress={() => router.push('/export' as any)}>
                 <Glass style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>

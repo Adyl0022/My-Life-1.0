@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ScrollView, Pressable, TextInput, Keyboard, Platform, BackHandler, LayoutAnimation } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, Keyboard, Platform, BackHandler } from 'react-native';
 import { Text } from '../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -39,8 +39,8 @@ export default function Notes() {
   const sorted = [...list.filter((n) => n.pin).sort(key), ...list.filter((n) => !n.pin).sort(key)];
   const menuNote = notes.find((n) => n.id === menuId);
 
-  const openNew = () => { const id = data.seq; setDraft({ id, t: '', s: '', c: 6, pin: false, u: Date.now(), r: '' }); setIsNew(true); setEditId(id); setFilter(0); setQ(''); };
-  const openEdit = (n: Note) => { setDraft({ ...n }); setIsNew(false); setEditId(n.id); };
+  const openNew = () => { cur.current = { s: 0, e: 0 }; const id = data.seq; setDraft({ id, t: '', s: '', c: 6, pin: false, u: Date.now(), r: '' }); setIsNew(true); setEditId(id); setFilter(0); setQ(''); };
+  const openEdit = (n: Note) => { cur.current = { s: n.s.length, e: n.s.length }; setDraft({ ...n }); setIsNew(false); setEditId(n.id); };
   const closeEd = () => { setEditId(0); setDraft(null); setConfirmDel(false); };
   const edOpen = useRef(false); edOpen.current = !!draft;
   const closeRef = useRef(closeEd); closeRef.current = closeEd;
@@ -59,44 +59,47 @@ export default function Notes() {
     closeEd(); say('Note saved');
   };
   const del = (id: number) => { setData({ ...data, notes: notes.filter((x) => x.id !== id) }); };
-  const addLine = (pre: string) => { if (!draft) return; const ns = (draft.s && !/\n$/.test(draft.s) ? draft.s + '\n' : draft.s) + pre; upd({ s: ns }); setFo(ns.split('\n').length - 1); };
-  const refs = useRef<any[]>([]);
-  const edScroll = useRef<any>(null); const focI = useRef(0); const vh = useRef(0); const sy = useRef(0); const cardY = useRef(0); const contY = useRef(0); const rowL = useRef<Record<number, { y: number; h: number }>>({});
-  // Keep the line being typed in view without throwing the top of the note off screen.
-  const ensure = (i: number) => setTimeout(() => { const r = rowL.current[i]; if (!r || !vh.current) return; const bottom = cardY.current + 18 + contY.current + r.y + r.h; const top = bottom - r.h; if (bottom > sy.current + vh.current - 20) edScroll.current?.scrollTo?.({ y: Math.max(0, bottom - vh.current + 40), animated: true }); else if (top < sy.current + 10) edScroll.current?.scrollTo?.({ y: Math.max(0, top - 40), animated: true }); }, 80); const selR = useRef<Record<number, number>>({}); const lastLen = useRef(0);
+  const inp = useRef<any>(null); const cur = useRef({ s: 0, e: 0 });
+  const [selOv, setSelOv] = useState<{ start: number; end: number } | null>(null);
   const [kb, setKb] = useState(0);
-  const ensureRef = useRef<any>(() => {}); ensureRef.current = ensure;
-  const [lh, setLh] = useState<Record<number, { t: string; h: number }>>({});
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    let ht: any = null; let shown = false;
-    // Moving to the next line briefly hides and shows the keyboard on some phones. Ignore that blink so the screen does not shake.
-    const a = Keyboard.addListener('keyboardDidShow', (e: any) => { if (ht) { clearTimeout(ht); ht = null; } setKb((k) => { if (k === e.endCoordinates.height) return k; LayoutAnimation.configureNext({ duration: 140, update: { type: 'easeInEaseOut' } }); return e.endCoordinates.height; }); if (!shown) { shown = true; ensureRef.current(focI.current); } });
-    const b = Keyboard.addListener('keyboardDidHide', () => { if (ht) clearTimeout(ht); ht = setTimeout(() => { LayoutAnimation.configureNext({ duration: 140, update: { type: 'easeInEaseOut' } }); setKb(0); ht = null; shown = false; }, 220); });
-    return () => { a.remove(); b.remove(); if (ht) clearTimeout(ht); };
+    const a = Keyboard.addListener('keyboardDidShow', (e: any) => setKb(e.endCoordinates.height));
+    const b = Keyboard.addListener('keyboardDidHide', () => setKb(0));
+    return () => { a.remove(); b.remove(); };
   }, []);
-  const [fo, setFo] = useState(-1);
-  useEffect(() => { if (fo >= 0) { const i = fo; setTimeout(() => refs.current[i]?.focus?.(), 0); setFo(-1); } }, [fo]);
-  const setLines = (L: string[]) => upd({ s: L.join('\n') });
-  const lineChange = (i: number, pre: string, v: string) => {
-    const L = (draft?.s ?? '').split('\n');
-    if (!v.includes('\n')) { L[i] = pre + v; return setLines(L); }
-    const parts = v.split('\n'); const first = parts[0]; const rest = parts.slice(1);
-    const emptyMarker = !first.trim() && pre;
-    const cont = pre === '☐ ' || pre === '☑ ' ? '☐ ' : /^•\s/.test(pre + first) && !emptyMarker ? '• ' : '';
-    if (emptyMarker || (!first.trim() && /^(•|\d+\.)\s*$/.test(pre + first))) { L[i] = ''; return setLines(L), setFo(i); }
-    const nm = /^(\d+)\.\s/.exec(pre + first); const num = nm ? (+nm[1] + 1) + '. ' : '';
-    L[i] = pre + first; const ins = rest.map((r, k) => (k === 0 ? (cont || num) + r : r));
-    L.splice(i + 1, 0, ...ins); setLines(L); setFo(i + rest.length);
+  // One editor for the whole note (like Apple Notes / Keep): focus never moves, so the keyboard never blinks.
+  const PRE = /^(☐|☑) |^• |^\d+\. /;
+  const put = (ns: string, caret: number) => { upd({ s: ns }); cur.current = { s: caret, e: caret }; setSelOv({ start: caret, end: caret }); setTimeout(() => setSelOv(null), 350); inp.current?.focus?.(); };
+  const onText = (v: string) => {
+    const old = draft?.s ?? '';
+    let i = 0; while (i < old.length && i < v.length && old[i] === v[i]) i++;
+    if (v.length === old.length + 1 && v[i] === '\n' && v.slice(i + 1) === old.slice(i)) {
+      const ls = v.lastIndexOf('\n', i - 1) + 1; const line = v.slice(ls, i); const m = PRE.exec(line);
+      if (m) {
+        if (!line.slice(m[0].length).trim()) return put(v.slice(0, ls) + v.slice(i + 1), ls);
+        const n = /^(\d+)\. /.exec(line); const cont = /^[☐☑]/.test(line) ? '☐ ' : n ? (+n[1] + 1) + '. ' : '• ';
+        return put(v.slice(0, i + 1) + cont + v.slice(i + 1), i + 1 + cont.length);
+      }
+    }
+    if (v.length === old.length - 1) {
+      const ls = old.lastIndexOf('\n', i - 1) + 1; const m = PRE.exec(old.slice(ls));
+      if (m && i === ls + m[0].length - 1) return put(old.slice(0, ls) + old.slice(ls + m[0].length), ls);
+    }
+    upd({ s: v });
   };
-  const lineKey = (i: number, pre: string, rest: string, e: any) => {
-    if (e?.nativeEvent?.key !== 'Backspace' || rest !== '') return;
-    const L = (draft?.s ?? '').split('\n');
-    if (pre) { L[i] = ''; setLines(L); setFo(i); } else if (i > 0) { refs.current[i - 1]?.focus?.(); L.splice(i, 1); setLines(L); setFo(i - 1); }
+  const lineAt = () => { const t = draft?.s ?? ''; const p = Math.min(cur.current.s, t.length); const ls = t.lastIndexOf('\n', p - 1) + 1; return { t, p, ls }; };
+  const mark = (kind: 'chk' | 'dot' | 'num') => {
+    if (!draft) return; const { t, p, ls } = lineAt(); const le = t.indexOf('\n', ls) < 0 ? t.length : t.indexOf('\n', ls); const line = t.slice(ls, le); const m = PRE.exec(line);
+    const isK = (k: string) => (k === 'chk' ? /^[☐☑]/ : k === 'dot' ? /^•/ : /^\d/).test(line);
+    if (kind === 'chk' && m && isK('chk')) return put(t.slice(0, ls) + (line[0] === '☑' ? '☐' : '☑') + t.slice(ls + 1), p);
+    if (m && isK(kind)) return put(t.slice(0, ls) + t.slice(ls + m[0].length), Math.max(ls, p - m[0].length));
+    const prev = ls > 0 ? t.slice(t.lastIndexOf('\n', ls - 2) + 1, ls - 1) : ''; const pn = /^(\d+)\. /.exec(prev);
+    const mk = kind === 'chk' ? '☐ ' : kind === 'dot' ? '• ' : (pn ? +pn[1] + 1 : 1) + '. ';
+    const base = m ? t.slice(0, ls) + t.slice(ls + m[0].length) : t; const cut = m ? m[0].length : 0;
+    put(base.slice(0, ls) + mk + base.slice(ls), Math.max(ls, p - cut) + mk.length);
   };
-  const toggleLine = (i: number) => { const L = (draft?.s ?? '').split('\n'); L[i] = (L[i].startsWith('☑') ? '☐' : '☑') + L[i].slice(1); setLines(L); };
-  const numLine = () => { if (!draft) return; const m = draft.s.split('\n').map((l) => l.match(/^(\d+)\.\s/)).filter(Boolean) as RegExpMatchArray[]; addLine((m.length ? +m[m.length - 1][1] + 1 : 1) + '. '); };
-  const stamp = () => { if (!draft) return; const d = new Date(); const t = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); addLine(t + '\n'); };
+  const stamp = () => { if (!draft) return; const d = new Date(); const x = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); const t = draft.s; const p = Math.min(cur.current.s, t.length); put(t.slice(0, p) + x + t.slice(p), p + x.length); };
   const words = draft ? (draft.t + ' ' + draft.s).trim().split(/\s+/).filter(Boolean).length : 0;
 
   return (
@@ -184,7 +187,7 @@ export default function Notes() {
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 10 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                {[['☐', 'Add checklist item', () => addLine('☐ ')], ['•', 'Add bullet', () => addLine('• ')], ['1.', 'Add numbered item', numLine], ['Date', 'Insert date and time', stamp]].map(([t, l, f]: any) => (
+                {[['☐', 'Checklist', () => mark('chk')], ['•', 'Bullet', () => mark('dot')], ['1.', 'Numbered list', () => mark('num')], ['Date', 'Insert date and time', stamp]].map(([t, l, f]: any) => (
                   <Pressable key={l} accessibilityLabel={l} onPress={f} style={{ minWidth: 34, height: 34, paddingHorizontal: t === 'Date' ? 8 : 0, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,.12)', borderTopColor: 'rgba(255,255,255,.5)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: t.length > 1 ? 12 : 17, fontWeight: t.length > 1 ? '700' : '400' }}>{t}</Text></Pressable>
                 ))}
                 </View>
@@ -196,27 +199,16 @@ export default function Notes() {
                   ))}
                 </View>
               </View>
-              <ScrollView ref={edScroll} keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 14, paddingBottom: 28 }} scrollEventThrottle={32} onScroll={(e) => { sy.current = e.nativeEvent.contentOffset.y; }} onLayout={(e) => { vh.current = e.nativeEvent.layout.height; }} onContentSizeChange={() => { if (kb > 0 && focI.current >= 0) ensure(focI.current); }}>
-               <View onLayout={(e) => { cardY.current = e.nativeEvent.layout.y; }} style={{ borderRadius: 30, paddingHorizontal: 18, paddingTop: 18, paddingBottom: 14, backgroundColor: 'rgba(255,255,255,.17)', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 6 }}>
-                <TextInput onFocus={() => { focI.current = -1; edScroll.current?.scrollTo?.({ y: 0, animated: true }); }} value={draft.t} onChangeText={(v) => upd({ t: v })} placeholder="Title" placeholderTextColor="rgba(255,255,255,.62)" style={{ color: W, fontSize: 26, fontWeight: '800', outlineStyle: 'none' } as any} />
+              <View style={{ flex: 1, paddingHorizontal: 14, paddingTop: 14, paddingBottom: 14 }}>
+               <View style={{ flex: 1, borderRadius: 30, paddingHorizontal: 18, paddingTop: 18, paddingBottom: 14, backgroundColor: 'rgba(255,255,255,.17)', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 6 }}>
+                <TextInput value={draft.t} onChangeText={(v) => upd({ t: v })} placeholder="Title" placeholderTextColor="rgba(255,255,255,.62)" style={{ color: W, fontSize: 26, fontWeight: '800', outlineStyle: 'none' } as any} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} />
                   <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 12 }}>{words} {words === 1 ? 'word' : 'words'}</Text>
                 </View>
-                <View onLayout={(e) => { contY.current = e.nativeEvent.layout.y; }} style={{ marginTop: 14, minHeight: 280 }}>
-                  {(draft.s ? draft.s.split('\n') : ['']).map((ln, i, all) => {
-                    const ck = /^[☐☑] /.test(ln); const on = ln.startsWith('☑'); const pre = ck ? ln.slice(0, 2) : ''; const rest = ck ? ln.slice(2) : ln;
-                    return (
-                      <View key={i} onLayout={(e) => { rowL.current[i] = { y: e.nativeEvent.layout.y, h: e.nativeEvent.layout.height }; }} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                        {ck ? <Pressable onPress={() => toggleLine(i)} hitSlop={8} accessibilityLabel="Toggle item" style={{ width: 30, height: 24, justifyContent: 'center' }}><Text style={{ color: on ? '#ffc46b' : W, fontSize: 20, lineHeight: 24 }}>{on ? '☑' : '☐'}</Text></Pressable> : null}
-                        <TextInput ref={(r) => { refs.current[i] = r; }} onFocus={() => { focI.current = i; ensure(i); }} onContentSizeChange={(e) => { const hh = Math.max(24, Math.ceil(e.nativeEvent.contentSize.height)); setLh((m) => (m[i] && m[i].t === rest && m[i].h === hh ? m : { ...m, [i]: { t: rest, h: hh } })); }} multiline numberOfLines={1} scrollEnabled={false} value={rest} onChangeText={(v) => lineChange(i, pre, v)} submitBehavior="submit" onSelectionChange={(e: any) => { selR.current[i] = e.nativeEvent.selection.end; }} onSubmitEditing={() => { const c = Math.min(selR.current[i] ?? rest.length, rest.length); lineChange(i, pre, rest.slice(0, c) + '\n' + rest.slice(c)); }} onKeyPress={(e) => lineKey(i, pre, rest, e)} placeholder={i === 0 && all.length === 1 ? 'Start writing...' : ''} placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, height: lh[i] ? lh[i].h : 24, minHeight: 24, color: on ? 'rgba(255,255,255,.5)' : W, textDecorationLine: on ? 'line-through' : 'none', fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
-                      </View>
-                    );
-                  })}
-                  <Pressable onPress={() => { const n = (draft.s || '').split('\n').length - 1; setFo(n); }} style={{ minHeight: 160 }} />
-                </View>
+                <TextInput ref={inp} multiline value={draft.s} onChangeText={onText} selection={selOv ?? undefined} onSelectionChange={(e: any) => { const sl = e.nativeEvent.selection; cur.current = { s: sl.start, e: sl.end }; }} placeholder="Start writing..." placeholderTextColor="rgba(255,255,255,.6)" style={{ flex: 1, marginTop: 14, color: W, fontSize: 16, lineHeight: 24, padding: 0, paddingVertical: 0, textAlignVertical: 'top', outlineStyle: 'none' } as any} />
                </View>
-              </ScrollView>
+              </View>
               {confirmDel && (
                 <Sheet onClose={() => setConfirmDel(false)}>
                   <View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>

@@ -182,26 +182,26 @@ export default function Notes() {
                 {!isNew && <Pressable onPress={() => setConfirmDel(true)} accessibilityLabel="Delete"><Glass radius={16} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#ffb3bf', fontSize: 16 }}>✕</Text></Glass></Pressable>}
                 <Pressable onPress={save}><LinearGradient colors={['#34d399', '#5ee7df']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingHorizontal: 18, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#06241d', fontSize: 14, fontWeight: '800' }}>Save</Text></LinearGradient></Pressable>
               </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                {[['☐', 'Add checklist item', () => addLine('☐ ')], ['•', 'Add bullet', () => addLine('• ')], ['1.', 'Add numbered item', numLine], ['Date', 'Insert date and time', stamp]].map(([t, l, f]: any) => (
+                  <Pressable key={l} accessibilityLabel={l} onPress={f} style={{ minWidth: 34, height: 34, paddingHorizontal: t === 'Date' ? 8 : 0, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,.12)', borderTopColor: 'rgba(255,255,255,.5)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: t.length > 1 ? 12 : 17, fontWeight: t.length > 1 ? '700' : '400' }}>{t}</Text></Pressable>
+                ))}
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  {COL.map((c, i) => (
+                    <Pressable key={c} accessibilityLabel="Colour" hitSlop={4} onPress={() => upd({ c: i })} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: c }}>
+                      <LinearGradient colors={['rgba(255,255,255,.55)', 'rgba(255,255,255,.08)', 'rgba(0,0,0,.18)']} locations={[0, 0.5, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1, borderRadius: 9, borderWidth: draft.c === i ? 2 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.3)', borderTopColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.7)' }} />
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
               <ScrollView ref={edScroll} keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 14, paddingBottom: 28 }} scrollEventThrottle={32} onScroll={(e) => { sy.current = e.nativeEvent.contentOffset.y; }} onLayout={(e) => { vh.current = e.nativeEvent.layout.height; }} onContentSizeChange={() => { if (kb > 0 && focI.current >= 0) ensure(focI.current); }}>
                <View onLayout={(e) => { cardY.current = e.nativeEvent.layout.y; }} style={{ borderRadius: 30, paddingHorizontal: 18, paddingTop: 18, paddingBottom: 14, backgroundColor: 'rgba(255,255,255,.17)', borderWidth: 1, borderColor: 'rgba(255,255,255,.4)', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 6 }}>
                 <TextInput onFocus={() => { focI.current = -1; edScroll.current?.scrollTo?.({ y: 0, animated: true }); }} value={draft.t} onChangeText={(v) => upd({ t: v })} placeholder="Title" placeholderTextColor="rgba(255,255,255,.62)" style={{ color: W, fontSize: 26, fontWeight: '800', outlineStyle: 'none' } as any} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} />
                   <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 12 }}>{words} {words === 1 ? 'word' : 'words'}</Text>
-                </View>
-                <View style={{ marginTop: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {[['☐', 'Add checklist item', () => addLine('☐ ')], ['•', 'Add bullet', () => addLine('• ')], ['1.', 'Add numbered item', numLine], ['Date', 'Insert date and time', stamp]].map(([t, l, f]: any) => (
-                  <Pressable key={l} accessibilityLabel={l} onPress={f} style={{ minWidth: 36, height: 36, paddingHorizontal: t === 'Date' ? 8 : 0, borderRadius: 13, backgroundColor: 'rgba(255,255,255,.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,.12)', borderTopColor: 'rgba(255,255,255,.5)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: W, fontSize: t.length > 1 ? 12.5 : 18, fontWeight: t.length > 1 ? '700' : '400' }}>{t}</Text></Pressable>
-                ))}
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>
-                  {COL.map((c, i) => (
-                    <Pressable key={c} accessibilityLabel="Colour" onPress={() => upd({ c: i })} style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: c }}>
-                      <LinearGradient colors={['rgba(255,255,255,.55)', 'rgba(255,255,255,.08)', 'rgba(0,0,0,.18)']} locations={[0, 0.5, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1, borderRadius: 14, borderWidth: draft.c === i ? 2.5 : 1, borderColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.3)', borderTopColor: draft.c === i ? '#fff' : 'rgba(255,255,255,.7)' }} />
-                    </Pressable>
-                  ))}
-                </View>
                 </View>
                 <View onLayout={(e) => { contY.current = e.nativeEvent.layout.y; }} style={{ marginTop: 14, minHeight: 280 }}>
                   {(draft.s ? draft.s.split('\n') : ['']).map((ln, i, all) => {

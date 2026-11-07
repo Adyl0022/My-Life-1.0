@@ -9,6 +9,7 @@ import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { THEMES, periodOf } from '../../lib/theme';
 import { Glass } from '../../components/Glass';
+import { useAnnouncement } from '../../lib/announcement';
 
 const ITEMS: { name: string; label: string }[] = [
   { name: 'index', label: 'Home' }, { name: 'stats', label: 'Stats' }, { name: 'insights', label: 'Insights' }, { name: 'settings', label: 'Settings' },
@@ -40,7 +41,7 @@ function iconAnim(name: string, v: Animated.Value): any {
   return { transform: [{ rotate: m([0, 0.6, 0.8, 1], ['0deg', '110deg', '88deg', '90deg']) }] };
 }
 function Bar({ state }: any) {
-  const router = useRouter();
+  const router = useRouter(); const { unread } = useAnnouncement();
   const home = state.index === 0;
   const period = periodOf(new Date());
   const th = THEMES[period];
@@ -131,6 +132,7 @@ function Bar({ state }: any) {
                 <View style={{ alignItems: 'center', paddingVertical: 10 }}>
                   <Animated.View style={{ transform: [{ translateY: pop.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.16] }) }] }}>
                     <Animated.View style={iconAnim(r.name, ia[ITEMS.findIndex((x) => x.name === r.name)])}><Icon name={r.name} color={on ? '#fff' : 'rgba(255,255,255,.65)'} /></Animated.View>
+                    {r.name === 'settings' && unread ? <View pointerEvents="none" style={{ position: 'absolute', right: -3, top: -3, width: 11, height: 11, borderRadius: 6, backgroundColor: '#ff5d73', borderWidth: 2, borderColor: home ? 'rgba(60,60,110,.9)' : '#181c48' }} /> : null}
                   </Animated.View>
                   <RA.View style={[{ overflow: 'hidden', marginTop: 2 }, lblSt]}>
                     <Text style={{ fontSize: 10.5, fontWeight: '700', color: on ? '#fff' : 'rgba(255,255,255,.65)' }}>{item.label}</Text>

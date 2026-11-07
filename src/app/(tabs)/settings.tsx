@@ -8,7 +8,7 @@ import { Text } from '../../components/Txt';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Glass } from '../../components/Glass';
 import { Blob } from '../../components/Bg';
 import { SettingsBg } from '../../components/SettingsBg';
@@ -17,6 +17,8 @@ import { Logo } from '../../components/AuthScreen';
 import { useIsAdmin } from '../../lib/admin';
 import { useLicense } from '../../lib/license';
 import { supabase } from '../../lib/supabase';
+import { Announcement } from '../../components/Announcement';
+import { markSeen, useAnnouncement } from '../../lib/announcement';
 import { useSession, signOut, checkPassword, setNewPassword, deleteAccount } from '../../lib/auth';
 import { syncNow, syncState, wipeCloud } from '../../lib/sync';
 import { PRIVACY, TERMS, COPYRIGHT, WHATS_NEW, LICENCES, HOWTO, FAQ, SUPPORT_EMAIL, PRIVACY_URL, Sec } from '../../lib/legal';
@@ -185,6 +187,8 @@ export default function Settings() {
   const canGo = isDel ? typed.trim().toUpperCase() === 'DELETE' && pwv.length > 0 : typed.trim().toUpperCase() === 'RESET';
 
   const [sess] = useSession(); const lic = useLicense(); const isAdmin = useIsAdmin(); const [busy, setBusy] = useState(false); const [synced, setSynced] = useState(syncState.last);
+  const { a: annNow } = useAnnouncement();
+  useFocusEffect(React.useCallback(() => { const t = setTimeout(markSeen, 1200); return () => clearTimeout(t); }, [annNow?.id]));
   const [fbText, setFbText] = useState(''); const [fbMsg, setFbMsg] = useState('');
   const sendFb = async () => {
     if (busy) return; const m = fbText.trim(); if (!m) return setFbMsg('Please write something first.');
@@ -226,6 +230,7 @@ export default function Settings() {
 
           {tab === 0 && (
             <View style={{ gap: 12, marginTop: 14 }}>
+              <Announcement />
               <Glass style={{ paddingVertical: 8, paddingHorizontal: 16 }}>
                 <View style={{ paddingTop: 8 }}><Ttl t="Reminders and notifications" /></View>
                 {TOG.map(([k, t, s], i) => <Row key={k} k={k} ic="x" t={t} sub={s} last={i === TOG.length - 1} onPress={() => setTg({ ...tg, [k]: !tg[k] })} right={<Sw on={!!tg[k]} />} />)}

@@ -8,6 +8,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient';
 import { Bg, Blob } from '../../components/Bg';
 import { Glass } from '../../components/Glass';
+import { Announcement } from '../../components/Announcement';
 import { PlannerArt, IslamicArt, FinanceArt, RecordArt, HabitArt, HabitBanner, ChipIcon, CARDS } from '../../components/dashArt';
 import { SkyArt } from '../../components/SkyArt';
 import { Orb, OrbSvg } from '../../components/Orb';
@@ -78,6 +79,7 @@ export default function Home() {
               </Pressable>
             </View>
           </View>
+          <Announcement />
           <View style={{ marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{ flexShrink: 1, fontSize: 11, fontWeight: '700', letterSpacing: 1.2, color: '#d9fff9' }}>YOUR LIFE, ALL IN ONE PLACE</Text>
             <LinearGradient colors={['rgba(143,233,226,.6)', 'rgba(143,233,226,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1, height: 1, minWidth: 6 }} />

@@ -16,6 +16,7 @@ import { useStored, clearMine, DEFAULT_NAME } from '../../lib/store';
 import { Logo } from '../../components/AuthScreen';
 import { useIsAdmin } from '../../lib/admin';
 import { useLicense } from '../../lib/license';
+import { supabase } from '../../lib/supabase';
 import { useSession, signOut, checkPassword, setNewPassword, deleteAccount } from '../../lib/auth';
 import { syncNow, syncState, wipeCloud } from '../../lib/sync';
 import { PRIVACY, TERMS, COPYRIGHT, WHATS_NEW, LICENCES, HOWTO, FAQ, SUPPORT_EMAIL, PRIVACY_URL, Sec } from '../../lib/legal';
@@ -163,7 +164,7 @@ export default function Settings() {
       say('Sent. It will appear in 3 seconds');
     } catch (e) { say('Could not send a test notification'); }
   };
-  const [dlgState, setDlg0] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq' | 'copy' | 'done' | 'restore' | 'confirm'>('');
+  const [dlgState, setDlg0] = useState<'' | 'out' | 'reset' | 'delete' | 'pw' | 'fb' | 'privacy' | 'terms' | 'new' | 'lic' | 'backup' | 'log' | 'howto' | 'faq' | 'copy' | 'done' | 'restore' | 'confirm'>('');
   const dlg = dlgState; const setDlg = (v: typeof dlgState) => { dlgR.current = v; setDlg0(v); };
   const [bk, setBk] = useState<Backup | null>(null); const [bkErr, setBkErr] = useState('');
   const [sto, setSto] = useState<{ data: number; temp: number } | null>(null); const [stoMsg, setStoMsg] = useState('');
@@ -184,6 +185,14 @@ export default function Settings() {
   const canGo = isDel ? typed.trim().toUpperCase() === 'DELETE' && pwv.length > 0 : typed.trim().toUpperCase() === 'RESET';
 
   const [sess] = useSession(); const lic = useLicense(); const isAdmin = useIsAdmin(); const [busy, setBusy] = useState(false); const [synced, setSynced] = useState(syncState.last);
+  const [fbText, setFbText] = useState(''); const [fbMsg, setFbMsg] = useState('');
+  const sendFb = async () => {
+    if (busy) return; const m = fbText.trim(); if (!m) return setFbMsg('Please write something first.');
+    setBusy(true); setFbMsg('');
+    try { const { error } = await supabase.rpc('send_feedback', { p_msg: m }); if (error) setFbMsg(error.message.includes('too_many') ? 'Too many messages. Please try again later.' : 'Could not send. Check your internet and try again.'); else { setFbText(''); close(); say('Thank you! Your message was sent.'); } }
+    catch { setFbMsg('No internet connection.'); }
+    setBusy(false);
+  };
   const savePw = async () => {
     if (busy) return;
     if (!p1) return setPwErr('Enter your current password.');
@@ -280,6 +289,7 @@ export default function Settings() {
                   <Btn t={busy ? 'Syncing…' : 'Sync now'} kind="primary" onPress={doSync} />
                   <Btn t="Change password" onPress={() => { setP1(''); setP2(''); setP3(''); setPwErr(''); setDlg('pw'); }} />
                 </View>
+                <View style={{ flexDirection: 'row', marginTop: 8 }}><Btn t="Send feedback" onPress={() => { setFbText(''); setFbMsg(''); setDlg('fb'); }} /></View>
               </Glass>
               <Glass style={{ paddingHorizontal: 16 }}>
                 <Row k="bk" t="Backup reminder" sub={(bkLast ? 'Last backup ' + new Date(bkLast).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'You have not saved a backup yet') + (bkRem ? '. Reminds every 30 days' : '')} last onPress={() => setBkRem(!bkRem)} right={<Sw on={!!bkRem} />} />
@@ -421,6 +431,15 @@ export default function Settings() {
             <Text style={{ color: W, fontSize: 17, fontWeight: '800' }}>Log out of My Life?</Text>
             <Text style={{ color: DIM, fontSize: 13, lineHeight: 19, marginTop: 6 }}>Your data is backed up first. You will need your email and password to sign back in on this device.</Text>
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}><Btn t="Cancel" onPress={close} /><Btn t="Log out" kind="danger" onPress={async () => { await syncNow(); close(); await signOut(); }} /></View>
+          </View></Overlay>
+        )}
+        {dlg === 'fb' && (
+          <Overlay onClose={close}><View style={{ padding: 20, borderRadius: 26, backgroundColor: '#131845', borderWidth: 1, borderColor: 'rgba(255,255,255,.16)' }}>
+            <Text style={{ color: W, fontSize: 17, fontWeight: '800' }}>Send feedback</Text>
+            <Text style={{ color: DIM, fontSize: 12.5, lineHeight: 18, marginTop: 4 }}>Found a problem, or have an idea? Tell us. Your email is sent with it so we can reply.</Text>
+            <View style={{ marginTop: 12 }}><Inp multiline value={fbText} onChangeText={(v: string) => { setFbText(v.slice(0, 1000)); setFbMsg(''); }} placeholder="Your message" style={{ minHeight: 110, textAlignVertical: 'top' }} /></View>
+            {fbMsg ? <Text style={{ color: '#ffb3bf', fontSize: 12, marginTop: 8 }}>{fbMsg}</Text> : null}
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}><Btn t="Cancel" onPress={close} /><Btn t={busy ? 'Sending…' : 'Send'} kind="primary" onPress={sendFb} /></View>
           </View></Overlay>
         )}
         {dlg === 'pw' && (

@@ -17,6 +17,9 @@ const GR = ['#f5c76b', '#5ee7b5'] as [string, string];   // gold to emerald: the
 const day = (s?: string | null) => s ? new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 type Ov = { users: number; active: number; codes_unused: number; codes_used: number; new_7d: number; income: number; income_month: number; sold_month: number; free_total: number };
 type U = { id: string; email: string; name?: string; created_at: string; last_sign_in_at?: string; active: boolean; confirmed: boolean };
+type Gr = { days: { d: string; n: number }[]; active7: number };
+type Fb = { id: number; email?: string; msg: string; created_at: string };
+type At = { email: string; tries: number; tries_24h: number; last_at: string };
 type C = { code: string; note?: string; price?: number | null; method?: string | null; free?: boolean; created_at: string; redeemed_at?: string; used_by?: string };
 const METHODS = ['DuitNow', 'Bank', 'Cash', 'Other'];
 const rm = (n: number) => 'RM ' + (Number(n) || 0).toLocaleString('en-MY', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -52,7 +55,8 @@ export default function Admin() {
   const router = useRouter(); const isAdmin = useIsAdmin();
   const [ov, setOv] = useState<Ov | null>(null); const [users, setUsers] = useState<U[]>([]); const [codes, setCodes] = useState<C[]>([]);
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false); const [note, setNote] = useState(''); const [cnt, setCnt] = useState('1');
-  const [fresh, setFresh] = useState<string[]>([]); const [tab, setTab] = useState<'users' | 'codes'>('users');
+  const [fresh, setFresh] = useState<string[]>([]); const [tab, setTab] = useState<'users' | 'codes' | 'inbox' | 'log'>('users');
+  const [gr, setGr] = useState<Gr | null>(null); const [fb, setFb] = useState<Fb[]>([]); const [att, setAtt] = useState<At[]>([]); const [ann, setAnn] = useState(''); const [annText, setAnnText] = useState('');
   const [free, setFree] = useState(false); const [price, setPrice] = useState(''); const [method, setMethod] = useState('DuitNow');
   const [q, setQ] = useState(''); const [open, setOpen] = useState(''); const [ask, setAsk] = useState('');
   const [gate, setGate] = useState<'loading' | 'set' | 'enter' | 'open'>('loading'); const [pin, setPin] = useState(''); const [pin1, setPin1] = useState(''); const [gmsg, setGmsg] = useState('');
@@ -87,6 +91,8 @@ export default function Admin() {
     setBusy(false);
     if (!a.ok) { if (a.err === 'admin_locked') { setGate('enter'); setErr(''); } else setErr(a.err); return; }
     setOv(a.data); if (b.ok) setUsers(b.data); if (c.ok) setCodes(c.data);
+    const [g, f, t, n] = await Promise.all([adminCall<Gr>('admin_growth'), adminCall<Fb[]>('admin_feedback'), adminCall<At[]>('admin_attempts'), adminCall<{ id: number; msg: string } | null>('get_announcement')]);
+    if (g.ok) setGr(g.data); if (f.ok) setFb(f.data || []); if (t.ok) setAtt(t.data || []); if (n.ok) setAnn(n.data?.msg || '');
   }, []);
   useEffect(() => { if (isAdmin && gate === 'open') load(); }, [isAdmin, gate]);
   const make = async () => {
@@ -104,6 +110,10 @@ export default function Admin() {
     if (!r.ok) { if (r.err === 'admin_locked') { setGate('enter'); return; } setErr(r.err.includes('cannot_revoke') ? 'You cannot remove your own access.' : r.err); return; }
     setErr(''); load();
   };
+  const csv = (rows: (string | number | null | undefined)[][], name: string) => Share.share({ title: name, message: rows.map((r) => r.map((v) => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\n') });
+  const exportUsers = () => csv([['Email', 'Name', 'Joined', 'Last sign in', 'Active', 'Email confirmed'], ...users.map((u) => [u.email, u.name, day(u.created_at), day(u.last_sign_in_at), u.active ? 'yes' : 'no', u.confirmed ? 'yes' : 'no'])], 'my-life-users.csv');
+  const exportCodes = () => csv([['Code', 'Note', 'Price (RM)', 'Method', 'Free', 'Made', 'Used on', 'Used by'], ...codes.map((c) => [c.code, c.note, c.price, c.method, c.free ? 'yes' : '', day(c.created_at), c.redeemed_at ? day(c.redeemed_at) : '', c.used_by])], 'my-life-codes.csv');
+  const publish = async (text: string) => { setBusy(true); const r = await adminCall<boolean>('admin_announce', { p_msg: text }); setBusy(false); if (!r.ok) { if (r.err === 'admin_locked') { setGate('enter'); return; } setErr(r.err); return; } setErr(''); setAnnText(''); setAnn(text.trim().slice(0, 300)); };
   const send = (code: string) => Share.share({ message: 'Your My Life activation code: ' + code + '\nOpen the app, sign in, then type the 8 characters after ML-.' });
   return (
     <View style={{ flex: 1, backgroundColor: '#06100d', overflow: 'hidden' }}>
@@ -161,6 +171,27 @@ export default function Admin() {
               </View>
             </View> : null}
 
+            {gr ? (() => { const mx = Math.max(1, ...gr.days.map((x) => x.n)); const tot = gr.days.reduce((a, x) => a + x.n, 0); return (
+              <View style={{ marginTop: 10, borderRadius: 18, padding: 14, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)', overflow: 'hidden', ...RAISED }}>
+                <Shine h={44} />
+                <View style={{ flexDirection: 'row', alignItems: 'baseline' }}><Text style={{ flex: 1, color: W, fontWeight: '800', fontSize: 15 }}>Growth</Text><Text style={{ color: dim, fontSize: 12 }}>{tot + ' new in 14 days  ·  ' + gr.active7 + ' signed in this week'}</Text></View>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: 70, gap: 4, marginTop: 12 }}>
+                  {gr.days.map((x) => <View key={x.d} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: 70 }}><LinearGradient colors={GR} style={{ width: '100%', borderRadius: 4, height: x.n ? Math.max(6, Math.round((x.n / mx) * 62)) : 3, opacity: x.n ? 1 : 0.35 }} /></View>)}
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}><Text style={{ color: dim, fontSize: 10.5 }}>{gr.days[0] ? day(gr.days[0].d) : ''}</Text><Text style={{ color: dim, fontSize: 10.5 }}>Today</Text></View>
+              </View>); })() : null}
+
+            <View style={{ marginTop: 10, borderRadius: 18, padding: 14, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)', overflow: 'hidden', ...RAISED }}>
+              <Shine h={44} />
+              <Text style={{ color: W, fontWeight: '800', fontSize: 15 }}>Announcement</Text>
+              <Text style={{ color: dim, fontSize: 12, marginTop: 3, marginBottom: 10 }}>{ann ? 'Showing now: ' + ann : 'Nothing showing. Write a message and every user sees it on their Dashboard.'}</Text>
+              <Inp value={annText} onChangeText={(t: string) => setAnnText(t.slice(0, 300))} placeholder="e.g. A new version is ready. Please update." multiline />
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                <Pill t="Publish" on c={EM} onPress={() => { if (annText.trim()) publish(annText); }} />
+                {ann ? <Pill t={ask === 'ann' ? 'Tap again to remove' : 'Remove'} on={ask === 'ann'} c="#ff8fa0" onPress={() => { if (ask !== 'ann') { setAsk('ann'); return; } setAsk(''); publish(''); }} /> : null}
+              </View>
+            </View>
+
             <View style={{ marginTop: 22, borderRadius: 22, padding: 18, backgroundColor: CARD, borderWidth: 1, borderColor: LINE, overflow: 'hidden', ...RAISED }}>
               <Shine h={80} />
               <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: EM }} />
@@ -186,14 +217,15 @@ export default function Admin() {
               ))}
             </View>
 
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 26 }}>
-              {(['users', 'codes'] as const).map((t) => (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 26 }}>
+              {(['users', 'codes', 'inbox', 'log'] as const).map((t) => (
                 <Pressable key={t} onPress={() => setTab(t)} style={{ paddingVertical: 8, paddingHorizontal: 16, borderRadius: 10, backgroundColor: tab === t ? GOLD : CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.1)', ...RAISED }}>
-                  <Text style={{ color: tab === t ? '#0b1512' : W, fontWeight: '800', fontSize: 13 }}>{t === 'users' ? 'Users (' + users.length + ')' : 'Codes (' + codes.length + ')'}</Text>
+                  <Text style={{ color: tab === t ? '#0b1512' : W, fontWeight: '800', fontSize: 13 }}>{t === 'users' ? 'Users (' + users.length + ')' : t === 'codes' ? 'Codes (' + codes.length + ')' : t === 'inbox' ? 'Inbox (' + fb.length + ')' : 'Log (' + att.length + ')'}</Text>
                 </Pressable>
               ))}
             </View>
-            {tab === 'users' ? <View style={{ marginTop: 12 }}><Inp value={q} onChangeText={setQ} placeholder="Search by name or email" autoCapitalize="none" /></View> : null}
+            {tab === 'users' ? <View style={{ marginTop: 12, flexDirection: 'row', gap: 8, alignItems: 'center' }}><View style={{ flex: 1 }}><Inp value={q} onChangeText={setQ} placeholder="Search by name or email" autoCapitalize="none" /></View><Pill t="Export" on={false} onPress={exportUsers} /></View> : null}
+            {tab === 'codes' ? <View style={{ marginTop: 12, flexDirection: 'row' }}><Pill t="Export all codes" on={false} onPress={exportCodes} /></View> : null}
             {tab === 'users' ? users.filter((u) => !q.trim() || (u.email + ' ' + (u.name || '')).toLowerCase().includes(q.trim().toLowerCase())).map((u) => (
               <Pressable key={u.id} onPress={() => { setOpen(open === u.id ? '' : u.id); setAsk(''); }} style={{ marginTop: 10, padding: 12, borderRadius: 18, backgroundColor: CARD, borderWidth: 1, borderColor: open === u.id ? 'rgba(245,199,107,.55)' : 'rgba(255,255,255,.09)', overflow: 'hidden', ...RAISED }}>
                 <Shine h={36} />
@@ -218,16 +250,32 @@ export default function Admin() {
                   </View>
                 ) : null}
               </Pressable>
-            )) : codes.map((c) => (
+            )) : tab === 'codes' ? codes.map((c) => (
               <View key={c.code} style={{ marginTop: 10, padding: 12, borderRadius: 16, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)', overflow: 'hidden', ...RAISED }}>
                 <Shine h={36} />
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text selectable style={{ flex: 1, color: W, fontWeight: '800', letterSpacing: 1 }}>{c.code}</Text>
-                  {c.redeemed_at ? <Text style={{ color: dim, fontSize: 11.5, fontWeight: '800' }}>USED</Text> : <Pressable onPress={() => send(c.code)} hitSlop={8}><Text style={{ color: GOLD, fontWeight: '800' }}>Send</Text></Pressable>}
+                  {c.redeemed_at ? <Text style={{ color: dim, fontSize: 11.5, fontWeight: '800' }}>USED</Text> : <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}><Pressable onPress={() => send(c.code)} hitSlop={8}><Text style={{ color: GOLD, fontWeight: '800' }}>Send</Text></Pressable><Pressable onPress={() => act('admin_delete_code', { p_code: c.code }, 'dc' + c.code)} hitSlop={8}><Text style={{ color: '#ff8fa0', fontWeight: '800' }}>{ask === 'dc' + c.code ? 'Tap again' : 'Delete'}</Text></Pressable></View>}
                 </View>
                 <Text style={{ color: dim, fontSize: 12, marginTop: 2 }}>{(c.note ? c.note + '  ·  ' : '') + (c.free ? 'Free  ·  ' : c.price != null ? rm(c.price) + (c.method ? ' ' + c.method : '') + '  ·  ' : '') + (c.redeemed_at ? 'Used by ' + c.used_by + ' on ' + day(c.redeemed_at) : 'Made ' + day(c.created_at))}</Text>
               </View>
-            ))}
+            )) : tab === 'inbox' ? (fb.length ? fb.map((f) => (
+              <View key={f.id} style={{ marginTop: 10, padding: 12, borderRadius: 16, backgroundColor: CARD, borderWidth: 1, borderColor: 'rgba(255,255,255,.09)', overflow: 'hidden', ...RAISED }}>
+                <Shine h={36} />
+                <Text selectable style={{ color: W, fontSize: 13.5, lineHeight: 19 }}>{f.msg}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                  <Text style={{ flex: 1, color: dim, fontSize: 11.5 }} numberOfLines={1}>{(f.email || '') + '  ·  ' + day(f.created_at)}</Text>
+                  <Pressable onPress={() => act('admin_feedback_delete', { p_id: f.id }, 'fb' + f.id)} hitSlop={8}><Text style={{ color: '#ff8fa0', fontWeight: '800', fontSize: 12.5 }}>{ask === 'fb' + f.id ? 'Tap again to delete' : 'Delete'}</Text></Pressable>
+                </View>
+              </View>
+            )) : <Text style={{ color: dim, marginTop: 16 }}>No messages yet. Users can send feedback from Settings.</Text>)
+            : (att.length ? att.map((a) => (
+              <View key={a.email} style={{ marginTop: 10, padding: 12, borderRadius: 16, backgroundColor: CARD, borderWidth: 1, borderColor: a.tries_24h >= 8 ? 'rgba(255,143,160,.5)' : 'rgba(255,255,255,.09)', overflow: 'hidden', ...RAISED }}>
+                <Shine h={36} />
+                <Text style={{ color: W, fontWeight: '700' }} numberOfLines={1}>{a.email}</Text>
+                <Text style={{ color: dim, fontSize: 12, marginTop: 2 }}>{a.tries + ' wrong tries  ·  ' + a.tries_24h + ' in the last 24 hours  ·  last ' + day(a.last_at)}</Text>
+              </View>
+            )) : <Text style={{ color: dim, marginTop: 16 }}>No wrong codes in the last 30 days.</Text>)}
           </>}
         </ScrollView>
       </SafeAreaView>
